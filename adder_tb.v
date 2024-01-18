@@ -1,6 +1,6 @@
 // Testbench for the adder of the ALU
 // Created:     2024-01-17
-// Modified:    2024-01-17
+// Modified:    2024-01-18
 // Author:      Kagan Dikmen
 
 `include "adder.v"
@@ -31,6 +31,9 @@ module adder_tb
         opd2_t <= 32'd0;
         alu_op_select_t <= 3'b0;
 
+
+        // positive operands
+
         #10;
         opd1_t <= 32'd0;
         opd2_t <= 32'd1;
@@ -55,6 +58,32 @@ module adder_tb
         opd1_t <= 32'd6;
         opd2_t <= 32'd7;
         alu_op_select_t <= 3'b1;
+
+        #10;
+        opd1_t <= 32'd0;
+        opd2_t <= 32'd0;
+        alu_op_select_t <= 3'b0;
+
+
+        // negative operands
+
+        #10;
+        opd1_t <= 32'hffffffff;
+        opd2_t <= 32'hfffffffe;
+        alu_op_select_t <= 3'b0;
+        
+        #10;
+        opd1_t <= 32'hffffffff;
+        opd2_t <= 32'hfffffffe;
+        alu_op_select_t <= 3'd1;
+        
+        #10;
+        opd1_t <= 32'hfffffffe;
+        opd2_t <= 32'hffffffff;
+        alu_op_select_t <= 3'd1;
+
+
+        // testing complete
 
         #10;
         opd1_t <= 32'd0;
