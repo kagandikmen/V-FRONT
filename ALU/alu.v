@@ -1,72 +1,119 @@
 // ALU of the CPU
 // Created:     2024-01-17
-// Modified:    2024-01-18 (last status: working fine)
+// Modified:    2024-01-20 (last status: working fine)
 // Author:      Kagan Dikmen
 
 `include "adder.v"
 `include "comparison_unit.v"
 `include "logic_unit.v"
+`include "mux.v"
 `include "shifter.v"
 
 module alu
     #(
-    parameter OPERAND_LENGTH = 32
+    parameter OPERAND_LENGTH = 32,
+    parameter PC_LENGTH = 12
     )(
     input [OPERAND_LENGTH-1:0] opd1,
     input [OPERAND_LENGTH-1:0] opd2,
     input [OPERAND_LENGTH-1:0] opd3,
     input [OPERAND_LENGTH-1:0] opd4,
+    input [PC_LENGTH-1:0] pc,
     input alu_mux1_select,
     input [1:0] alu_mux2_select,
     input [2:0] alu_op_select,    // adder: 000 for addition, 001 for subtraction
+    input alu_pc_select,
     
     output [OPERAND_LENGTH-1:0] alu_result,
     output [OPERAND_LENGTH-1:0] comp_result   // zero-extended
     );
 
+    wire [OPERAND_LENGTH-1:0] pc_extended;
+
+    assign pc_extended = pc;
+
+    wire [OPERAND_LENGTH-1:0] adder_input1;
     wire [OPERAND_LENGTH-1:0] adder_result;
     
-    wire [OPERAND_LENGTH-1:0] cu_first_opd;   // cu stands for "compare unit"
-    wire [OPERAND_LENGTH-1:0] cu_second_opd;
+    wire [OPERAND_LENGTH-1:0] cu_input1;   // cu stands for "compare unit"
+    wire [OPERAND_LENGTH-1:0] cu_input2;
 
     wire [OPERAND_LENGTH-1:0] logic_result;
     wire [OPERAND_LENGTH-1:0] shifter_result;
 
-    assign cu_first_opd = (alu_mux1_select == 1'b0) ? opd1 : opd3;
-    assign cu_second_opd = (alu_mux1_select == 1'b0) ? opd2 : opd4;
 
-    assign alu_result = (alu_mux2_select == 2'b00) ? adder_result :
-                        (alu_mux2_select == 2'b01) ? logic_result :
-                        (alu_mux2_select == 2'b10) ? shifter_result : 
-                        comp_result;
+    adder #(.OPERAND_LENGTH(OPERAND_LENGTH)) 
+                    adder_in_alu
+                    (
+                        .opd1(adder_input1),
+                        .opd2(opd2),
+                        .alu_op_select(alu_op_select),
+                        .adder_result(adder_result)
+                    );
 
+    comparison_unit #(.OPD_LENGTH(OPERAND_LENGTH)) 
+                    comparison_unit_in_alu 
+                    (
+                        .opd1(cu_input1),
+                        .opd2(cu_input2),
+                        .alu_op_select(alu_op_select),
+                        .comp_result(comp_result)
+                    );
 
-    adder #(.OPERAND_LENGTH(OPERAND_LENGTH)) adder_in_alu(
-                                                        .opd1(opd1),
-                                                        .opd2(opd2),
-                                                        .alu_op_select(alu_op_select),
-                                                        .adder_result(adder_result)
-                                                        );
+    logic_unit #(.OPD_LENGTH(OPERAND_LENGTH)) 
+                    logic_unit_in_alu 
+                    (
+                        .opd1(opd1),
+                        .opd2(opd2),
+                        .alu_op_select(alu_op_select),
+                        .logic_result(logic_result)
+                    );
 
-    comparison_unit #(.OPD_LENGTH(OPERAND_LENGTH)) comparison_unit_in_alu (
-                                                                            .opd1(cu_first_opd),
-                                                                            .opd2(cu_second_opd),
-                                                                            .alu_op_select(alu_op_select),
-                                                                            .comp_result(comp_result)
-                                                                            );
+    shifter #(.OPD_LENGTH(OPERAND_LENGTH)) 
+                    shifter_in_alu 
+                    (
+                        .opd1(opd1),
+                        .opd2(opd2),
+                        .alu_op_select(alu_op_select),
+                        .shifter_result(shifter_result)
+                    );
 
-    logic_unit #(.OPD_LENGTH(OPERAND_LENGTH)) logic_unit_in_alu (
-                                                                .opd1(opd1),
-                                                                .opd2(opd2),
-                                                                .alu_op_select(alu_op_select),
-                                                                .logic_result(logic_result)
-                                                                );
+    two_input_mux #(.INPUT_LENGTH(OPERAND_LENGTH)) 
+                    pc_sel_mux
+                    (
+                        .a(opd1),
+                        .b(pc_extended),
+                        .sel(alu_pc_select),
+                        .z(adder_input1)
+                    );
 
-    shifter #(.OPD_LENGTH(OPERAND_LENGTH)) shifter_in_alu (
-                                                            .opd1(opd1),
-                                                            .opd2(opd2),
-                                                            .alu_op_select(alu_op_select),
-                                                            .shifter_result(shifter_result)
-                                                            );
+    two_input_mux #(.INPUT_LENGTH(OPERAND_LENGTH)) 
+                    cu_mux1
+                    (
+                        .a(opd1),
+                        .b(opd3),
+                        .sel(alu_mux1_select),
+                        .z(cu_input1)
+                    );
+
+    two_input_mux #(.INPUT_LENGTH(OPERAND_LENGTH)) 
+                    cu_mux2
+                    (
+                        .a(opd2),
+                        .b(opd4),
+                        .sel(alu_mux1_select),
+                        .z(cu_input2)
+                    );
+
+    four_input_mux #(.INPUT_LENGTH(OPERAND_LENGTH))
+                    result_mux
+                    (
+                        .a(adder_result),
+                        .b(logic_result),
+                        .c(shifter_result),
+                        .d(comp_result),
+                        .sel(alu_mux2_select),
+                        .z(alu_result)
+                    );
     
 endmodule

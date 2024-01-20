@@ -1,6 +1,6 @@
 // Testbench for the ALU of the CPU
 // Created:     2024-01-18
-// Modified:    2024-01-18
+// Modified:    2024-01-20
 // Author:      Kagan Dikmen
 
 `include "alu.v"
@@ -8,27 +8,35 @@
 `timescale 1ns/1ps
 
 module alu_tb 
-    #(parameter TB_OPD_LENGTH = 8)
-    ();
+    #(
+    parameter TB_OPD_LENGTH = 8,
+    parameter TB_PC_LENGTH = 4
+    )(
+    );
 
     reg [TB_OPD_LENGTH-1:0] opd1_t, opd2_t, opd3_t, opd4_t;
-    reg alu_mux1_select_t;
+    reg alu_mux1_select_t, alu_pc_select_t;
     reg [1:0] alu_mux2_select_t;
     reg [2:0] alu_op_select_t;
     wire [TB_OPD_LENGTH-1:0] alu_result_t, comp_result_t;
 
+    reg [TB_PC_LENGTH-1:0] pc_t;
 
-    alu #(.OPERAND_LENGTH(TB_OPD_LENGTH)) alu_test (
-                                        .opd1(opd1_t),
-                                        .opd2(opd2_t),
-                                        .opd3(opd3_t),
-                                        .opd4(opd4_t),
-                                        .alu_mux1_select(alu_mux1_select_t),
-                                        .alu_mux2_select(alu_mux2_select_t),
-                                        .alu_op_select(alu_op_select_t),
-                                        .alu_result(alu_result_t),
-                                        .comp_result(comp_result_t)
-                                        );
+
+    alu #(.OPERAND_LENGTH(TB_OPD_LENGTH), .PC_LENGTH(TB_PC_LENGTH)) 
+            alu_test (
+                    .opd1(opd1_t),
+                    .opd2(opd2_t),
+                    .opd3(opd3_t),
+                    .opd4(opd4_t),
+                    .pc(pc_t),
+                    .alu_mux1_select(alu_mux1_select_t),
+                    .alu_mux2_select(alu_mux2_select_t),
+                    .alu_op_select(alu_op_select_t),
+                    .alu_pc_select(alu_pc_select_t),
+                    .alu_result(alu_result_t),
+                    .comp_result(comp_result_t)
+                    );
 
 
     initial
@@ -41,8 +49,10 @@ module alu_tb
         opd2_t <= 'b0;
         opd3_t <= 'b0;
         opd4_t <= 'b0;
+        pc_t <= 'b0;
         alu_mux1_select_t <= 1'b0;
         alu_mux2_select_t <= 2'b00;     // adder result
+        alu_pc_select_t <= 1'b0;        // adder: select opd1
         alu_op_select_t <= 3'b000;      // adder: addition
 
         #5;
@@ -55,6 +65,20 @@ module alu_tb
         alu_op_select_t <= 3'b000;      // adder: addition
 
         #5;
+        opd1_t <= 'd3;
+        opd2_t <= 'd8;
+        opd3_t <= 'b0;
+        opd4_t <= 'b0;
+        pc_t <= 'd1;
+        alu_mux1_select_t <= 1'b0;
+        alu_mux2_select_t <= 2'b00;     // adder result
+        alu_pc_select_t <= 1'b1;        // adder: select PC
+        alu_op_select_t <= 3'b000;      // adder: addition
+        
+        #2;
+        alu_pc_select_t <= 1'b0;        // adder: select opd1
+        
+        #3;
         opd1_t <= 'd10;
         opd2_t <= 'd8;
         opd3_t <= 'b0;
