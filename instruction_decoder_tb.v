@@ -1,6 +1,6 @@
 // Testbench for the instruction decoder of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-20
+// Modified:    2024-01-25
 // Author:      Kagan Dikmen
 
 `include "instruction_decoder.v"
@@ -10,6 +10,7 @@
 module instruction_decoder_tb
     #(
     parameter OPD_LENGTH = 16,
+    parameter PC_WIDTH = 8,
     parameter REG_WIDTH = 16
     )(
     );
@@ -17,6 +18,7 @@ module instruction_decoder_tb
     `include "common_library.vh"
 
     reg [31:0] instr_t;
+    reg [PC_WIDTH-1:0] pc_t;
 
     wire [4:0] rs1_addr_t, rs2_addr_t, rd_addr_t;
     reg [REG_WIDTH-1:0] rs1_data_t, rs2_data_t;
@@ -24,10 +26,11 @@ module instruction_decoder_tb
     wire [OPD_LENGTH-1:0] opd1_t, opd2_t, opd3_t, opd4_t;
 
 
-    instruction_decoder #(.OPD_LENGTH(OPD_LENGTH), .REG_WIDTH(REG_WIDTH))
+    instruction_decoder #(.OPD_LENGTH(OPD_LENGTH), .PC_WIDTH(PC_WIDTH), .REG_WIDTH(REG_WIDTH))
                         instruction_decoder_ut
                         (
                             .instr(instr_t),
+                            .pc(pc_t),
                             .rs1_addr(rs1_addr_t),
                             .rs2_addr(rs2_addr_t),
                             .rd_addr(rd_addr_t),
@@ -44,6 +47,7 @@ module instruction_decoder_tb
 
         #5;
         instr_t <= {7'b0, 5'd4, 5'd3, 3'b0, 5'd2, R_OPCODE};            // ADD x2, x3, x4
+        pc_t <= 'd16;
         rs1_data_t <= 'd9;
         rs2_data_t <= 'd13;
 

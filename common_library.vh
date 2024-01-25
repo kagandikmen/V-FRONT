@@ -81,37 +81,6 @@ localparam HALFWORD     = 2'b01;
 localparam BYTE         = 2'b10;
 
 
-task dmem_read;
-    // input [MEM_DEPTH-1:0][MEM_WIDTH-1:0] mem;
-    input [DMEM_WIDTH-1:0] mem_cell;
-    input [DMEM_ADDR_LENGTH-1:0] addr;
-    input [1:0] mode;           // 00: WORD, 01: HALFWORD, 10: BYTE
-    output [31:0] data;
-    
-    begin
-
-        case (mode)
-            WORD:
-            begin
-                data = {mem_cell [addr+3], mem_cell [addr+2], mem_cell [addr+1], mem_cell [addr]};
-            end
-            HALFWORD:
-            begin
-                data = {16'b0, mem_cell [addr+1], mem_cell [addr]};
-            end
-            BYTE:
-            begin
-                data = {24'b0, mem_cell [addr]};
-            end
-            default:
-            begin
-                $error("ERROR: Invalid memory access mode!");
-            end
-        endcase
-    end
-endtask
-
-
 // PMEM
 
 // localparam PMEM_DEPTH       = 4096;

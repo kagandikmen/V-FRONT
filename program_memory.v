@@ -1,6 +1,6 @@
 // Program memory of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-20 (status: working fine)
+// Modified:    2024-01-25 (status: working fine)
 // Author:      Kagan Dikmen
 
 module program_memory 
@@ -12,7 +12,8 @@ module program_memory
     input w_en,
     input [PC_WIDTH-1:0] addr,
 
-    output reg [31:0] data
+    output reg [31:0] data,
+    output reg [PC_WIDTH-1:0] pc
     );
 
     `include "common_library.vh"
@@ -48,6 +49,7 @@ module program_memory
 
     always @(*)
     begin
-        data = pmem [addr];
+        data = pmem[addr];
+        pc = addr;
     end
 endmodule

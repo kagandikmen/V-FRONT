@@ -1,6 +1,6 @@
 // Testbench for the program memory of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-20
+// Modified:    2024-01-25
 // Author:      Kagan Dikmen
 
 `include "program_memory.v"
@@ -16,6 +16,7 @@ module program_memory_tb
     reg clk_t, rst_t, w_en_t;
     reg [PC_WIDTH-1:0] addr_t;
     wire [31:0] data_t;
+    wire [PC_WIDTH-1:0] pc_t;
 
     program_memory #(.PC_WIDTH(PC_WIDTH))
                     program_memory_ut
@@ -24,7 +25,8 @@ module program_memory_tb
                         .rst(rst_t),
                         .w_en(w_en_t),
                         .addr(addr_t),
-                        .data(data_t)
+                        .data(data_t),
+                        .pc(pc_t)
                     );
     
     always #1 clk_t = ~clk_t;

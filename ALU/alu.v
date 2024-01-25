@@ -1,12 +1,12 @@
 // ALU of the CPU
 // Created:     2024-01-17
-// Modified:    2024-01-20 (last status: working fine)
+// Modified:    2024-01-26 (last status: working fine)
 // Author:      Kagan Dikmen
 
-`include "adder.v"
+`include "../common_components/adder.v"
 `include "comparison_unit.v"
 `include "logic_unit.v"
-`include "mux.v"
+`include "../common_components/mux.v"
 `include "shifter.v"
 
 module alu
