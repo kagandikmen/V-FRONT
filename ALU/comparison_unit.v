@@ -1,6 +1,6 @@
 // Comparison unit of the ALU
 // Created:     2024-01-18
-// Modified:    2024-01-18 (last status: working fine)
+// Modified:    2024-01-27 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module comparison_unit
@@ -9,9 +9,9 @@ module comparison_unit
     )(
     input [OPD_LENGTH-1:0] opd1,
     input [OPD_LENGTH-1:0] opd2,
-    input [2:0] alu_op_select,      // 000 for IS_EQ, 001 for IS_NE, 
-                                    // 010 for IS_GE, 110 for IS_GEU,
-                                    // 011 for IS_LT, 111 for IS_LTU
+    input [3:0] alu_op_select,      // 0000 for IS_EQ, 0001 for IS_NE, 
+                                    // 0010 for IS_GE, 0110 for IS_GEU,
+                                    // 0011 for IS_LT, 0111 for IS_LTU
 
     output [OPD_LENGTH-1:0] comp_result
     );
@@ -29,7 +29,7 @@ module comparison_unit
 
     always @(*)
     begin
-        case (alu_op_select)
+        case (alu_op_select[2:0])
         IS_EQ:      comp_result_bf <= (opd1 == opd2) ? 'b1 : 'b0;
         IS_NE:      comp_result_bf <= (opd1 != opd2) ? 'b1 : 'b0;
         IS_GE:      comp_result_bf <= ($signed(opd1) >= $signed(opd2)) ? 'b1 : 'b0;

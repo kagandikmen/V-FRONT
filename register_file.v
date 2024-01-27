@@ -1,6 +1,6 @@
 // Register file of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-20 (last status: working fine)
+// Modified:    2024-01-27 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module register_file
@@ -50,8 +50,8 @@ module register_file
     // asynchronous read
     always @(*)
     begin
-        rs1_data<= rf[rs1_addr];
-        rs2_data<= rf[rs2_addr];
+        rs1_data <= rf[rs1_addr];
+        rs2_data <= rf[rs2_addr];
     end
 
     // synchronous write
@@ -59,6 +59,8 @@ module register_file
     begin
         if (w_en == 1'b1)
             rf[rd_addr] <= rd_write_data;
+
+        rf[0] <= 'b0;           // x0 always has the value 32'h00000000
     end
 
 

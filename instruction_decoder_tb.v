@@ -1,6 +1,6 @@
 // Testbench for the instruction decoder of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-25
+// Modified:    2024-01-27
 // Author:      Kagan Dikmen
 
 `include "instruction_decoder.v"
@@ -26,11 +26,10 @@ module instruction_decoder_tb
     wire [OPD_LENGTH-1:0] opd1_t, opd2_t, opd3_t, opd4_t;
 
 
-    instruction_decoder #(.OPD_LENGTH(OPD_LENGTH), .PC_WIDTH(PC_WIDTH), .REG_WIDTH(REG_WIDTH))
+    instruction_decoder #(.OPD_LENGTH(OPD_LENGTH), .REG_WIDTH(REG_WIDTH))
                         instruction_decoder_ut
                         (
                             .instr(instr_t),
-                            .pc(pc_t),
                             .rs1_addr(rs1_addr_t),
                             .rs2_addr(rs2_addr_t),
                             .rd_addr(rd_addr_t),

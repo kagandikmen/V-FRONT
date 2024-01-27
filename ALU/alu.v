@@ -1,6 +1,6 @@
 // ALU of the CPU
 // Created:     2024-01-17
-// Modified:    2024-01-26 (last status: working fine)
+// Modified:    2024-01-27 (last status: working fine)
 // Author:      Kagan Dikmen
 
 `include "../common_components/adder.v"
@@ -21,7 +21,7 @@ module alu
     input [PC_LENGTH-1:0] pc,
     input alu_mux1_select,
     input [1:0] alu_mux2_select,
-    input [2:0] alu_op_select,    // adder: 000 for addition, 001 for subtraction
+    input [3:0] alu_op_select,
     input alu_pc_select,
     
     output [OPERAND_LENGTH-1:0] alu_result,

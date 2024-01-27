@@ -1,6 +1,6 @@
 // Logic unit of the ALU
 // Created:     2024-01-18
-// Modified:    2024-01-18 (last status: working fine)
+// Modified:    2024-01-27 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module logic_unit
@@ -9,7 +9,7 @@ module logic_unit
     )(
     input [OPD_LENGTH-1:0] opd1,
     input [OPD_LENGTH-1:0] opd2,
-    input [2:0] alu_op_select,      // 111 for AND, 110 for OR, 100 for XOR, 000 for ~opd1, 001 for ~opd2
+    input [3:0] alu_op_select,      // 0111 for AND, 0110 for OR, 0100 for XOR, 0000 for ~opd1, 0001 for ~opd2
 
     output [OPD_LENGTH-1:0] logic_result
     );
@@ -26,7 +26,7 @@ module logic_unit
 
     always @(*)
     begin
-        case (alu_op_select)
+        case (alu_op_select[2:0])
         AND:        logic_result_bf <= opd1 & opd2;
         OR:         logic_result_bf <= opd1 | opd2;
         XOR:        logic_result_bf <= opd1 ^ opd2;

@@ -1,6 +1,6 @@
 // Testbench for the logic unit of the ALU
 // Created:     2024-01-18
-// Modified:    2024-01-18
+// Modified:    2024-01-27
 // Author:      Kagan Dikmen
 
 `include "logic_unit.v"
@@ -11,7 +11,7 @@ module logic_unit_tb
     #(parameter OPD_LENGTH = 8)();
 
     reg [OPD_LENGTH-1:0] opd1_t, opd2_t;
-    reg [2:0] alu_op_select_t;
+    reg [3:0] alu_op_select_t;
     wire [OPD_LENGTH-1:0] logic_result_t;
 
     logic_unit #(.OPD_LENGTH(OPD_LENGTH)) logic_unit_ut (
@@ -27,46 +27,46 @@ module logic_unit_tb
         #5;
         opd1_t <= 'b0;
         opd2_t <= 'b0;
-        alu_op_select_t <= 3'b000;
+        alu_op_select_t <= 4'b0000;
 
         #5;
         opd1_t <= 'hcc;
         opd2_t <= 'hff;
-        alu_op_select_t <= 3'b000;
+        alu_op_select_t <= 4'b0000;
 
         #5;
-        alu_op_select_t <= 3'b001;
+        alu_op_select_t <= 4'b0001;
 
         #5;
-        alu_op_select_t <= 3'b111;
+        alu_op_select_t <= 4'b0111;
 
         #5;
-        alu_op_select_t <= 3'b110;
+        alu_op_select_t <= 4'b0110;
 
         #5;
-        alu_op_select_t <= 3'b100;
+        alu_op_select_t <= 4'b0100;
 
         #5;
         opd1_t <= 'h0e;
         opd2_t <= 'ha0;
-        alu_op_select_t <= 3'b000;
+        alu_op_select_t <= 4'b0000;
 
         #5;
-        alu_op_select_t <= 3'b001;
+        alu_op_select_t <= 4'b0001;
 
         #5;
-        alu_op_select_t <= 3'b111;
+        alu_op_select_t <= 4'b0111;
 
         #5;
-        alu_op_select_t <= 3'b110;
+        alu_op_select_t <= 4'b0110;
 
         #5;
-        alu_op_select_t <= 3'b100;
+        alu_op_select_t <= 4'b0100;
 
         #5;
         opd1_t <= 'b0;
         opd2_t <= 'b0;
-        alu_op_select_t <= 3'b000;
+        alu_op_select_t <= 4'b0000;
     end
     
 endmodule

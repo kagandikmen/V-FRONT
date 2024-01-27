@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-26 (status: working fine)
+// Modified:    2024-01-27 (status: working fine)
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -14,7 +14,7 @@ module control_unit
     // to ALU
     output reg alu_mux1_select,
     output reg [1:0] alu_mux2_select,
-    output reg [2:0] alu_op_select,
+    output reg [3:0] alu_op_select,
     output reg alu_pc_select,
 
     // to register file
@@ -39,7 +39,7 @@ module control_unit
     assign instr_compressed = {instr[14:12], instr[6:0]};
     assign w_en_pmem = 1'b1;
 
-    always #5 clk = ~clk;
+    always #2 clk = ~clk;
 
     always @(instr)
     begin
@@ -57,7 +57,7 @@ module control_unit
                 begin
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b00; 
-                    alu_op_select <= 3'b000;
+                    alu_op_select <= 4'b0000;
                     w_en_rf <= 1'b1;
                     rf_w_select <= 2'b00;
                 end
@@ -65,7 +65,7 @@ module control_unit
                 begin
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b00; 
-                    alu_op_select <= 3'b001;
+                    alu_op_select <= 4'b1000;
                     w_en_rf <= 1'b1;
                     rf_w_select <= 2'b00;
                 end
@@ -74,7 +74,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b10;
-                alu_op_select <= 3'b011;
+                alu_op_select <= 4'b0011;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -82,7 +82,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b11;
-                alu_op_select <= 3'b011;
+                alu_op_select <= 4'b0011;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -90,7 +90,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b11;
-                alu_op_select <= 3'b111;
+                alu_op_select <= 4'b0111;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -98,7 +98,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01;
-                alu_op_select <= 3'b110;
+                alu_op_select <= 4'b0110;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -108,7 +108,7 @@ module control_unit
                 begin
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b10; 
-                    alu_op_select <= 3'b001; 
+                    alu_op_select <= 4'b0001; 
                     w_en_rf <= 1'b1;
                     rf_w_select <= 2'b00;
                 end
@@ -116,7 +116,7 @@ module control_unit
                 begin
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b10;
-                    alu_op_select <= 3'b111;
+                    alu_op_select <= 4'b0111;
                     w_en_rf <= 1'b1;
                     rf_w_select <= 2'b00;
                 end
@@ -125,7 +125,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01;
-                alu_op_select <= 3'b110;
+                alu_op_select <= 4'b0110;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -133,7 +133,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01; 
-                alu_op_select <= 3'b111; 
+                alu_op_select <= 4'b0111; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -141,7 +141,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000;
+                alu_op_select <= 4'b0000;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -149,7 +149,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b11;
-                alu_op_select <= 3'b011;
+                alu_op_select <= 4'b0011;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -157,7 +157,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b11;
-                alu_op_select <= 3'b111;
+                alu_op_select <= 4'b0111;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -165,7 +165,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01; 
-                alu_op_select <= 3'b100;
+                alu_op_select <= 4'b0100;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -173,7 +173,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01; 
-                alu_op_select <= 3'b110;
+                alu_op_select <= 4'b0110;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -181,7 +181,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01;
-                alu_op_select <= 3'b111;
+                alu_op_select <= 4'b0111;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -189,7 +189,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b10;
-                alu_op_select <= 3'b011;
+                alu_op_select <= 4'b0011;
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b00;
             end
@@ -199,7 +199,7 @@ module control_unit
                 begin
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b10;
-                    alu_op_select <= 3'b001;
+                    alu_op_select <= 4'b0001;
                     w_en_rf <= 1'b1;
                     rf_w_select <= 2'b00;
                 end
@@ -207,7 +207,7 @@ module control_unit
                 begin
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b10;
-                    alu_op_select <= 3'b111;
+                    alu_op_select <= 4'b0111;
                     w_en_rf <= 1'b1;
                     rf_w_select <= 2'b00;
                 end
@@ -216,7 +216,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
                 rw_mode <= 2'b10;
@@ -225,7 +225,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
                 rw_mode <= 2'b01;
@@ -234,7 +234,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
             end
@@ -242,7 +242,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
                 rw_mode <= 2'b10;
@@ -251,7 +251,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
                 rw_mode <= 2'b01;
@@ -260,7 +260,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00; 
-                alu_op_select <= 3'b000;
+                alu_op_select <= 4'b0000;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
                 rw_mode <= 2'b10;
@@ -270,7 +270,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00; 
-                alu_op_select <= 3'b000;
+                alu_op_select <= 4'b0000;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
                 rw_mode <= 2'b01;
@@ -280,7 +280,7 @@ module control_unit
             begin
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00; 
-                alu_op_select <= 3'b000;
+                alu_op_select <= 4'b0000;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
                 wr_en_dmem <= 1'b1;
@@ -290,7 +290,7 @@ module control_unit
                 alu_pc_select <= 1'b1;
                 alu_mux1_select <= 1'b1;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000;
+                alu_op_select <= 4'b0000;
                 branch <= 1'b1; 
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
@@ -300,7 +300,7 @@ module control_unit
                 alu_pc_select <= 1'b1;
                 alu_mux1_select <= 1'b1;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0001; 
                 branch <= 1'b1;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
@@ -310,7 +310,7 @@ module control_unit
                 alu_pc_select <= 1'b1;
                 alu_mux1_select <= 1'b1;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0011; 
                 branch <= 1'b1;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
@@ -320,7 +320,7 @@ module control_unit
                 alu_pc_select <= 1'b1;
                 alu_mux1_select <= 1'b1;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0010; 
                 branch <= 1'b1;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
@@ -330,7 +330,7 @@ module control_unit
                 alu_pc_select <= 1'b1;
                 alu_mux1_select <= 1'b1;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000; 
+                alu_op_select <= 4'b0111; 
                 branch <= 1'b1;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
@@ -340,7 +340,7 @@ module control_unit
                 alu_pc_select <= 1'b1;
                 alu_mux1_select <= 1'b1;
                 alu_mux2_select <= 2'b00;
-                alu_op_select <= 3'b000;
+                alu_op_select <= 4'b0110;
                 branch <= 1'b1; 
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
@@ -353,7 +353,7 @@ module control_unit
                         alu_pc_select <= 1'b1;
                         alu_mux1_select <= 1'b0;
                         alu_mux2_select <= 2'b00;
-                        alu_op_select <= 3'b000; 
+                        alu_op_select <= 4'b0000; 
                         jump <= 1'b1;
                         w_en_rf <= 1'b1;
                         rf_w_select <= 2'b10;
@@ -362,7 +362,7 @@ module control_unit
                     begin
                         alu_mux1_select <= 1'b0;
                         alu_mux2_select <= 2'b00;
-                        alu_op_select <= 3'b000;
+                        alu_op_select <= 4'b0000;
                         jump <= 1'b1;
                         w_en_rf <= 1'b1;
                         rf_w_select <= 2'b10;
@@ -371,7 +371,7 @@ module control_unit
                     begin
                         alu_mux1_select <= 1'b0;
                         alu_mux2_select <= 2'b00;
-                        alu_op_select <= 3'b000;
+                        alu_op_select <= 4'b0000;
                         w_en_rf <= 1'b1;
                         rf_w_select <= 2'b00;
                     end
@@ -380,18 +380,22 @@ module control_unit
                         alu_pc_select <= 1'b1;
                         alu_mux1_select <= 1'b0;
                         alu_mux2_select <= 2'b00;
-                        alu_op_select <= 3'b000;
+                        alu_op_select <= 4'b0000;
                         w_en_rf <= 1'b1;
                         rf_w_select <= 2'b00;
                     end
                     default:
                     begin
+                        alu_mux1_select <= 1'b0;
+                        alu_mux2_select <= 2'b00;
+                        alu_op_select <= 4'b0000;
+                        w_en_rf <= 1'b0;
+                        rf_w_select <= 2'b00;
                         $error("ERROR: Invalid instruction!");
                     end
                 endcase
             end
-        endcase
-        
+        endcase   
     end
     
 

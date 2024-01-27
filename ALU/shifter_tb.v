@@ -1,6 +1,6 @@
 // Testbench for the shifter of the ALU
 // Created:     2024-01-18
-// Modified:    2024-01-18
+// Modified:    2024-01-27
 // Author:      Kagan Dikmen
 
 `include "shifter.v"
@@ -14,7 +14,7 @@ module shifter_tb
     );
 
     reg [OPD_LENGTH-1:0] opd1_t, opd2_t;
-    reg [2:0] alu_op_select_t;
+    reg [3:0] alu_op_select_t;
     wire [OPD_LENGTH-1:0] shifter_result_t;
 
     shifter #(.OPD_LENGTH(OPD_LENGTH)) shifter_ut (
@@ -31,7 +31,7 @@ module shifter_tb
         #5;
         opd1_t <= 8'b0;
         opd2_t <= 8'b0;
-        alu_op_select_t <= 3'b000;      // invalid op. for shifter
+        alu_op_select_t <= 4'b0000;      // invalid op. for shifter
 
 
         // opd2 positive
@@ -39,17 +39,17 @@ module shifter_tb
         #5;
         opd1_t <= 8'h0f;
         opd2_t <= 8'h03;
-        alu_op_select_t <= 3'b011;      // SLL/SLLI
+        alu_op_select_t <= 4'b0011;      // SLL/SLLI
 
         #5;
         opd1_t <= 8'hf0;
         opd2_t <= 8'h03;
-        alu_op_select_t <= 3'b001;      // SRL/SRLI
+        alu_op_select_t <= 4'b0001;      // SRL/SRLI
 
         #5;
         opd1_t <= 8'he0;
         opd2_t <= 8'h03;
-        alu_op_select_t <= 3'b111;      // SRA/SRAI
+        alu_op_select_t <= 4'b0111;      // SRA/SRAI
 
 
         // opd2 = 0
@@ -57,17 +57,17 @@ module shifter_tb
         #5;
         opd1_t <= 8'h0f;
         opd2_t <= 8'h00;
-        alu_op_select_t <= 3'b011;      // SLL/SLLI
+        alu_op_select_t <= 4'b0011;      // SLL/SLLI
 
         #5;
         opd1_t <= 8'hf0;
         opd2_t <= 8'h00;
-        alu_op_select_t <= 3'b001;      // SRL/SRLI
+        alu_op_select_t <= 4'b0001;      // SRL/SRLI
 
         #5;
         opd1_t <= 8'he0;
         opd2_t <= 8'h00;
-        alu_op_select_t <= 3'b111;      // SRA/SRAI
+        alu_op_select_t <= 4'b0111;      // SRA/SRAI
 
 
         // Testing complete
@@ -75,7 +75,7 @@ module shifter_tb
         #5;
         opd1_t <= 8'b0;
         opd2_t <= 8'b0;
-        alu_op_select_t <= 3'b000;      // invalid op. for shifter
+        alu_op_select_t <= 4'b0000;      // invalid op. for shifter
 
     end 
 

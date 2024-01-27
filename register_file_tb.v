@@ -1,6 +1,6 @@
 // Testbench for the register file of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-20
+// Modified:    2024-01-27
 // Author:      Kagan Dikmen
 
 `include "register_file.v"
@@ -89,6 +89,20 @@ module register_file_tb
         #5;
         rd_addr_t <= 'd9;
         rd_write_data_t <= 'd27;
+
+        #5;
+        w_en_t <= 1'b0;
+
+        // testing writing to x0
+
+        #5;
+        w_en_t <= 1'b1;
+        rd_addr_t <= 'd0;
+        rd_write_data_t <= 'd3;
+
+        #5;
+        rd_addr_t <= 'd10;
+        rd_write_data_t <= 'd30;
 
         #5;
         w_en_t <= 1'b0;
