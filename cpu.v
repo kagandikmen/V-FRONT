@@ -3,15 +3,15 @@
 // Modified:    2024-01-28 (status: working fine)
 // Author:      Kagan Dikmen
 
-`include "ALU/alu.v"
-`include "control_unit.v"
-`include "data_memory.v"
-`include "immediate_generator.v"
-`include "instruction_decoder.v"
+`include "cpu_components/ALU/alu.v"
+`include "cpu_components/control_unit.v"
+`include "cpu_components/data_memory.v"
+`include "cpu_components/immediate_generator.v"
+`include "cpu_components/instruction_decoder.v"
 `include "common_components/mux.v"
-`include "pc_counter.v"
-`include "program_memory.v"
-`include "register_file.v"
+`include "cpu_components/pc_counter.v"
+`include "cpu_components/program_memory.v"
+`include "cpu_components/register_file.v"
 
 module cpu 
     #(

@@ -15,7 +15,7 @@ module instruction_decoder_tb
     )(
     );
 
-    `include "common_library.vh"
+    `include "../common_library.vh"
 
     reg [31:0] instr_t;
     reg [PC_WIDTH-1:0] pc_t;

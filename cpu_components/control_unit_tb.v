@@ -34,7 +34,7 @@ module control_unit_tb
                         .jump(jump)
                     );
 
-    `include "common_library.vh"
+    `include "../common_library.vh"
 
     initial
     begin

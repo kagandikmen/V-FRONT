@@ -11,8 +11,8 @@ module immediate_generator_tb
     (
     );
 
-    `include "common_library.vh"
-    `include "instr_generator.vh"
+    `include "../common_library.vh"
+    `include "../instr_generator.vh"
 
     reg [31:0] instr;
     wire [31:0] imm;

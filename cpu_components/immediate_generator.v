@@ -9,7 +9,7 @@ module immediate_generator
         output reg [31:0] imm
     );
 
-    `include "common_library.vh"
+    `include "../common_library.vh"
 
     wire [6:0] opcode;
 

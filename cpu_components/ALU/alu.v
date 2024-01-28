@@ -3,10 +3,10 @@
 // Modified:    2024-01-28 (last status: working fine)
 // Author:      Kagan Dikmen
 
-`include "../common_components/adder.v"
+`include "../../common_components/adder.v"
 `include "comparison_unit.v"
 `include "logic_unit.v"
-`include "../common_components/mux.v"
+`include "../../common_components/mux.v"
 `include "shifter.v"
 
 module alu

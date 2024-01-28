@@ -35,7 +35,7 @@ module control_unit
     output reg jump
     );
 
-    `include "common_library.vh"
+    `include "../common_library.vh"
 
     wire [16:0] instr_compressed;
 

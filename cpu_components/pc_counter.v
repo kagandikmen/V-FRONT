@@ -1,6 +1,6 @@
 // PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-27 (status: working fine)
+// Modified:    2024-01-28 (status: working fine)
 // Author:      Kagan Dikmen
 
 module pc_counter
@@ -19,7 +19,7 @@ module pc_counter
     output reg [PC_WIDTH-1:0] next_pc
     );
 
-    `include "common_library.vh"
+    `include "../common_library.vh"
 
     always @(posedge clk)
     begin

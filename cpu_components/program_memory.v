@@ -17,8 +17,8 @@ module program_memory
     output reg [OPD_WIDTH-1:0] pc
     );
 
-    `include "common_library.vh"
-    `include "instr_generator.vh"
+    `include "../common_library.vh"
+    `include "../instr_generator.vh"
 
     integer i;
 
@@ -59,8 +59,8 @@ module program_memory
     localparam testinstr_23 = {7'b0, 5'd5, 5'd2, FUNCT3_SH, 5'd12, S_OPCODE};           // SH x5 12(x2)
     localparam testinstr_24 = {7'b0, 5'd5, 5'd2, FUNCT3_SW, 5'd12, S_OPCODE};           // SW x5 12(x2)
     localparam testinstr_25 = {12'd1, 5'd2, FUNCT3_ADDI, 5'd2, I_OPCODE};               // ADDI x2 x2 1     // to test HALFWORD/WORD access (should throw an error if addr%2!=0 for HW, or addr%4!=0 for W)
-    localparam testinstr_50 = jal_instr('d3, 20'b11111111111111011000);                 // JAL x3 -40
-    localparam testinstr_99 = 32'b0;                                                    // Invalid Operation
+    localparam testinstr_26 = jal_instr('d3, 20'b11111111111111011000);                 // JAL x3 -40
+    localparam testinstr_27 = 32'b0;                                                    // Invalid Operation
 
     always @(posedge clk)
     begin
@@ -224,16 +224,16 @@ module program_memory
             pmem[199] <= testinstr_25[31:24];
 
             // JAL x3 -40
-            pmem[200] <= testinstr_50[7:0];
-            pmem[201] <= testinstr_50[15:8];
-            pmem[202] <= testinstr_50[23:16];
-            pmem[203] <= testinstr_50[31:24];
+            pmem[200] <= testinstr_26[7:0];
+            pmem[201] <= testinstr_26[15:8];
+            pmem[202] <= testinstr_26[23:16];
+            pmem[203] <= testinstr_26[31:24];
 
             // Invalid Operation
-            pmem[204] <= testinstr_99[7:0];
-            pmem[205] <= testinstr_99[15:8];
-            pmem[206] <= testinstr_99[23:16];
-            pmem[207] <= testinstr_99[31:24];
+            pmem[204] <= testinstr_27[7:0];
+            pmem[205] <= testinstr_27[15:8];
+            pmem[206] <= testinstr_27[23:16];
+            pmem[207] <= testinstr_27[31:24];
              
         end
     end
