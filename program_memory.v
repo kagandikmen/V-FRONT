@@ -1,6 +1,6 @@
 // Program memory of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-27 (status: working fine)
+// Modified:    2024-01-28 (status: working fine)
 // Author:      Kagan Dikmen
 
 module program_memory 
@@ -24,11 +24,16 @@ module program_memory
 
     reg [7:0] pmem [2**PC_WIDTH-1:0];
 
-    localparam testinstr_1 = {7'b0, 5'd4, 5'd3, 3'b0, 5'd2, R_OPCODE};                  // ADD x2, x3, x4
-    localparam testinstr_2 = {7'b0, 5'd5, 5'd3, 3'b0, 5'd2, R_OPCODE};                  // ADD x2, x3, x5
-    localparam testinstr_3 = {12'd4, 5'd3, 3'b0, 5'd2, I_OPCODE};                       // ADDI x2, x3, 4
-    localparam testinstr_4 = {12'd8, 5'd4, FUNCT3_LW, 5'd3, LOAD_OPCODE};               // LW x3 8(x4)
-    localparam testinstr_5 = {7'b0, 5'd3, 5'd4, FUNCT3_SW, 5'd12, S_OPCODE};            // SW x4 12(x3)
+    // localparam testinstr_1 = {7'b0, 5'd4, 5'd3, 3'b0, 5'd2, R_OPCODE};                  
+    localparam testinstr_1 = r_instr(FUNCT3_ADD, FUNCT7_ADD, 5'd2, 5'd3, 5'd4);         // ADD x2, x3, x4
+    // localparam testinstr_2 = {7'b0, 5'd5, 5'd3, 3'b0, 5'd2, R_OPCODE};                  
+    localparam testinstr_2 = r_instr(FUNCT3_ADD, FUNCT7_ADD, 5'd2, 5'd3, 5'd5);         // ADD x2, x3, x5
+    // localparam testinstr_3 = {12'd4, 5'd3, 3'b0, 5'd2, I_OPCODE};                       
+    localparam testinstr_3 = i_instr(FUNCT3_ADDI, 5'd2, 5'd3, 12'd4);                   // ADDI x2, x3, 4
+    // localparam testinstr_4 = {12'd8, 5'd4, FUNCT3_LW, 5'd3, LOAD_OPCODE};               
+    localparam testinstr_4 = load_instr(FUNCT3_LW, 5'd3, 12'd8, 5'd4);                  // LW x3 8(x4)
+    // localparam testinstr_5 = {7'b0, 5'd4, 5'd3, FUNCT3_SW, 5'd12, S_OPCODE};         
+    localparam testinstr_5 = s_instr(FUNCT3_SW, 5'd4, 12'd12, 5'd3);                    // SW x4 12(x3)
     //localparam testinstr_6 = {7'b0, 5'd4, 5'd3, FUNCT3_BGE, 5'b01100, B_OPCODE};   
     localparam testinstr_6 = b_instr(FUNCT3_BGE, 'd3, 'd4, 'd12);                       // BGE x3 x4 12
     // localparam testinstr_7 = {1'b0, 10'd40, 1'b0, 8'b0, 5'd3, JAL_OPCODE};              

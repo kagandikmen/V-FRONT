@@ -1,6 +1,6 @@
 // Instruction decoder of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-27 (last status: working fine)
+// Modified:    2024-01-28 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module instruction_decoder
@@ -82,7 +82,7 @@ module instruction_decoder
                 imm = {20'b0, instr[31:25], instr[11:7]};
                 rs1_addr = rs1;
                 rs2_addr = rs2;
-                rd_addr = rs1;
+                rd_addr = 'b0;
                 opd1 = rs1_data;
                 opd2 = imm;
                 opd3 = rs2_data;

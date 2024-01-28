@@ -4,7 +4,7 @@ This is a project in which I am rewriting a group assignment I contributed to fo
 
 ## To-Do
 
-- instr_generator.v should be expanded to cover all types of instructions
+- An immediate generator can be implemented (it's done currently inside the instruction decoder)
 - There are some places where the code is only behavioural
 
 ## Contributing
