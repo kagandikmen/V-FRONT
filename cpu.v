@@ -1,11 +1,12 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2024-01-27 (status: working fine)
+// Modified:    2024-01-28 (status: working fine)
 // Author:      Kagan Dikmen
 
 `include "ALU/alu.v"
 `include "control_unit.v"
 `include "data_memory.v"
+`include "immediate_generator.v"
 `include "instruction_decoder.v"
 `include "common_components/mux.v"
 `include "pc_counter.v"
@@ -22,42 +23,61 @@ module cpu
     input rst
     );
 
-    wire alu_mux1_select, alu_pc_select, clk, w_en_rf, w_en_pmem, wr_en_dmem, branch, jump;
+    wire alu_imm_select, alu_mux1_select, alu_pc_select, clk, w_en_rf, w_en_pmem, wr_en_dmem, branch, jump;
     wire [1:0] alu_mux2_select, rf_w_select, rw_mode;
     wire [3:0] alu_op_select;
     wire [31:0] instr;
-    wire [PC_WIDTH-1:0] next_pc, pc;
-    wire [OP_LENGTH-1:0] alu_result, comp_result, opd1, opd2, opd3, opd4, pc_plus4;
+    wire [PC_WIDTH-1:0] next_pc;
+    wire [OP_LENGTH-1:0] alu_result, comp_result, opd1, opd2, pc_plus4, pc;
+    wire [OP_LENGTH-1:0] alu_opd1, alu_opd2;
+    wire [OP_LENGTH-1:0] imm;
     wire [DMEM_DATA_WIDTH-1:0] r_data;
     wire [4:0] rs1_addr, rs2_addr, rd_addr;
     wire [31:0] rs1_data, rs2_data, rd_write_data;
 
 
-    alu #(.OPERAND_LENGTH(OP_LENGTH), .PC_LENGTH(PC_WIDTH)) 
+    alu #(.OPERAND_LENGTH(OP_LENGTH)) 
         alu_cpu
         (
-            .opd1(opd1),
-            .opd2(opd2),
-            .opd3(opd3),
-            .opd4(opd4),
-            .pc(pc),
+            .opd1(alu_opd1),
+            .opd2(alu_opd2),
+            .opd3(opd1),
+            .opd4(opd2),
             .alu_mux1_select(alu_mux1_select),
             .alu_mux2_select(alu_mux2_select),
             .alu_op_select(alu_op_select),
-            .alu_pc_select(alu_pc_select),
             .alu_result(alu_result),
             .comp_result(comp_result)
+        );
+
+    two_input_mux #(.INPUT_LENGTH(32))
+        alu_opd1_mux
+        (
+            .a(opd1),
+            .b(pc),
+            .sel(alu_pc_select),
+            .z(alu_opd1)
+        );
+
+    two_input_mux #(.INPUT_LENGTH(32))
+        alu_opd2_mux
+        (
+            .a(opd2),
+            .b(imm),
+            .sel(alu_imm_select),
+            .z(alu_opd2)
         );
 
     control_unit control_unit_cpu
         (
             .instr(instr),
             .clk(clk),
+            .alu_imm_select(alu_imm_select),
+            .alu_pc_select(alu_pc_select),
             .rf_w_select(rf_w_select),
             .alu_mux1_select(alu_mux1_select),
             .alu_mux2_select(alu_mux2_select),
             .alu_op_select(alu_op_select),
-            .alu_pc_select(alu_pc_select),
             .w_en_rf(w_en_rf),
             .w_en_pmem(w_en_pmem),
             .wr_en_dmem(wr_en_dmem),
@@ -74,8 +94,14 @@ module cpu
             .wr_en(wr_en_dmem),
             .rw_mode(rw_mode),
             .addr(alu_result),
-            .w_data(opd3),
+            .w_data(opd2),
             .r_data(r_data)
+        );
+
+    immediate_generator immediate_generator_cpu
+        (
+            .instr(instr),
+            .imm(imm)
         );
 
     instruction_decoder #(.OPD_LENGTH(OP_LENGTH), .REG_WIDTH(32)) 
@@ -88,9 +114,7 @@ module cpu
             .rs1_data(rs1_data),
             .rs2_data(rs2_data),
             .opd1(opd1),
-            .opd2(opd2),
-            .opd3(opd3),
-            .opd4(opd4)
+            .opd2(opd2)
         );
 
     four_input_mux #(.INPUT_LENGTH(OP_LENGTH)) 

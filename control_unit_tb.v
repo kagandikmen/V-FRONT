@@ -1,6 +1,6 @@
 // Testbench for the control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-27
+// Modified:    2024-01-28
 // Author:      Kagan Dikmen
 
 `include "control_unit.v"
@@ -12,7 +12,7 @@ module control_unit_tb
     );
 
     reg [31:0] instr;
-    wire clk, alu_mux1_select, alu_pc_select, w_en_rf, w_en_pmem, wr_en_dmem, branch, jump;
+    wire clk, alu_mux1_select, alu_imm_select, alu_pc_select, w_en_rf, w_en_pmem, wr_en_dmem, branch, jump;
     wire [1:0] alu_mux2_select, rf_w_select, rw_mode;
     wire [3:0] alu_op_select;
 
@@ -20,11 +20,12 @@ module control_unit_tb
                     (
                         .instr(instr),
                         .clk(clk),
+                        .alu_imm_select(alu_imm_select),
+                        .alu_pc_select(alu_pc_select),
                         .rf_w_select(rf_w_select),
                         .alu_mux1_select(alu_mux1_select),
                         .alu_mux2_select(alu_mux2_select),
                         .alu_op_select(alu_op_select),
-                        .alu_pc_select(alu_pc_select),
                         .w_en_rf(w_en_rf),
                         .w_en_pmem(w_en_pmem),
                         .wr_en_dmem(wr_en_dmem),

@@ -20,33 +20,25 @@ module instruction_decoder
 
     // ALU interface
     output reg [OPD_LENGTH-1:0] opd1,
-    output reg [OPD_LENGTH-1:0] opd2,
-    output reg [OPD_LENGTH-1:0] opd3,       // for branch operations
-    output reg [OPD_LENGTH-1:0] opd4        // for branch operations
+    output reg [OPD_LENGTH-1:0] opd2
     );
 
     `include "common_library.vh"
 
-    reg [6:0] opcode;
-    reg [4:0] rd, rs1, rs2;
-    reg [2:0] funct3;
-    reg [6:0] funct7;
-    reg [31:0] imm;
-
     always @(*)
-    begin
-        
-        opcode = instr [6:0];
-        rd = instr [11:7];
-        funct3 = instr [14:12];
-        rs1 = instr [19:15];
-        rs2 = instr [24:20];
-        funct7 = instr [31:25];
+    begin        
 
+        rd_addr = instr [11:7];
+        rs1_addr = instr [19:15];
+        rs2_addr = instr [24:20];
+
+        opd1 = rs1_data;
+        opd2 = rs2_data;
+
+        /*  AN OLD IMPLEMENTATION
         case (opcode)
             R_OPCODE:
             begin
-                imm = 32'b0;
                 rs1_addr = rs1;
                 rs2_addr = rs2;
                 rd_addr = rd;
@@ -57,7 +49,6 @@ module instruction_decoder
             end
             I_OPCODE:
             begin
-                imm = {20'b0, instr[31:20]};
                 rs1_addr = rs1;
                 rs2_addr = 5'b0;
                 rd_addr = rd;
@@ -68,7 +59,6 @@ module instruction_decoder
             end
             LOAD_OPCODE:
             begin
-                imm = {20'b0, instr[31:20]};
                 rs1_addr = rs1;
                 rs2_addr = 5'b0;
                 rd_addr = rd;
@@ -79,7 +69,6 @@ module instruction_decoder
             end
             S_OPCODE:
             begin
-                imm = {20'b0, instr[31:25], instr[11:7]};
                 rs1_addr = rs1;
                 rs2_addr = rs2;
                 rd_addr = 'b0;
@@ -90,7 +79,6 @@ module instruction_decoder
             end
             B_OPCODE:
             begin
-                imm = {19'b0, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0};
                 rs1_addr = rs1;
                 rs2_addr = rs2;
                 rd_addr = 5'b0;
@@ -100,9 +88,7 @@ module instruction_decoder
                 opd4 = rs2_data;
             end
             JAL_OPCODE:
-            begin
-                imm = {instr[31], instr[19:12], instr[20], instr[30:21], 1'b0};
-                
+            begin                
                 rs1_addr = 5'b0;
                 rs2_addr = 5'b0;
                 rd_addr = rd;
@@ -113,7 +99,6 @@ module instruction_decoder
             end
             JALR_OPCODE:
             begin
-                imm = {20'b0, instr[31:20]};
                 rs1_addr = rs1;
                 rs2_addr = 5'b0;
                 rd_addr = rd;
@@ -124,7 +109,6 @@ module instruction_decoder
             end
             LUI_OPCODE:
             begin
-                imm = {instr[31:12], 12'b0};
                 rs1_addr = 5'b0;
                 rs2_addr = 5'b0;
                 rd_addr = rd;
@@ -135,7 +119,6 @@ module instruction_decoder
             end
             AUIPC_OPCODE:
             begin
-                imm = {instr[31:12], 12'b0};
                 rs1_addr = 5'b0;
                 rs2_addr = 5'b0;
                 rd_addr = rd;
@@ -146,7 +129,6 @@ module instruction_decoder
             end
             default: 
             begin
-                imm = 32'b0;
                 rs1_addr = 5'b0;
                 rs2_addr = 5'b0;
                 rd_addr = 5'b0;
@@ -157,7 +139,7 @@ module instruction_decoder
                 $error("ERROR: invalid opcode given to the instruction decoder! (instruction_decoder.v line 158)");
             end 
         endcase
-
+        */
     end
 
 endmodule

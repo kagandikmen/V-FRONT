@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-27 (status: working fine)
+// Modified:    2024-01-28 (status: working fine)
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -9,13 +9,16 @@ module control_unit
 
     output reg clk = 1'b0,
 
+    // multiplexer select signals
+    output reg alu_imm_select,
+    output reg alu_pc_select,
     output reg [1:0] rf_w_select,
 
     // to ALU
     output reg alu_mux1_select,
     output reg [1:0] alu_mux2_select,
     output reg [3:0] alu_op_select,
-    output reg alu_pc_select,
+    
 
     // to register file
     output reg w_en_rf,
@@ -44,17 +47,19 @@ module control_unit
     always @(instr)
     begin
 
-        alu_pc_select <= 1'b0;  // don't select PC at ALU
+        alu_imm_select <= 1'b1;     // choose the immediate
+        alu_pc_select <= 1'b0;      // don't select PC at ALU
         branch <= 1'b0;
         jump <= 1'b0;
-        rw_mode <= 2'b00;       // WORD
-        wr_en_dmem <= 1'b0;     // no write to DMEM
+        rw_mode <= 2'b00;           // WORD
+        wr_en_dmem <= 1'b0;         // no write to DMEM
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
             begin
                 if (instr[30] == 1'b0)      // AND
                 begin
+                    alu_imm_select <= 1'b0;
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b00; 
                     alu_op_select <= 4'b0000;
@@ -63,6 +68,7 @@ module control_unit
                 end
                 else                        // SUB
                 begin
+                    alu_imm_select <= 1'b0;
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b00; 
                     alu_op_select <= 4'b1000;
@@ -72,6 +78,7 @@ module control_unit
             end
             {FUNCT3_SLL, R_OPCODE}: // SLL
             begin
+                alu_imm_select <= 1'b0;
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b10;
                 alu_op_select <= 4'b0011;
@@ -80,6 +87,7 @@ module control_unit
             end
             {FUNCT3_SLT, R_OPCODE}: // SLT
             begin
+                alu_imm_select <= 1'b0;
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b11;
                 alu_op_select <= 4'b0011;
@@ -88,6 +96,7 @@ module control_unit
             end
             {FUNCT3_SLTU, R_OPCODE}: // SLTU
             begin
+                alu_imm_select <= 1'b0;
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b11;
                 alu_op_select <= 4'b0111;
@@ -96,6 +105,7 @@ module control_unit
             end
             {FUNCT3_XOR, R_OPCODE}: // XOR
             begin
+                alu_imm_select <= 1'b0;
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01;
                 alu_op_select <= 4'b0110;
@@ -106,6 +116,7 @@ module control_unit
             begin
                 if (instr[31] == 1'b0)  // SRL
                 begin
+                    alu_imm_select <= 1'b0;
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b10; 
                     alu_op_select <= 4'b0001; 
@@ -114,6 +125,7 @@ module control_unit
                 end
                 else                    // SRA
                 begin
+                    alu_imm_select <= 1'b0;
                     alu_mux1_select <= 1'b0;
                     alu_mux2_select <= 2'b10;
                     alu_op_select <= 4'b0111;
@@ -123,6 +135,7 @@ module control_unit
             end
             {FUNCT3_OR, R_OPCODE}: // OR
             begin
+                alu_imm_select <= 1'b0;
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01;
                 alu_op_select <= 4'b0110;
@@ -131,6 +144,7 @@ module control_unit
             end
             {FUNCT3_AND, R_OPCODE}: // AND
             begin
+                alu_imm_select <= 1'b0;
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b01; 
                 alu_op_select <= 4'b0111; 

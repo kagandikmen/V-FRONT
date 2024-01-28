@@ -1,6 +1,6 @@
 // ALU of the CPU
 // Created:     2024-01-17
-// Modified:    2024-01-27 (last status: working fine)
+// Modified:    2024-01-28 (last status: working fine)
 // Author:      Kagan Dikmen
 
 `include "../common_components/adder.v"
@@ -11,26 +11,19 @@
 
 module alu
     #(
-    parameter OPERAND_LENGTH = 32,
-    parameter PC_LENGTH = 12
+    parameter OPERAND_LENGTH = 32
     )(
     input [OPERAND_LENGTH-1:0] opd1,
     input [OPERAND_LENGTH-1:0] opd2,
     input [OPERAND_LENGTH-1:0] opd3,
     input [OPERAND_LENGTH-1:0] opd4,
-    input [PC_LENGTH-1:0] pc,
     input alu_mux1_select,
     input [1:0] alu_mux2_select,
     input [3:0] alu_op_select,
-    input alu_pc_select,
     
     output [OPERAND_LENGTH-1:0] alu_result,
     output [OPERAND_LENGTH-1:0] comp_result   // zero-extended
     );
-
-    wire [OPERAND_LENGTH-1:0] pc_extended;
-
-    assign pc_extended = pc;
 
     wire [OPERAND_LENGTH-1:0] adder_input1;
     wire [OPERAND_LENGTH-1:0] adder_result;
@@ -45,7 +38,7 @@ module alu
     adder #(.OPERAND_LENGTH(OPERAND_LENGTH)) 
                     adder_in_alu
                     (
-                        .opd1(adder_input1),
+                        .opd1(opd1),
                         .opd2(opd2),
                         .alu_op_select(alu_op_select),
                         .adder_result(adder_result)
@@ -78,14 +71,6 @@ module alu
                         .shifter_result(shifter_result)
                     );
 
-    two_input_mux #(.INPUT_LENGTH(OPERAND_LENGTH)) 
-                    pc_sel_mux
-                    (
-                        .a(opd1),
-                        .b(pc_extended),
-                        .sel(alu_pc_select),
-                        .z(adder_input1)
-                    );
 
     two_input_mux #(.INPUT_LENGTH(OPERAND_LENGTH)) 
                     cu_mux1
