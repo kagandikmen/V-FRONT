@@ -1,6 +1,6 @@
 // Data memory of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-28 (status: working fine)
+// Modified:    2024-08-12 (status: working fine)
 // Author:      Kagan Dikmen
 
 module data_memory
@@ -43,7 +43,6 @@ module data_memory
                     else
                     begin 
                         r_data <= 32'b0;
-                        $error("ERROR: addr value must be divisible by 2 for halfword read access! (Time: %t)", $realtime/1000);
                     end
                 end
                 WORD:
@@ -55,13 +54,11 @@ module data_memory
                     else
                     begin 
                         r_data <= 32'b0;
-                        $error("ERROR: addr value must be divisible by 4 for word read access! (Time: %t)", $realtime/1000);
                     end
                 end
                 default:
                 begin
                     r_data <= 32'b0;
-                    $error("ERROR: Invalid rw_mode value at data memory!");
                 end
             endcase
         end
@@ -120,7 +117,6 @@ module data_memory
                     end
                     else
                     begin 
-                        $error("ERROR: addr value must be divisible by 2 for halfword write access! (Time: %t)", $realtime/1000);
                     end
                 end
                 WORD:
@@ -134,12 +130,10 @@ module data_memory
                     end
                     else
                     begin 
-                        $error("ERROR: addr value must be divisible by 4 for word write access! (Time: %t)", $realtime/1000);
                     end
                 end
                 default:
                 begin
-                    $error("ERROR: Invalid rw_mode value at data memory!");
                 end
             endcase
         end

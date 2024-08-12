@@ -1,13 +1,17 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2024-01-28 (status: working fine)
+// Modified:    2024-08-12 (status: working fine)
 // Author:      Kagan Dikmen
 
 `include "cpu_components/ALU/alu.v"
+`include "cpu_components/clock_inverter.v"
 `include "cpu_components/control_unit.v"
 `include "cpu_components/data_memory.v"
 `include "cpu_components/immediate_generator.v"
 `include "cpu_components/instruction_decoder.v"
+`include "common_components/bram.v"
+`include "common_components/dff.v"
+`include "common_components/extender_register.v"
 `include "common_components/mux.v"
 `include "cpu_components/pc_counter.v"
 `include "cpu_components/program_memory.v"
@@ -20,10 +24,13 @@ module cpu
     parameter OP_LENGTH = 32,
     parameter PC_WIDTH = 12
     )(
-    input rst
+    input rst,
+    input sysclk,
+    output led
     );
 
-    wire alu_imm_select, alu_mux1_select, alu_pc_select, clk, w_en_rf, w_en_pmem, wr_en_dmem, branch, jump;
+    wire alu_imm_select, alu_mux1_select, alu_pc_select, w_en_rf, wr_en_dmem, branch, jump;
+    wire pcctr_clk;
     wire [1:0] alu_mux2_select, rf_w_select, rw_mode;
     wire [3:0] alu_op_select;
     wire [31:0] instr;
@@ -68,10 +75,15 @@ module cpu
             .z(alu_opd2)
         );
 
+    clock_inverter clock_inverter_cpu
+        (
+            .clk(sysclk),
+            .clk_inv(pcctr_clk)
+        );
+
     control_unit control_unit_cpu
         (
             .instr(instr),
-            .clk(clk),
             .alu_imm_select(alu_imm_select),
             .alu_pc_select(alu_pc_select),
             .rf_w_select(rf_w_select),
@@ -79,25 +91,39 @@ module cpu
             .alu_mux2_select(alu_mux2_select),
             .alu_op_select(alu_op_select),
             .w_en_rf(w_en_rf),
-            .w_en_pmem(w_en_pmem),
             .wr_en_dmem(wr_en_dmem),
             .rw_mode(rw_mode),
             .branch(branch),
             .jump(jump)
         );
-
+    
+    bram data_memory_cpu
+        (
+            .wr_addr(alu_result[11:0]),
+            .rd_addr(alu_result[11:0]),
+            .ram_in(opd2),
+            .clk(sysclk),
+            .byte_w_en(rw_mode),
+            .r_en(1'b1),
+            .out_res(),
+            .out_r_en(),
+            .r_out(r_data)
+        );
+    
+    /*
     data_memory #(.DMEM_DATA_WIDTH(DMEM_DATA_WIDTH), .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH)) 
         data_memory_cpu
         (
-            .clk(clk),
+            .clk(sysclk),
             .rst(rst),
             .wr_en(wr_en_dmem),
             .rw_mode(rw_mode),
-            .addr(alu_result),
+            .addr(alu_result[11:0]),
             .w_data(opd2),
             .r_data(r_data)
         );
-
+    */
+    
     immediate_generator immediate_generator_cpu
         (
             .instr(instr),
@@ -131,7 +157,7 @@ module cpu
     pc_counter #(.OPD_WIDTH(OP_LENGTH), .PC_WIDTH(PC_WIDTH)) 
         pc_counter_cpu
         (
-            .clk(clk),
+            .clk(pcctr_clk),
             .rst(rst),
             .branch(branch),
             .jump(jump),
@@ -140,22 +166,45 @@ module cpu
             .pc_plus4(pc_plus4),
             .next_pc(next_pc)
         );
-
+    
+    
+    bram #(.INIT_FILE("./dummy_instrs.txt")) program_memory_cpu
+        (
+            .wr_addr(),
+            .rd_addr(next_pc),
+            .ram_in(),
+            .clk(sysclk),
+            .byte_w_en(),
+            .r_en(1'b1),
+            .out_res(),
+            .out_r_en(),
+            .r_out(instr)
+        );
+                        
+    extender_register #(.INPUT_WIDTH(PC_WIDTH), .OUTPUT_WIDTH(OP_LENGTH))
+        extender_register_cpu
+        (
+            .clk(sysclk),
+            .in(next_pc),
+            .out(pc)
+        );
+    
+    /*
     program_memory #(.PC_WIDTH(PC_WIDTH)) 
         program_memory_cpu
         (
-            .clk(clk),
+            .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_pmem),
             .addr(next_pc),
             .data(instr),
             .pc(pc)
         );
-
+    */
+    
     register_file #(.RF_ADDR_LEN(5), .RF_DATA_LEN(32)) 
         register_file_cpu
         (
-            .clk(clk),
+            .clk(sysclk),
             .rst(rst),
             .w_en(w_en_rf),
             .rs1_addr(rs1_addr),
@@ -165,6 +214,7 @@ module cpu
             .rs2_data(rs2_data),
             .rd_write_data(rd_write_data)
         );
-
+    
+    assign led = wr_en_dmem;
 
 endmodule

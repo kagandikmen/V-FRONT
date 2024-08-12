@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-20
+// Modified:    2024-08-12
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -76,9 +76,9 @@ localparam DMEM_WIDTH        = 8;
 localparam DMEM_DEPTH        = 4096;
 localparam DMEM_ADDR_LENGTH  = 12;       // log2(MEM_DEPTH) = 12
 
-localparam WORD         = 2'b00;
-localparam HALFWORD     = 2'b01;
-localparam BYTE         = 2'b10;
+localparam WORD         = 4'b1111;
+localparam HALFWORD     = 4'b1100;
+localparam BYTE         = 4'b1000;
 
 
 // PMEM

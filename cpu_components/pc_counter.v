@@ -1,6 +1,6 @@
 // PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-28 (status: working fine)
+// Modified:    2024-08-12 (status: working fine)
 // Author:      Kagan Dikmen
 
 module pc_counter
@@ -28,11 +28,7 @@ module pc_counter
             next_pc <= 'b0;
             pc_plus4 <= 'd4;
         end
-    end
-
-    always @(negedge clk)
-    begin
-        if (rst != 1'b1)
+        else
         begin
             if ((branch == 1'b1 && comp_result == 'b1) || jump == 1'b1)
             begin
