@@ -1,13 +1,11 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-28 (status: working fine)
+// Modified:    2024-08-12 (status: working fine)
 // Author:      Kagan Dikmen
 
 module control_unit
     (
     input [31:0] instr,
-
-    output reg clk = 1'b0,
 
     // multiplexer select signals
     output reg alu_imm_select,
@@ -23,12 +21,9 @@ module control_unit
     // to register file
     output reg w_en_rf,
 
-    // to program memory
-    output w_en_pmem,
-
     // to data memory
     output reg wr_en_dmem,
-    output reg [1:0] rw_mode,
+    output reg [3:0] rw_mode,
 
     // to PC counter
     output reg branch,
@@ -40,18 +35,15 @@ module control_unit
     wire [16:0] instr_compressed;
 
     assign instr_compressed = {instr[14:12], instr[6:0]};
-    assign w_en_pmem = 1'b1;
 
-    always #2 clk = ~clk;
-
-    always @(instr)
+    always @(instr_compressed)
     begin
 
         alu_imm_select <= 1'b1;     // choose the immediate
         alu_pc_select <= 1'b0;      // don't select PC at ALU
         branch <= 1'b0;
         jump <= 1'b0;
-        rw_mode <= 2'b00;           // WORD
+        rw_mode <= WORD;            // WORD
         wr_en_dmem <= 1'b0;         // no write to DMEM
         
         case (instr_compressed)
@@ -233,7 +225,7 @@ module control_unit
                 alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
-                rw_mode <= 2'b10;
+                rw_mode <= BYTE;
             end
             {FUNCT3_LH, LOAD_OPCODE}: // LH
             begin
@@ -242,7 +234,7 @@ module control_unit
                 alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
-                rw_mode <= 2'b01;
+                rw_mode <= HALFWORD;
             end
             {FUNCT3_LW, LOAD_OPCODE}: // LW
             begin
@@ -259,7 +251,7 @@ module control_unit
                 alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
-                rw_mode <= 2'b10;
+                rw_mode <= BYTE;
             end
             {FUNCT3_LHU, LOAD_OPCODE}: // LHU
             begin
@@ -268,7 +260,7 @@ module control_unit
                 alu_op_select <= 4'b0000; 
                 w_en_rf <= 1'b1;
                 rf_w_select <= 2'b01;
-                rw_mode <= 2'b01;
+                rw_mode <= HALFWORD;
             end
             {FUNCT3_SB, S_OPCODE}:  // SB
             begin
@@ -277,7 +269,7 @@ module control_unit
                 alu_op_select <= 4'b0000;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
-                rw_mode <= 2'b10;
+                rw_mode <= BYTE;
                 wr_en_dmem <= 1'b1;
             end
             {FUNCT3_SH, S_OPCODE}:  // SH
@@ -287,7 +279,7 @@ module control_unit
                 alu_op_select <= 4'b0000;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
-                rw_mode <= 2'b01;
+                rw_mode <= HALFWORD;
                 wr_en_dmem <= 1'b1;
             end
             {FUNCT3_SW, S_OPCODE}:  // SW
@@ -405,7 +397,6 @@ module control_unit
                         alu_op_select <= 4'b0000;
                         w_en_rf <= 1'b0;
                         rf_w_select <= 2'b00;
-                        $error("ERROR: Invalid instruction!");
                     end
                 endcase
             end

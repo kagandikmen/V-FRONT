@@ -1,6 +1,6 @@
 // Instruction Word Generator for RISC-V Core Instruction Formats
 // Created:     2024-01-27
-// Modified:    2024-01-28 (status: working fine)
+// Modified:    2024-08-12 (status: working fine)
 // Author:      Kagan Dikmen
 
 // `include "common_library.vh" 
@@ -19,7 +19,6 @@ begin
     if (imm[0] == 1'b1)
     begin
         b_instr = 32'b0;
-        $error("ERROR: Invalid imm: Branch immediate cannot be an odd number!");
     end
     else
     begin
@@ -39,7 +38,6 @@ begin
     if (imm[0] == 1'b1)
     begin
         jal_instr = 32'b0;
-        $error("ERROR: Invalid imm: Jump immediate cannot be an odd number!");
     end
     else
     begin

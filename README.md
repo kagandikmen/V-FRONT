@@ -4,7 +4,7 @@ This is a project in which I am rewriting a group assignment I contributed to fo
 
 ## Status
 
-The project is considered **completed** as of 2024-01-28.
+The data flow instructions are completed and tested for synthesisability. The design can run fine at 40 MHz on a PYNQ-Z1 board. Some control flow instructions are not implemented yet.
 
 ## Contributing
 

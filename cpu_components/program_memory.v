@@ -1,6 +1,6 @@
 // Program memory of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-28 (status: working fine)
+// Modified:    2024-08-12 (status: working fine)
 // Author:      Kagan Dikmen
 
 module program_memory 
@@ -10,7 +10,6 @@ module program_memory
     )(
     input clk,
     input rst,
-    input w_en,
     input [PC_WIDTH-1:0] addr,
 
     output reg [31:0] data,
@@ -22,7 +21,7 @@ module program_memory
 
     integer i;
 
-    reg [7:0] pmem [2**PC_WIDTH-1:0];
+    (* ram_style = "block" *) reg [7:0] pmem [2**PC_WIDTH-1:0];
 
     // localparam testinstr_1 = {7'b0, 5'd4, 5'd3, 3'b0, 5'd2, R_OPCODE};                  
     localparam testinstr_1 = r_instr(FUNCT3_ADD, FUNCT7_ADD, 5'd2, 5'd3, 5'd4);         // ADD x2, x3, x4
@@ -70,7 +69,7 @@ module program_memory
             begin
                 pmem [i] <= 32'b0;
             end
-
+            
             // a little bit of cheating for testing purposes
             
             // ADD x2, x3, x4
@@ -234,7 +233,7 @@ module program_memory
             pmem[205] <= testinstr_27[15:8];
             pmem[206] <= testinstr_27[23:16];
             pmem[207] <= testinstr_27[31:24];
-             
+            
         end
     end
 
