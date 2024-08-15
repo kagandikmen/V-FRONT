@@ -1,6 +1,6 @@
 // Immediate generator of the CPU
 // Created:     2024-01-28
-// Modified:    2024-08-12 (last status: working fine)
+// Modified:    2024-08-15 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module immediate_generator
@@ -9,7 +9,7 @@ module immediate_generator
         output reg [31:0] imm
     );
 
-    `include "../common_library.vh"
+    `include "../lib/common_library.vh"
 
     wire [6:0] opcode;
 

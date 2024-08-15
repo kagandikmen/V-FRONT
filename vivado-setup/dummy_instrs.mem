@@ -1,0 +1,35 @@
+// Dummy instructions for the Vivado setup
+// Created: 2024-08-15
+// Modified: 2024-08-15 (status: working fine)
+// Author: Kagan Dikmen
+
+// You can use these test instructions to test the cpu "out-of-the-shelf"
+// or replace it with your own test.
+
+@0000 00418133  // ADD x2, x3, x4
+@0004 00518133  // ADD x2, x3, x5
+@0008 00418113  // ADDI x2, x3, 4
+@000C 00822183  // LW x3, 8(x4)
+@0010 0041A623  // SW x4, 12(x3)
+@0014 0041D663  // BGE x3, x4, 12
+@0018 050001EF  // JAL x3, 80
+@0068 078201E7  // JALR x3, 120(x4)
+@0084 00002637  // LUI x10, 2
+@0088 00002793  // AUIPC x15, 2
+@008C 00400013  // ADDI x0, x0, 4
+@0090 00300093  // ADDI x1, x0, 3
+@0094 00200113  // ADDI x2, x0, 2
+@0098 00110113  // ADDI x2, x2, 1
+@009C FE20DEE3  // BGE x1, x2, -4
+@00A0 3FC00213  // ADDI x4, x0, 1020
+@00A4 25C00293  // ADDI x5, x0, 604
+@00A8 00411623  // SH x4, 12(x2)
+@00AC 00510623  // SB x5, 12(x2)
+@00B0 F42402B7  // LUI x5, 1000000
+@00B4 FEB28293  // ADDI x5, x5, 4075
+@00B8 00510623  // SB x5, 12(x2)
+@00BC 00511623  // SH x5, 12(x2)
+@00C0 00512623  // SW x5, 12(x2)
+@00C4 00110113  // ADDI x2, x2, 1
+@00C8 FD9FF1EF  // JAL x3, -40
+@00CC 00000000  // Invalid Operation

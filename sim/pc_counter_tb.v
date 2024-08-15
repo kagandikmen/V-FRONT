@@ -1,9 +1,9 @@
 // Testbench for the PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-26
+// Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "pc_counter.v"
+`include "../rtl/pc_counter.v"
 
 `timescale 1ns/1ps
 

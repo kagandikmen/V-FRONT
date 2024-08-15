@@ -1,6 +1,6 @@
 // Instruction decoder of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-28 (last status: working fine)
+// Modified:    2024-08-15 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module instruction_decoder
@@ -23,7 +23,7 @@ module instruction_decoder
     output reg [OPD_LENGTH-1:0] opd2
     );
 
-    `include "../common_library.vh"
+    `include "../lib/common_library.vh"
 
     always @(*)
     begin        

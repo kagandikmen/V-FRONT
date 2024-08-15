@@ -1,9 +1,9 @@
 // Testbench for the program memory of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-27
+// Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "program_memory.v"
+`include "../rtl/program_memory.v"
 
 `timescale 1ns/1ps
 

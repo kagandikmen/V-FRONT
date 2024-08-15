@@ -1,6 +1,6 @@
 // Program memory of the CPU
 // Created:     2024-01-20
-// Modified:    2024-08-12 (status: working fine)
+// Modified:    2024-08-15 (status: working fine)
 // Author:      Kagan Dikmen
 
 module program_memory 
@@ -16,8 +16,8 @@ module program_memory
     output reg [OPD_WIDTH-1:0] pc
     );
 
-    `include "../common_library.vh"
-    `include "../instr_generator.vh"
+    `include "../lib/common_library.vh"
+    `include "../lib/instr_generator.vh"
 
     integer i;
 

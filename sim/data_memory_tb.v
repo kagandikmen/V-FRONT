@@ -1,9 +1,9 @@
 // Testbench for the data memory of the CPU
 // Created:     2024-01-25
-// Modified:    2024-01-27
+// Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "data_memory.v"
+`include "../rtl/data_memory.v"
 
 `timescale 1ns/1ps
 

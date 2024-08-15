@@ -1,6 +1,6 @@
 // Register file of the CPU
 // Created:     2024-01-20
-// Modified:    2024-08-12 (last status: working fine)
+// Modified:    2024-08-15 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module register_file
@@ -21,7 +21,7 @@ module register_file
     input [RF_DATA_LEN-1:0] rd_write_data
     );
 
-    `include "../common_library.vh"
+    `include "../lib/common_library.vh"
 
     integer i;
 
