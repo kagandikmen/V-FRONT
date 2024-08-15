@@ -3,19 +3,19 @@
 // Modified:    2024-08-15 (status: working fine)
 // Author:      Kagan Dikmen
 
-`include "./rtl/luftALU/alu.v"
-`include "./rtl/clock_inverter.v"
-`include "./rtl/control_unit.v"
-// `include "./rtl/data_memory.v"
-`include "./rtl/immediate_generator.v"
-`include "./rtl/instruction_decoder.v"
-`include "./rtl/bram.v"
-`include "./rtl/dff.v"
-`include "./rtl/extender_register.v"
-`include "./rtl/mux.v"
-`include "./rtl/pc_counter.v"
-// `include "./rtl/program_memory.v"
-`include "./rtl/register_file.v"
+`include "./luftALU/rtl/alu.v"
+`include "./clock_inverter.v"
+`include "./control_unit.v"
+// `include "./data_memory.v"
+`include "./immediate_generator.v"
+`include "./instruction_decoder.v"
+`include "./bram.v"
+`include "./dff.v"
+`include "./extender_register.v"
+`include "./mux.v"
+`include "./pc_counter.v"
+// `include "./program_memory.v"
+`include "./register_file.v"
 
 module cpu 
     #(
@@ -26,13 +26,13 @@ module cpu
     )(
     input rst,
     input sysclk,
-    output led
+    output wire led     // does not serve any practical purpose other than preventing synthesisers from optimising the whole CPU away
     );
 
     wire alu_imm_select, alu_mux1_select, alu_pc_select, w_en_rf, wr_en_dmem, branch, jump;
     wire pcctr_clk;
-    wire [1:0] alu_mux2_select, rf_w_select, rw_mode;
-    wire [3:0] alu_op_select;
+    wire [1:0] alu_mux2_select, rf_w_select;
+    wire [3:0] alu_op_select, rw_mode;
     wire [31:0] instr;
     wire [PC_WIDTH-1:0] next_pc;
     wire [OP_LENGTH-1:0] alu_result, comp_result, opd1, opd2, pc_plus4, pc;
@@ -168,7 +168,7 @@ module cpu
         );
     
     
-    bram #(.INIT_FILE("./dummy_instrs.txt")) program_memory_cpu
+    bram #(.INIT_FILE("./dummy_instrs.mem")) program_memory_cpu
         (
             .wr_addr(),
             .rd_addr(next_pc),

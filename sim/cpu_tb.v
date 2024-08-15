@@ -3,7 +3,7 @@
 // Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "../cpu.v"
+`include "../rtl/cpu.v"
 
 `timescale 1ns/1ps
 
@@ -11,13 +11,15 @@ module cpu_tb
     (
     );
 
-    reg rst, sysclk_t, led_t;
+    reg rst, sysclk_t;
+    wire led_t;
 
     cpu #(.DMEM_ADDR_WIDTH(12), .DMEM_DATA_WIDTH(32), .OP_LENGTH(32), .PC_WIDTH(12)) 
         cpu_ut 
         (
             .rst(rst),
-            .sysclk(sysclk_t)
+            .sysclk(sysclk_t),
+            .led(led_t)
         );
     
     always #5 sysclk_t = ~sysclk_t;
