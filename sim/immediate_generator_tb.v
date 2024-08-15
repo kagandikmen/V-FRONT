@@ -1,9 +1,9 @@
 // testbench for the immediate generator of the CPU
 // Created:     2024-01-28
-// Modified:    2024-01-28
+// Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "immediate_generator.v"
+`include "../rtl/immediate_generator.v"
 
 `timescale 1ns/1ps
 
@@ -11,8 +11,8 @@ module immediate_generator_tb
     (
     );
 
-    `include "../common_library.vh"
-    `include "../instr_generator.vh"
+    `include "../lib/common_library.vh"
+    `include "../lib/instr_generator.vh"
 
     reg [31:0] instr;
     wire [31:0] imm;

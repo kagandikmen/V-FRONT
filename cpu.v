@@ -1,21 +1,21 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2024-08-12 (status: working fine)
+// Modified:    2024-08-15 (status: working fine)
 // Author:      Kagan Dikmen
 
-`include "cpu_components/ALU/alu.v"
-`include "cpu_components/clock_inverter.v"
-`include "cpu_components/control_unit.v"
-`include "cpu_components/data_memory.v"
-`include "cpu_components/immediate_generator.v"
-`include "cpu_components/instruction_decoder.v"
-`include "common_components/bram.v"
-`include "common_components/dff.v"
-`include "common_components/extender_register.v"
-`include "common_components/mux.v"
-`include "cpu_components/pc_counter.v"
-`include "cpu_components/program_memory.v"
-`include "cpu_components/register_file.v"
+`include "./rtl/luftALU/alu.v"
+`include "./rtl/clock_inverter.v"
+`include "./rtl/control_unit.v"
+// `include "./rtl/data_memory.v"
+`include "./rtl/immediate_generator.v"
+`include "./rtl/instruction_decoder.v"
+`include "./rtl/bram.v"
+`include "./rtl/dff.v"
+`include "./rtl/extender_register.v"
+`include "./rtl/mux.v"
+`include "./rtl/pc_counter.v"
+// `include "./rtl/program_memory.v"
+`include "./rtl/register_file.v"
 
 module cpu 
     #(

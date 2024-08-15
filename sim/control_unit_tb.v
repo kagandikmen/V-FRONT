@@ -1,9 +1,9 @@
 // Testbench for the control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2024-08-13
+// Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "control_unit.v"
+`include "../rtl/control_unit.v"
 
 `timescale 1ns/1ps
 
@@ -32,7 +32,7 @@ module control_unit_tb
                         .jump(jump)
                     );
 
-    `include "../common_library.vh"
+    `include "../lib/common_library.vh"
     
     initial
     begin

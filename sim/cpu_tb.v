@@ -1,9 +1,9 @@
 // Testbench for the main body of the CPU
 // Created:     2024-01-26
-// Modified:    2024-08-12
+// Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "cpu.v"
+`include "../cpu.v"
 
 `timescale 1ns/1ps
 

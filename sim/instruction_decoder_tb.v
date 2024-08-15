@@ -1,9 +1,9 @@
 // Testbench for the instruction decoder of the CPU
 // Created:     2024-01-20
-// Modified:    2024-01-28
+// Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "instruction_decoder.v"
+`include "../rtl/instruction_decoder.v"
 
 `timescale 1ns/1ps
 
@@ -15,7 +15,7 @@ module instruction_decoder_tb
     )(
     );
 
-    `include "../common_library.vh"
+    `include "../lib/common_library.vh"
 
     reg [31:0] instr_t;
     reg [PC_WIDTH-1:0] pc_t;

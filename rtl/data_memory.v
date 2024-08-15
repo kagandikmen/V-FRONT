@@ -1,6 +1,6 @@
 // Data memory of the CPU
 // Created:     2024-01-25
-// Modified:    2024-08-12 (status: working fine)
+// Modified:    2024-08-15 (status: working fine)
 // Author:      Kagan Dikmen
 
 module data_memory
@@ -18,7 +18,7 @@ module data_memory
     output reg [DMEM_DATA_WIDTH-1:0] r_data
     );
 
-    `include "../common_library.vh"
+    `include "../lib/common_library.vh"
 
     integer i;
 

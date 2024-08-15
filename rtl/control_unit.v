@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2024-08-12 (status: working fine)
+// Modified:    2024-08-15 (status: working fine)
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -30,7 +30,7 @@ module control_unit
     output reg jump
     );
 
-    `include "../common_library.vh"
+    `include "../lib/common_library.vh"
 
     wire [16:0] instr_compressed;
 
