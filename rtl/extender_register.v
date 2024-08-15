@@ -1,7 +1,9 @@
 // Extender Register
 // Created:     2024-08-12
-// Modified:    2024-08-12 (last status: working fine)
+// Modified:    2024-08-15 (last status: working fine)
 // Author:      Kagan Dikmen
+
+// Not used in the current design
 
 `include "./dff.v"
 

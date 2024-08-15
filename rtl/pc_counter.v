@@ -15,32 +15,27 @@ module pc_counter
     input [OPD_WIDTH-1:0] alu_result,
     input [OPD_WIDTH-1:0] comp_result,
 
-    output reg [OPD_WIDTH-1:0] pc_plus4,
-    output reg [PC_WIDTH-1:0] next_pc
+    output [OPD_WIDTH-1:0] pc_out,
+    output [OPD_WIDTH-1:0] pc_plus4,
+    output [PC_WIDTH-1:0] next_pc
     );
 
-    `include "../lib/common_library.vh"
+    reg [31:0] pc;
+    reg rst_buff;
+    wire [11:0] next_pc_buffer;
 
     always @(posedge clk)
     begin
-        if (rst == 1'b1)
-        begin
-            next_pc <= 'b0;
-            pc_plus4 <= 'd4;
-        end
+        rst_buff <= rst;
+        if (rst == 1'b1 || rst_buff == 1'b1)
+            pc <= 32'b0;
         else
-        begin
-            if ((branch == 1'b1 && comp_result == 'b1) || jump == 1'b1)
-            begin
-                next_pc <= alu_result;
-                pc_plus4 <= next_pc + 4;
-            end
-            else
-            begin
-                next_pc <= next_pc + 4;
-                pc_plus4 <= next_pc + 4;
-            end
-        end
+            pc <= {20'b0, next_pc_buffer};
     end
+
+    assign next_pc_buffer = ((branch == 1'b1 && comp_result == 'b1) || jump == 1'b1) ? alu_result : pc + 4;
+    assign next_pc = next_pc_buffer;
+    assign pc_out = pc;
+    assign pc_plus4 = pc + 4;
 
 endmodule
