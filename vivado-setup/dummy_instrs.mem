@@ -32,4 +32,4 @@
 @00C0 00512623  // SW x5, 12(x2)
 @00C4 00110113  // ADDI x2, x2, 1
 @00C8 FD9FF1EF  // JAL x3, -40
-@00CC 00000000  // Invalid Operation
+@00CC 11111111  // Defined Illegal
