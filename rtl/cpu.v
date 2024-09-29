@@ -157,12 +157,13 @@ module cpu
     pc_counter #(.OPD_WIDTH(OP_LENGTH), .PC_WIDTH(PC_WIDTH)) 
         pc_counter_cpu
         (
-            .clk(pcctr_clk),
+            .clk(sysclk),
             .rst(rst),
             .branch(branch),
             .jump(jump),
             .alu_result(alu_result),
             .comp_result(comp_result),
+            .pc_out(pc),
             .pc_plus4(pc_plus4),
             .next_pc(next_pc)
         );
@@ -171,7 +172,7 @@ module cpu
     bram #(.INIT_FILE("./dummy_instrs.mem")) program_memory_cpu
         (
             .wr_addr(),
-            .rd_addr(next_pc),
+            .rd_addr(next_pc[11:0]),
             .ram_in(),
             .clk(sysclk),
             .byte_w_en(),
@@ -180,7 +181,8 @@ module cpu
             .out_r_en(),
             .r_out(instr)
         );
-                        
+    
+    /*                    
     extender_register #(.INPUT_WIDTH(PC_WIDTH), .OUTPUT_WIDTH(OP_LENGTH))
         extender_register_cpu
         (
@@ -188,7 +190,8 @@ module cpu
             .in(next_pc),
             .out(pc)
         );
-    
+    */
+
     /*
     program_memory #(.PC_WIDTH(PC_WIDTH)) 
         program_memory_cpu

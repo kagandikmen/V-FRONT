@@ -32,7 +32,7 @@ module cpu_tb
         #4;
         rst = ~rst;
 
-        #10;
+        #20;
         rst = ~rst;
     end
 

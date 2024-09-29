@@ -1,7 +1,9 @@
 // Clock inverter of the CPU
 // Created:     2024-08-12
-// Modified:    2024-08-12 (status: working fine)
+// Modified:    2024-08-15 (status: working fine)
 // Author:      Kagan Dikmen
+
+// Not used in the current design
 
 module clock_inverter
     (

@@ -3,6 +3,8 @@
 // Modified:    2024-08-15 (status: working fine)
 // Author:      Kagan Dikmen
 
+// Not used in the current design
+
 module program_memory 
     #(
     parameter OPD_WIDTH = 32,
