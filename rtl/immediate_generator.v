@@ -1,6 +1,6 @@
 // Immediate generator of the CPU
 // Created:     2024-01-28
-// Modified:    2024-08-15 (last status: working fine)
+// Modified:    2025-05-22 (last status: working fine)
 // Author:      Kagan Dikmen
 
 module immediate_generator
@@ -53,6 +53,10 @@ module immediate_generator
         AUIPC_OPCODE:
         begin
             imm = {instr[31:12], 12'b0};
+        end
+        FENCE_OPCODE:
+        begin
+            imm = 32'b0;
         end
         default:
         begin
