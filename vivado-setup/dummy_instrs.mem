@@ -33,5 +33,9 @@
 @00BC 00511623  // SH x5, 12(x2)
 @00C0 00512623  // SW x5, 12(x2)
 @00C4 00110113  // ADDI x2, x2, 1
-@00C8 FD9FF1EF  // JAL x3, -40
-@00CC 11111111  // Defined Illegal
+@00C8 00700193  // ADDI x3, x0, 7
+@00CC 00315463  // BGE x2, x3, 8
+@00D0 FD1FF06F  // JAL x0, -48
+@00D4 00000073  // ECALL
+@00D8 11111111  // Defined Illegal
+@0FFC 0000006F  // j 0 (infinite loop)

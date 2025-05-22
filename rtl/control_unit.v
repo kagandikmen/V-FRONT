@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-05-22 (status: working fine)
+// Modified:    2025-05-23
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -49,7 +49,7 @@ module control_unit
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
             begin
-                if (instr[30] == 1'b0)      // AND
+                if (instr[30] == 1'b0)      // ADD
                 begin
                     alu_imm_select <= 1'b0;
                     alu_mux1_select <= 1'b0;
@@ -364,6 +364,16 @@ module control_unit
                 alu_mux1_select <= 1'b0;
                 alu_mux2_select <= 2'b00; 
                 alu_op_select <= 4'b0000;
+                w_en_rf <= 1'b0;
+                rf_w_select <= 2'b00;
+            end
+            {FUNCT3_SYSTEM, SYSTEM_OPCODE}: // ECALL & EBREAK
+            begin
+                alu_pc_select <= 1'b0;
+                alu_mux1_select <= 1'b0;    
+                alu_mux2_select <= 2'b00;
+                alu_op_select <= 4'b0000;
+                jump <= 1'b1;
                 w_en_rf <= 1'b0;
                 rf_w_select <= 2'b00;
             end

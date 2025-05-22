@@ -1,6 +1,6 @@
 // Immediate generator of the CPU
 // Created:     2024-01-28
-// Modified:    2025-05-22 (last status: working fine)
+// Modified:    2025-05-23
 // Author:      Kagan Dikmen
 
 module immediate_generator
@@ -57,6 +57,10 @@ module immediate_generator
         FENCE_OPCODE:
         begin
             imm = 32'b0;
+        end
+        SYSTEM_OPCODE:
+        begin
+            imm = 32'hffc;
         end
         default:
         begin
