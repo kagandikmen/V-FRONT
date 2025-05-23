@@ -36,7 +36,7 @@ module immediate_generator
         end
         B_OPCODE:
         begin
-            imm = {19'b0, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0};
+            imm = {{19{instr[31]}}, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0};
         end
         JAL_OPCODE:
         begin
@@ -60,7 +60,7 @@ module immediate_generator
         end
         SYSTEM_OPCODE:
         begin
-            imm = 32'hffc;
+            imm = 32'h3ff0;
         end
         default:
         begin

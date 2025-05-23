@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2024-08-15 (status: working fine)
+// Modified:    2025-05-23
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -22,7 +22,7 @@ module cpu
     parameter DMEM_ADDR_WIDTH = 12,
     parameter DMEM_DATA_WIDTH = 32,
     parameter OP_LENGTH = 32,
-    parameter PC_WIDTH = 12
+    parameter PC_WIDTH = 16
     )(
     input rst,
     input sysclk,
@@ -172,7 +172,7 @@ module cpu
     bram #(.INIT_FILE("./dummy_instrs.mem")) program_memory_cpu
         (
             .wr_addr(),
-            .rd_addr(next_pc[11:0]),
+            .rd_addr({'b0,next_pc[PC_WIDTH-1:2]}),
             .ram_in(),
             .clk(sysclk),
             .byte_w_en(),
