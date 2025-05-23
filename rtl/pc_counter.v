@@ -1,6 +1,6 @@
 // PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2024-08-15 (status: working fine)
+// Modified:    2025-05-23
 // Author:      Kagan Dikmen
 
 module pc_counter
@@ -22,7 +22,7 @@ module pc_counter
 
     reg [31:0] pc;
     reg rst_buff;
-    wire [11:0] next_pc_buffer;
+    wire [PC_WIDTH-1:0] next_pc_buffer;
 
     always @(posedge clk)
     begin
@@ -30,7 +30,7 @@ module pc_counter
         if (rst == 1'b1 || rst_buff == 1'b1)
             pc <= 32'b0;
         else
-            pc <= {20'b0, next_pc_buffer};
+            pc <= {'b0, next_pc_buffer};
     end
 
     assign next_pc_buffer = ((branch == 1'b1 && comp_result == 'b1) || jump == 1'b1) ? alu_result : pc + 4;

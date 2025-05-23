@@ -1,22 +1,24 @@
-# Single-Cycle-RISCV-CPU
+# V-CORE
 
-This is a project in which I am rewriting a group assignment I contributed to for the class "Entwurf digitaler Systeme mit VHDL und SystemC" (Digital System Design with VHDL and SystemC) using Verilog. The project involves the implementation and testing of a single-cycle CPU based on RISC-V ISA (RV32I).
+*(The V stands for Verilog,RISC-V, or perhaps my intention to make the CPU 5-stage some day.)*
+
+**V-CORE** is a 32-bit RISC-V processor written in Verilog. It implements RISC-V ISA base module RV32I, version 2.1. It does not include any extensions (yet).
 
 ## Getting Started
 
-This repository includes [luftALU](https://github.com/kagandikmen/luftALU) as a submodule. Run
+This repository initiates [luftALU](https://github.com/kagandikmen/luftALU) as a submodule. Run
 ```
-git clone --recursive https://github.com/kagandikmen/Single-Cycle-RISCV-CPU.git
+git submodule update --init --recursive
 ```
-from the directory you want to clone the repository into. For the automated Vivado setup please refer to ```vivado-setup/README.md```.
+from the root directory of the project. For the automated Vivado setup please refer to `vivado-setup/README.md`.
 
 ## Status
 
-The data flow instructions are completed and tested for synthesisability. The current design can run fine at 62.5 MHz on a PYNQ-Z1 board. Some control flow instructions are not implemented yet.
+The data and control flow instructions are implemented and tested for synthesizability. The current design runs stably at 62.5 MHz on a PYNQ-Z1 board.
 
 ## Contributing
 
-Pull requests, suggestions, bug fixes etc. are all welcome.
+Pull requests, suggestions, and bug reports are all welcome.
 
 ## License
 

@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2024-08-12
+// Modified:    2025-05-23
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -13,6 +13,8 @@ localparam JAL_OPCODE       = 7'b1101111;
 localparam JALR_OPCODE      = 7'b1100111;
 localparam LUI_OPCODE       = 7'b0110111;
 localparam AUIPC_OPCODE     = 7'b0010111;
+localparam FENCE_OPCODE     = 7'b0001111;
+localparam SYSTEM_OPCODE    = 7'b1110011;
 
 
 //FUNCT3
@@ -51,6 +53,9 @@ localparam FUNCT3_SRL       = 3'b101;
 localparam FUNCT3_SRA       = 3'b101;
 localparam FUNCT3_OR        = 3'b110;
 localparam FUNCT3_AND       = 3'b111;
+localparam FUNCT3_FENCE     = 3'b000;
+localparam FUNCT3_FENCEI    = 3'b001;
+localparam FUNCT3_SYSTEM    = 3'b000;
 
 
 // FUNCT7
@@ -68,6 +73,12 @@ localparam FUNCT7_SRL       = 7'b0000000;
 localparam FUNCT7_SRA       = 7'b0100000;
 localparam FUNCT7_OR        = 7'b0000000;
 localparam FUNCT7_AND       = 7'b0000000;
+
+
+// IMM
+
+localparam ECALL_IMM        = 12'h000;
+localparam EBREAK_IMM       = 12'h001;
 
 
 // DMEM 

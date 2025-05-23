@@ -1,20 +1,16 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2024-08-15 (status: working fine)
+// Modified:    2025-05-23
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
 `include "./clock_inverter.v"
 `include "./control_unit.v"
-// `include "./data_memory.v"
 `include "./immediate_generator.v"
 `include "./instruction_decoder.v"
 `include "./bram.v"
-`include "./dff.v"
-`include "./extender_register.v"
 `include "./mux.v"
 `include "./pc_counter.v"
-// `include "./program_memory.v"
 `include "./register_file.v"
 
 module cpu 
@@ -22,7 +18,7 @@ module cpu
     parameter DMEM_ADDR_WIDTH = 12,
     parameter DMEM_DATA_WIDTH = 32,
     parameter OP_LENGTH = 32,
-    parameter PC_WIDTH = 12
+    parameter PC_WIDTH = 16
     )(
     input rst,
     input sysclk,
@@ -110,20 +106,6 @@ module cpu
             .r_out(r_data)
         );
     
-    /*
-    data_memory #(.DMEM_DATA_WIDTH(DMEM_DATA_WIDTH), .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH)) 
-        data_memory_cpu
-        (
-            .clk(sysclk),
-            .rst(rst),
-            .wr_en(wr_en_dmem),
-            .rw_mode(rw_mode),
-            .addr(alu_result[11:0]),
-            .w_data(opd2),
-            .r_data(r_data)
-        );
-    */
-    
     immediate_generator immediate_generator_cpu
         (
             .instr(instr),
@@ -172,7 +154,7 @@ module cpu
     bram #(.INIT_FILE("./dummy_instrs.mem")) program_memory_cpu
         (
             .wr_addr(),
-            .rd_addr(next_pc[11:0]),
+            .rd_addr({'b0,next_pc[PC_WIDTH-1:2]}),
             .ram_in(),
             .clk(sysclk),
             .byte_w_en(),
@@ -181,28 +163,6 @@ module cpu
             .out_r_en(),
             .r_out(instr)
         );
-    
-    /*                    
-    extender_register #(.INPUT_WIDTH(PC_WIDTH), .OUTPUT_WIDTH(OP_LENGTH))
-        extender_register_cpu
-        (
-            .clk(sysclk),
-            .in(next_pc),
-            .out(pc)
-        );
-    */
-
-    /*
-    program_memory #(.PC_WIDTH(PC_WIDTH)) 
-        program_memory_cpu
-        (
-            .clk(sysclk),
-            .rst(rst),
-            .addr(next_pc),
-            .data(instr),
-            .pc(pc)
-        );
-    */
     
     register_file #(.RF_ADDR_LEN(5), .RF_DATA_LEN(32)) 
         register_file_cpu
