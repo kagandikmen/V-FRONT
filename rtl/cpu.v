@@ -9,8 +9,6 @@
 `include "./immediate_generator.v"
 `include "./instruction_decoder.v"
 `include "./bram.v"
-`include "./dff.v"
-`include "./extender_register.v"
 `include "./mux.v"
 `include "./pc_counter.v"
 `include "./register_file.v"

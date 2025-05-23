@@ -7,7 +7,7 @@
 2. Direct to this directory with
 
 ```
-cd <path>/Single-Cycle-RISCV-CPU/vivado-setup/
+cd <path>/V-CORE/vivado-setup/
 ```
 
 3. Run the Tcl script with
@@ -24,7 +24,7 @@ Includes constants needed to synthesise and implement the CPU. Its current conte
 
 ### create_project.tcl
 
-Includes the Tcl script Vivado needs to build the project as intended.
+Includes the Tcl script Vivado needs to build the project as intended. Please consider that this Tcl script was generated using Vivado 2019.2, and that it may not work seamlessly for newer versions of the tool.
 
 ### dummy_instrs.mem
 
