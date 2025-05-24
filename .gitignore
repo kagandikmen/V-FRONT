@@ -1,3 +1,9 @@
 a.out
 vivado_proj
 .Xil
+*.hex
+*.coe
+*.bin
+*.map
+*.elf
+*.o
