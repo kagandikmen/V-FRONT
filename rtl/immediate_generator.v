@@ -1,6 +1,6 @@
 // Immediate generator of the CPU
 // Created:     2024-01-28
-// Modified:    2025-05-23
+// Modified:    2025-05-24
 // Author:      Kagan Dikmen
 
 module immediate_generator
@@ -24,15 +24,15 @@ module immediate_generator
         end
         I_OPCODE:
         begin
-            imm = {20'b0, instr[31:20]};
+            imm = {{20{instr[31]}}, instr[31:20]};
         end
         LOAD_OPCODE:
         begin
-            imm = {20'b0, instr[31:20]};
+            imm = {{20{instr[31]}}, instr[31:20]};
         end
         S_OPCODE:
         begin
-            imm = {20'b0, instr[31:25], instr[11:7]};
+            imm = {{20{instr[31]}}, instr[31:25], instr[11:7]};
         end
         B_OPCODE:
         begin
@@ -44,7 +44,7 @@ module immediate_generator
         end
         JALR_OPCODE:
         begin
-            imm = {20'b0, instr[31:20]};
+            imm = {{20{instr[31]}}, instr[31:20]};
         end
         LUI_OPCODE:
         begin

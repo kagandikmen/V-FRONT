@@ -27,10 +27,10 @@ module cpu
     output wire led     // does not serve any practical purpose other than preventing synthesisers from optimising the whole CPU away
     );
 
-    wire alu_imm_select, alu_mux1_select, alu_pc_select, w_en_rf, wr_en_dmem, branch, jump;
+    wire alu_imm_select, alu_mux1_select, alu_pc_select, w_en_rf, branch, jump;
     wire pcctr_clk;
     wire [1:0] alu_mux2_select, rf_w_select;
-    wire [3:0] alu_op_select, rw_mode;
+    wire [3:0] alu_op_select, wr_mode;
     wire [31:0] instr;
     wire [PC_WIDTH-1:0] next_pc;
     wire [OP_LENGTH-1:0] alu_result, comp_result, opd1, opd2, pc_plus4, pc;
@@ -89,19 +89,18 @@ module cpu
             .alu_mux2_select(alu_mux2_select),
             .alu_op_select(alu_op_select),
             .w_en_rf(w_en_rf),
-            .wr_en_dmem(wr_en_dmem),
-            .rw_mode(rw_mode),
+            .wr_mode(wr_mode),
             .branch(branch),
             .jump(jump)
         );
     
     bram #(.INIT_FILE(DMEM_INIT_FILE)) data_memory_cpu
         (
-            .wr_addr(alu_result[11:0]),
-            .rd_addr(alu_result[11:0]),
+            .wr_addr(alu_result[13:2]),
+            .rd_addr(alu_result[13:2]),
             .ram_in(opd2),
             .clk(sysclk),
-            .byte_w_en(rw_mode),
+            .byte_w_en(wr_mode),
             .r_en(1'b1),
             .out_res(),
             .out_r_en(),
@@ -180,6 +179,6 @@ module cpu
             .rd_write_data(rd_write_data)
         );
     
-    assign led = wr_en_dmem;
+    assign led = branch;
 
 endmodule
