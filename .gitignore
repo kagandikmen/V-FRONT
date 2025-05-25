@@ -7,3 +7,9 @@ vivado_proj
 *.map
 *.elf
 *.o
+tests/
+tests-build/
+v-core.prj
+*.jou
+*.log
+*.pb

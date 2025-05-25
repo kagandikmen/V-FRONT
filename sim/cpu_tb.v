@@ -1,6 +1,6 @@
 // Testbench for the main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-24
+// Modified:    2025-05-25
 // Author:      Kagan Dikmen
 
 `include "../rtl/cpu.v"
@@ -8,13 +8,16 @@
 `timescale 1ns/1ps
 
 module cpu_tb
-    (
+    #(
+        parameter PMEM_INIT_FILE = "pmem.hex",
+        parameter DMEM_INIT_FILE = "dmem.hex"
+    )(
     );
 
     reg rst, sysclk_t;
     wire led_t;
 
-    cpu #(.DMEM_ADDR_WIDTH(12), .DMEM_DATA_WIDTH(32), .OP_LENGTH(32), .PC_WIDTH(16), .PMEM_INIT_FILE("pmem.hex"), .DMEM_INIT_FILE("dmem.hex")) 
+    cpu #(.DMEM_ADDR_WIDTH(12), .DMEM_DATA_WIDTH(32), .OP_LENGTH(32), .PC_WIDTH(16), .PMEM_INIT_FILE(PMEM_INIT_FILE), .DMEM_INIT_FILE(DMEM_INIT_FILE)) 
         cpu_ut 
         (
             .rst(rst),
@@ -34,6 +37,9 @@ module cpu_tb
 
         #20;
         rst = ~rst;
+
+        #1000;
+        $finish;
     end
 
 endmodule
