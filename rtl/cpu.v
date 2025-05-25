@@ -1,10 +1,9 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-24
+// Modified:    2025-05-25
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
-`include "./clock_inverter.v"
 `include "./control_unit.v"
 `include "./immediate_generator.v"
 `include "./instruction_decoder.v"
@@ -28,7 +27,6 @@ module cpu
     );
 
     wire alu_imm_select, alu_mux1_select, alu_pc_select, w_en_rf, branch, jump;
-    wire pcctr_clk;
     wire [1:0] alu_mux2_select, rf_w_select;
     wire [3:0] alu_op_select, wr_mode;
     wire [31:0] instr;
@@ -71,12 +69,6 @@ module cpu
             .b(imm),
             .sel(alu_imm_select),
             .z(alu_opd2)
-        );
-
-    clock_inverter clock_inverter_cpu
-        (
-            .clk(sysclk),
-            .clk_inv(pcctr_clk)
         );
 
     control_unit control_unit_cpu
