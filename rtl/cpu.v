@@ -44,6 +44,8 @@ module cpu
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
 
+    wire ecall, ebreak, mret;
+
     alu #(.OPERAND_LENGTH(OP_LENGTH)) 
         alu_cpu
         (
@@ -89,6 +91,9 @@ module cpu
             .wr_mode(wr_mode),
             .branch(branch),
             .jump(jump),
+            .ecall(ecall),
+            .ebreak(ebreak),
+            .mret(mret),
             .csr_r_en(csr_unit_r_en),
             .csr_w_en(csr_unit_w_en),
             .csr_op(csr_unit_op),
@@ -110,6 +115,9 @@ module cpu
             .rst(rst),
             .r_en(csr_unit_r_en),
             .w_en(csr_unit_w_en),
+            .ecall(ecall),
+            .ebreak(ebreak),
+            .pc(pc),
             .op(csr_unit_op),
             .in(csr_in),
             .csr_addr(csr_unit_addr),
@@ -166,8 +174,10 @@ module cpu
             .rst(rst),
             .branch(branch),
             .jump(jump),
+            .csr_sel(ecall || ebreak || mret),
             .alu_result(alu_result),
             .comp_result(comp_result),
+            .csr_out(csr_unit_out),
             .pc_out(pc),
             .pc_plus4(pc_plus4),
             .next_pc(next_pc)

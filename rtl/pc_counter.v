@@ -1,6 +1,6 @@
 // PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2025-05-24
+// Modified:    2025-05-26
 // Author:      Kagan Dikmen
 
 module pc_counter
@@ -12,8 +12,10 @@ module pc_counter
     input rst,
     input branch,
     input jump,
+    input csr_sel,
     input [OPD_WIDTH-1:0] alu_result,
     input [OPD_WIDTH-1:0] comp_result,
+    input [OPD_WIDTH-1:0] csr_out,
 
     output [OPD_WIDTH-1:0] pc_out,
     output [OPD_WIDTH-1:0] pc_plus4,
@@ -38,7 +40,9 @@ module pc_counter
         rst_buff <= rst;
     end
 
-    assign next_pc_buffer = ((branch == 1'b1 && comp_result == 'b1) || jump == 1'b1) ? alu_result : pc + 4;
+    assign next_pc_buffer = (csr_sel == 1'b1) ? csr_out :
+                            ((branch == 1'b1 && comp_result == 'b1) || jump == 1'b1) ? alu_result :
+                            pc + 4;
     assign pc_out = pc;
     assign pc_plus4 = pc + 4;
 

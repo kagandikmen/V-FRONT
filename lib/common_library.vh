@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2025-05-25
+// Modified:    2025-05-26
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -112,6 +112,29 @@ localparam MEM_IDLE     = 4'b0000;
 localparam RF_WIDTH         = 32;
 localparam RF_DEPTH         = 32;
 localparam RF_ADDR_LENGTH   = 5;        // log2(RF_DEPTH) = 5
+
+
+// CSR
+
+localparam CSR_JVT_ADDR     = 12'h017;
+localparam CSR_MSTATUS_ADDR = 12'h300;
+localparam CSR_MISA_ADDR    = 12'h301;
+localparam CSR_MIE_ADDR     = 12'h304;
+localparam CSR_MTVEC_ADDR   = 12'h305;
+localparam CSR_MTVT_ADDR    = 12'h307;
+localparam CSR_MEPC_ADDR    = 12'h341;
+localparam CSR_MCAUSE_ADDR  = 12'h342;
+localparam CSR_MTVAL_ADDR   = 12'h343;
+
+localparam CSR_JVT_RST      = 32'h0000_0000;
+localparam CSR_MSTATUS_RST  = 32'h0000_1800;
+localparam CSR_MISA_RST     = 32'h4000_0000;    // RV32I with no extensions
+localparam CSR_MIE_RST      = 32'h0000_0000;
+localparam CSR_MTVEC_RST    = 32'h0000_0000;
+localparam CSR_MTVT_RST     = 32'h0000_0000;
+localparam CSR_MEPC_RST     = 32'h0000_0000;
+localparam CSR_MCAUSE_RST   = 32'h0000_0000;
+localparam CSR_MTVAL_RST    = 32'h0000_0000;
 
 
 //  The following function calculates the address width based on specified RAM depth

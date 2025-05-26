@@ -12,6 +12,13 @@ module csr_unit
 
     input r_en,
     input w_en,
+
+    input ecall,
+    input ebreak,
+    input [31:0] pc,
+
+    input mret,
+
     input [2:0] op,
     input [31:0] in,
     input [clogb2(CSR_REG_COUNT-1)-1:0] csr_addr,
@@ -34,6 +41,25 @@ module csr_unit
             begin
                 csr_registers[i] <= 'b0;
             end
+            csr_registers[CSR_JVT_ADDR]     <= CSR_JVT_RST;
+            csr_registers[CSR_MSTATUS_ADDR] <= CSR_MSTATUS_RST;
+            csr_registers[CSR_MISA_ADDR]    <= CSR_MISA_RST;
+            csr_registers[CSR_MIE_ADDR]     <= CSR_MIE_RST;
+            csr_registers[CSR_MTVEC_ADDR]   <= CSR_MTVEC_RST;
+            csr_registers[CSR_MTVT_ADDR]    <= CSR_MTVT_RST;
+            csr_registers[CSR_MEPC_ADDR]    <= CSR_MEPC_RST;
+            csr_registers[CSR_MCAUSE_ADDR]  <= CSR_MCAUSE_RST;
+        end
+        else if (mret == 1'b1)
+        begin
+            csr_registers[CSR_MSTATUS_ADDR][1] <= csr_registers[CSR_MSTATUS_ADDR][7];
+            csr_registers[CSR_MSTATUS_ADDR][7] <= 1'b1;
+            csr_registers[CSR_MSTATUS_ADDR][12:11] <= 2'b00;
+        end
+        else if (ecall || ebreak)
+        begin
+            csr_registers[CSR_MEPC_ADDR] <= pc;
+            csr_registers[CSR_MCAUSE_ADDR] <= (ecall) ? 32'd11 : 32'd3;
         end
         else if (w_en == 1'b1)
         begin

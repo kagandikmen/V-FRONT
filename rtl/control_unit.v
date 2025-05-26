@@ -28,6 +28,10 @@ module control_unit
     output reg branch,
     output reg jump,
 
+    output reg ecall,
+    output reg ebreak,
+    output reg mret,
+
     // to CSR unit
     output reg csr_r_en,
     output reg csr_w_en,
@@ -55,6 +59,9 @@ module control_unit
         csr_addr = 12'b0;
         csr_imm_select = 1'b0;
         csr_op = 3'b000;
+        mret = 1'b0;
+        ecall = 1'b0;
+        ebreak = 1'b0;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
@@ -378,9 +385,28 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;   
                 alu_imm_select = 1'b1;
-                jump = 1'b1;
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
+                csr_r_en = 1'b1;
+                csr_w_en = 1'b0;
+                csr_op = 3'b000;
+                case (instr[31:20])
+                    12'h000:    // ECALL
+                    begin
+                        ecall = 1'b1;
+                        csr_addr <= CSR_MTVEC_ADDR;
+                    end
+                    12'h001:    // EBREAK
+                    begin
+                        ebreak = 1'b1;
+                        csr_addr <= CSR_MTVEC_ADDR;
+                    end
+                    12'h302:    // MRET
+                    begin
+                        mret = 1'b1;
+                        csr_addr <= CSR_MEPC_ADDR;
+                    end
+                endcase
             end
             {FUNCT3_CSRRW, SYSTEM_OPCODE}:
             begin
