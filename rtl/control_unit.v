@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-05-24
+// Modified:    2025-05-26
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -26,7 +26,13 @@ module control_unit
 
     // to PC counter
     output reg branch,
-    output reg jump
+    output reg jump,
+
+    // to CSR unit
+    output reg csr_r_en,
+    output reg csr_w_en,
+    output reg [11:0] csr_addr,
+    output reg csr_imm_select
     );
 
     `include "../lib/common_library.vh"
@@ -43,6 +49,10 @@ module control_unit
         branch = 1'b0;
         jump = 1'b0;
         wr_mode = MEM_IDLE;        // IDLE
+        csr_r_en = 1'b0;
+        csr_w_en = 1'b0;
+        csr_addr = 12'b0;
+        csr_imm_select = 1'b0;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
@@ -359,15 +369,79 @@ module control_unit
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
             end
-            {FUNCT3_SYSTEM, SYSTEM_OPCODE}: // ECALL & EBREAK
+            {FUNCT3_ECALL_EBREAK, SYSTEM_OPCODE}:
             begin
                 alu_pc_select = 1'b0;
-                alu_mux1_select = 1'b0;    
+                alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
-                alu_op_select = 4'b0000;
+                alu_op_select = 4'b0000;   
+                alu_imm_select = 1'b1;
                 jump = 1'b1;
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
+            end
+            {FUNCT3_CSRRW, SYSTEM_OPCODE}:
+            begin
+                alu_pc_select = 1'b0;
+                alu_mux2_select = 2'b00;
+                alu_op_select = 4'b0000;  
+                alu_imm_select = 1'b1;
+                w_en_rf = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                rf_w_select = 2'b11;
+                csr_r_en = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                csr_w_en = 1'b1;
+                csr_addr = instr[31:20];
+            end
+            {FUNCT3_CSRRS, SYSTEM_OPCODE}:
+            begin
+                alu_pc_select = 1'b0;
+                alu_mux2_select = 2'b00;
+                alu_op_select = 4'b0000;  
+                alu_imm_select = 1'b1;
+                w_en_rf = 1'b1;
+                rf_w_select = 2'b11;
+                csr_r_en = 1'b1;
+                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr = instr[31:20];
+            end
+            {FUNCT3_CSRRC, SYSTEM_OPCODE}:
+            begin
+                alu_pc_select = 1'b0;
+                alu_mux2_select = 2'b00;
+                alu_op_select = 4'b0000;  
+                alu_imm_select = 1'b1;
+                w_en_rf = 1'b1;
+                rf_w_select = 2'b11;
+                csr_r_en = 1'b1;
+                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr = instr[31:20];
+            end
+            {FUNCT3_CSRRWI, SYSTEM_OPCODE}:
+            begin
+                w_en_rf = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                rf_w_select = 2'b11;
+                csr_r_en = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                csr_w_en = 1'b1;
+                csr_addr = instr[31:20];
+                csr_imm_select = 1'b1;
+            end
+            {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
+            begin
+                w_en_rf = 1'b1;
+                rf_w_select = 2'b11;
+                csr_r_en = 1'b1;
+                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr = instr[31:20];
+                csr_imm_select = 1'b1;
+            end
+            {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
+            begin
+                w_en_rf = 1'b1;
+                rf_w_select = 2'b11;
+                csr_r_en = 1'b1;
+                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr = instr[31:20];
+                csr_imm_select = 1'b1;
             end
             default:    // JAL / JALR / LUI / AUIPC
             begin

@@ -5,6 +5,7 @@
 
 `include "./luftALU/rtl/alu.v"
 `include "./control_unit.v"
+`include "./csr_unit.v"
 `include "./immediate_generator.v"
 `include "./instruction_decoder.v"
 `include "./bram.v"
@@ -38,6 +39,9 @@ module cpu
     wire [4:0] rs1_addr, rs2_addr, rd_addr;
     wire [31:0] rs1_data, rs2_data, rd_write_data;
 
+    wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
+    wire csr_unit_r_en, csr_unit_w_en, csr_imm_select;
+    wire [11:0] csr_unit_addr;
 
     alu #(.OPERAND_LENGTH(OP_LENGTH)) 
         alu_cpu
@@ -83,7 +87,30 @@ module cpu
             .w_en_rf(w_en_rf),
             .wr_mode(wr_mode),
             .branch(branch),
-            .jump(jump)
+            .jump(jump),
+            .csr_r_en(csr_unit_r_en),
+            .csr_w_en(csr_unit_w_en),
+            .csr_addr(csr_unit_addr),
+            .csr_imm_select(csr_imm_select)
+        );
+
+    two_input_mux #(.INPUT_LENGTH(32)) csr_unit_mux
+        (
+            .a(alu_result),
+            .b(imm),
+            .sel(csr_imm_select),
+            .z(csr_in)
+        );
+    
+    csr_unit #(.CSR_REG_COUNT(4096)) csr_unit_cpu
+        (
+            .clk(sysclk),
+            .rst(rst),
+            .r_en(csr_unit_r_en),
+            .w_en(csr_unit_w_en),
+            .in(csr_in),
+            .csr_addr(csr_unit_addr),
+            .out(csr_unit_out)
         );
     
     bram #(.INIT_FILE(DMEM_INIT_FILE)) data_memory_cpu
@@ -124,7 +151,7 @@ module cpu
             .a(alu_result),
             .b(r_data),
             .c(pc_plus4),
-            .d(),
+            .d(csr_unit_out),
             .sel(rf_w_select),
             .z(rd_write_data)
         );

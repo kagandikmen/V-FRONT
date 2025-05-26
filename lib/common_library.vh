@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2025-05-24
+// Modified:    2025-05-25
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -55,7 +55,15 @@ localparam FUNCT3_OR        = 3'b110;
 localparam FUNCT3_AND       = 3'b111;
 localparam FUNCT3_FENCE     = 3'b000;
 localparam FUNCT3_FENCEI    = 3'b001;
-localparam FUNCT3_SYSTEM    = 3'b000;
+
+localparam FUNCT3_ECALL_EBREAK = 3'b000;
+
+localparam FUNCT3_CSRRW     = 3'b001;
+localparam FUNCT3_CSRRS     = 3'b010;
+localparam FUNCT3_CSRRC     = 3'b011;
+localparam FUNCT3_CSRRWI    = 3'b101;
+localparam FUNCT3_CSRRSI    = 3'b110;
+localparam FUNCT3_CSRRCI    = 3'b111;
 
 
 // FUNCT7
@@ -104,3 +112,11 @@ localparam MEM_IDLE     = 4'b0000;
 localparam RF_WIDTH         = 32;
 localparam RF_DEPTH         = 32;
 localparam RF_ADDR_LENGTH   = 5;        // log2(RF_DEPTH) = 5
+
+
+//  The following function calculates the address width based on specified RAM depth
+function integer clogb2;
+    input integer depth;
+    for (clogb2=0; depth>0; clogb2=clogb2+1)
+        depth = depth >> 1;
+endfunction

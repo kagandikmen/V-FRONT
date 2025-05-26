@@ -1,6 +1,6 @@
 // Block RAM Module
 // Created:     2024-08-12
-// Modified:    2024-08-13 (last status: working fine)
+// Modified:    2025-05-25
 // Taken from Xilinx' module examples, partly modified by Kagan Dikmen
 
   //  Xilinx Simple Dual Port Single Clock RAM with Byte-write
@@ -25,6 +25,8 @@ module bram
     input out_r_en,                                   // Output register enable
     output [(NB_COL*COL_WIDTH)-1:0] r_out             // RAM output data
     );
+
+    `include "../lib/common_library.vh"
     
     (* ram_style = "block" *) reg [(NB_COL*COL_WIDTH)-1:0] ram [RAM_DEPTH-1:0];
     reg [(NB_COL*COL_WIDTH)-1:0] ram_data = {(NB_COL*COL_WIDTH){1'b0}};
@@ -78,12 +80,5 @@ module bram
 
         end
     endgenerate
-
-    //  The following function calculates the address width based on specified RAM depth
-    function integer clogb2;
-        input integer depth;
-        for (clogb2=0; depth>0; clogb2=clogb2+1)
-            depth = depth >> 1;
-    endfunction
         
 endmodule

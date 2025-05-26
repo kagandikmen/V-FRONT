@@ -1,6 +1,6 @@
 // Immediate generator of the CPU
 // Created:     2024-01-28
-// Modified:    2025-05-24
+// Modified:    2025-05-25
 // Author:      Kagan Dikmen
 
 module immediate_generator
@@ -60,7 +60,12 @@ module immediate_generator
         end
         SYSTEM_OPCODE:
         begin
-            imm = 32'h3ff0;
+            if(instr[14:12] == 3'b000)
+                imm = 32'h3ff0;
+            else if(instr[14] == 1'b0)
+                imm = 32'b0;
+            else
+                imm = {27'b0, instr[19:15]};
         end
         default:
         begin
