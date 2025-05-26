@@ -31,7 +31,7 @@ module pc_counter
         if (rst == 1'b1 || rst_buff == 1'b1)
             next_pc = 32'b0;
         else
-            next_pc = {'b0, next_pc_buffer};
+            next_pc = next_pc_buffer;
     end
 
     always @(posedge clk)

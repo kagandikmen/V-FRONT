@@ -14,3 +14,5 @@ v-core.prj
 *.log
 *.pb
 xsim.dir/
+*.wdb
+*.zip

@@ -187,7 +187,7 @@ module cpu
     bram #(.INIT_FILE(PMEM_INIT_FILE)) program_memory_cpu
         (
             .wr_addr(),
-            .rd_addr({'b0,next_pc[PC_WIDTH-1:2]}),
+            .rd_addr(next_pc[PC_WIDTH-3:2]),
             .ram_in(),
             .clk(sysclk),
             .byte_w_en(),

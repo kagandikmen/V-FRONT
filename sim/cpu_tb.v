@@ -1,16 +1,17 @@
 // Testbench for the main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-25
+// Modified:    2025-05-26
 // Author:      Kagan Dikmen
 
 `include "../rtl/cpu.v"
 
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 
 module cpu_tb
     #(
         parameter PMEM_INIT_FILE = "pmem.hex",
-        parameter DMEM_INIT_FILE = "dmem.hex"
+        parameter DMEM_INIT_FILE = "dmem.hex",
+        parameter TOHOST_ADDR    = 16384
     )(
     );
 
@@ -38,8 +39,15 @@ module cpu_tb
         #20;
         rst = ~rst;
 
-        #1000;
+        wait (^cpu_ut.data_memory_cpu.ram[TOHOST_ADDR[13:2]] !== 1'bx);
+        
+        if (cpu_ut.data_memory_cpu.ram[TOHOST_ADDR[13:2]] == 32'd1)
+            $display("Note: Success!");
+        else
+            $display("Note: Failure!");
+        
         $finish;
+        
     end
 
 endmodule

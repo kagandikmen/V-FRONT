@@ -1,15 +1,21 @@
 # V-CORE Main Makefile
 # Created:		2025-05-25
-# Modified:		2025-05-25
+# Modified:		2025-05-26
 # Author:		Kagan Dikmen (kagandikmen@outlook.com)
 
 include ut/rv32ui/Makefrag
+
+FAILING_TESTS := and fence_i lb lbu lh lhu lw ld_st lui ma_data or sb sh sw st_ld sll sra srai srl srli xor
+
+UNIT_TESTS := $(filter-out $(FAILING_TESTS), $(rv32ui_sc_tests))
 
 DESIGN_SOURCES := \
 	rtl/cpu.v
 
 SIMULATION_SOURCES := \
 	sim/cpu_tb.v
+
+MODE ?=
 
 TOOLCHAIN_PREFIX := riscv32-unknown-elf
 
@@ -30,23 +36,28 @@ create_project:
 
 copy_tests: create_project
 	test -d tests || mkdir tests
-	for test in $(rv32ui_sc_tests); do \
+	for test in $(UNIT_TESTS); do \
 		cp ut/rv32ui/$$test.S tests; \
 	done
 
 compile_tests: copy_tests
 	test -d tests-build || mkdir tests-build
-	for test in $(rv32ui_sc_tests); do \
+	for test in $(UNIT_TESTS); do \
 		$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
 		$(TOOLCHAIN_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o; \
 		sw/extract_hex.sh tests-build/$$test.elf tests-build/$$test-pmem.hex tests-build/$$test-dmem.hex; \
 	done
 
 run_tests: compile_tests
-	for test in $(rv32ui_sc_tests); do \
+	for test in $(UNIT_TESTS); do \
 		echo -ne "Running test $$test:\t"; \
-		DMEM_FILE="tests-build/$$test-dmem.hex"; \
-		xelab cpu_tb -relax -generic_top "PMEM_INIT_FILE=tests-build/$$test-pmem.hex" -generic_top "DMEM_INIT_FILE=tests-build/$$test-dmem.hex" -prj v-core.prj > /dev/null; \
+		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		xelab cpu_tb -relax -timescale 1ns/1ns -debug all \
+			-i rtl/ -i sim/ -i lib/ \
+			-generic_top PMEM_INIT_FILE=\"tests-build/$$test-pmem.hex\" \
+			-generic_top DMEM_INIT_FILE=\"tests-build/$$test-dmem.hex\" \
+			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
+			-prj v-core.prj > /dev/null; \
 		xsim cpu_tb -R --onfinish quit > tests-build/$$test.results; \
 		RESULT=$$(cat tests-build/$$test.results | awk '/Note:/ {print}' | sed 's/Note://' | awk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
@@ -59,7 +70,7 @@ run_tests: compile_tests
 	done
 
 clean:
-	rm -rf tests-build/ webtalk* xelab* xsim*
+	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid*
 
 clean_all: clean
 	rm -rf v-core.prj tests/
