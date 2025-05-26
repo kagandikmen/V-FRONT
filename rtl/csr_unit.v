@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2025-05-25
+// Modified:    2025-05-26
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -12,6 +12,7 @@ module csr_unit
 
     input r_en,
     input w_en,
+    input [2:0] op,
     input [31:0] in,
     input [clogb2(CSR_REG_COUNT-1)-1:0] csr_addr,
 
@@ -36,7 +37,14 @@ module csr_unit
         end
         else if (w_en == 1'b1)
         begin
-            csr_registers[csr_addr] <= in;
+            casez (op)
+                3'b?01:
+                    csr_registers[csr_addr] <= in;
+                3'b?10:
+                    csr_registers[csr_addr] <= (csr_registers[csr_addr] | in);
+                3'b?11:
+                    csr_registers[csr_addr] <= (csr_registers[csr_addr] & (~in));
+            endcase
         end
     end
 

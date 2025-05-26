@@ -31,6 +31,7 @@ module control_unit
     // to CSR unit
     output reg csr_r_en,
     output reg csr_w_en,
+    output reg [2:0] csr_op,
     output reg [11:0] csr_addr,
     output reg csr_imm_select
     );
@@ -53,6 +54,7 @@ module control_unit
         csr_w_en = 1'b0;
         csr_addr = 12'b0;
         csr_imm_select = 1'b0;
+        csr_op = 3'b000;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
@@ -391,6 +393,7 @@ module control_unit
                 csr_r_en = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
                 csr_w_en = 1'b1;
                 csr_addr = instr[31:20];
+                csr_op = 3'b001;
             end
             {FUNCT3_CSRRS, SYSTEM_OPCODE}:
             begin
@@ -403,6 +406,7 @@ module control_unit
                 csr_r_en = 1'b1;
                 csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr = instr[31:20];
+                csr_op = 3'b010;
             end
             {FUNCT3_CSRRC, SYSTEM_OPCODE}:
             begin
@@ -415,6 +419,7 @@ module control_unit
                 csr_r_en = 1'b1;
                 csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr = instr[31:20];
+                csr_op = 3'b011;
             end
             {FUNCT3_CSRRWI, SYSTEM_OPCODE}:
             begin
@@ -424,6 +429,7 @@ module control_unit
                 csr_w_en = 1'b1;
                 csr_addr = instr[31:20];
                 csr_imm_select = 1'b1;
+                csr_op = 3'b101;
             end
             {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
             begin
@@ -433,6 +439,7 @@ module control_unit
                 csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr = instr[31:20];
                 csr_imm_select = 1'b1;
+                csr_op = 3'b110;
             end
             {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
             begin
@@ -442,6 +449,7 @@ module control_unit
                 csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr = instr[31:20];
                 csr_imm_select = 1'b1;
+                csr_op = 3'b111;
             end
             default:    // JAL / JALR / LUI / AUIPC
             begin

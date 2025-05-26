@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-25
+// Modified:    2025-05-26
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -42,6 +42,7 @@ module cpu
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
     wire csr_unit_r_en, csr_unit_w_en, csr_imm_select;
     wire [11:0] csr_unit_addr;
+    wire [2:0] csr_unit_op;
 
     alu #(.OPERAND_LENGTH(OP_LENGTH)) 
         alu_cpu
@@ -90,6 +91,7 @@ module cpu
             .jump(jump),
             .csr_r_en(csr_unit_r_en),
             .csr_w_en(csr_unit_w_en),
+            .csr_op(csr_unit_op),
             .csr_addr(csr_unit_addr),
             .csr_imm_select(csr_imm_select)
         );
@@ -108,6 +110,7 @@ module cpu
             .rst(rst),
             .r_en(csr_unit_r_en),
             .w_en(csr_unit_w_en),
+            .op(csr_unit_op),
             .in(csr_in),
             .csr_addr(csr_unit_addr),
             .out(csr_unit_out)
