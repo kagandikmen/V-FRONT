@@ -120,13 +120,13 @@ module control_unit
                 alu_imm_select = 1'b0;
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b01;
-                alu_op_select = 4'b0110;
+                alu_op_select = 4'b0100;
                 w_en_rf = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SRL, R_OPCODE}: // SRL / SRA
             begin
-                if (instr[31] == 1'b0)  // SRL
+                if (instr[30] == 1'b0)  // SRL
                 begin
                     alu_imm_select = 1'b0;
                     alu_mux1_select = 1'b0;

@@ -5,7 +5,7 @@
 
 include ut/rv32ui/Makefrag
 
-FAILING_TESTS := fence_i lui ma_data sll sra srai srl xor
+FAILING_TESTS := fence_i ma_data
 
 UNIT_TESTS := $(filter-out $(FAILING_TESTS), $(rv32ui_sc_tests))
 
