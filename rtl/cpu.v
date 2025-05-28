@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-26
+// Modified:    2025-05-28
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -27,8 +27,8 @@ module cpu
     output wire led     // does not serve any practical purpose other than preventing synthesisers from optimising the whole CPU away
     );
 
-    wire alu_imm_select, alu_mux1_select, alu_pc_select, w_en_rf, branch, jump;
-    wire [1:0] alu_mux2_select, rf_w_select;
+    wire alu_imm_select, alu_mux1_select, w_en_rf, branch, jump;
+    wire [1:0] alu_pc_select, alu_mux2_select, rf_w_select;
     wire [3:0] alu_op_select, wr_mode;
     wire [31:0] instr;
     wire [PC_WIDTH-1:0] next_pc;
@@ -60,11 +60,13 @@ module cpu
             .comp_result(comp_result)
         );
 
-    two_input_mux #(.INPUT_LENGTH(32))
+    four_input_mux #(.INPUT_LENGTH(32))
         alu_opd1_mux
         (
             .a(opd1),
             .b(pc),
+            .c('b0),
+            .d(),
             .sel(alu_pc_select),
             .z(alu_opd1)
         );

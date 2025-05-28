@@ -1,11 +1,11 @@
 # V-CORE Main Makefile
 # Created:		2025-05-25
-# Modified:		2025-05-26
+# Modified:		2025-05-28
 # Author:		Kagan Dikmen (kagandikmen@outlook.com)
 
 include ut/rv32ui/Makefrag
 
-FAILING_TESTS := and fence_i lb lbu lh lhu lw ld_st lui ma_data or sb sh sw st_ld sll sra srai srl srli xor
+FAILING_TESTS := fence_i lb lbu lh lhu lw ld_st lui ma_data sb sh sw st_ld sll sra srai srl xor
 
 UNIT_TESTS := $(filter-out $(FAILING_TESTS), $(rv32ui_sc_tests))
 
@@ -36,13 +36,13 @@ create_project:
 
 copy_tests: create_project
 	test -d tests || mkdir tests
-	for test in $(UNIT_TESTS); do \
+	for test in $(UNIT_TESTS) $(FAILING_TESTS); do \
 		cp ut/rv32ui/$$test.S tests; \
 	done
 
 compile_tests: copy_tests
 	test -d tests-build || mkdir tests-build
-	for test in $(UNIT_TESTS); do \
+	for test in $(UNIT_TESTS) $(FAILING_TESTS); do \
 		$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
 		$(TOOLCHAIN_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o; \
 		sw/extract_hex.sh tests-build/$$test.elf tests-build/$$test-pmem.hex tests-build/$$test-dmem.hex; \
@@ -73,5 +73,5 @@ clean:
 	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid*
 
 clean_all: clean
-	rm -rf v-core.prj tests/
+	rm -rf v-core.prj tests/ sim/*.hex
 

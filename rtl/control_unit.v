@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-05-26
+// Modified:    2025-05-28
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -9,7 +9,7 @@ module control_unit
 
     // multiplexer select signals
     output reg alu_imm_select,
-    output reg alu_pc_select,
+    output reg [1:0] alu_pc_select,
     output reg [1:0] rf_w_select,
 
     // to ALU
@@ -50,7 +50,7 @@ module control_unit
     begin
 
         alu_imm_select = 1'b1;     // choose the immediate
-        alu_pc_select = 1'b0;      // don't select PC at ALU
+        alu_pc_select = 2'b0;      // don't select PC at ALU
         branch = 1'b0;
         jump = 1'b0;
         wr_mode = MEM_IDLE;        // IDLE
@@ -304,7 +304,7 @@ module control_unit
             end
             {FUNCT3_BEQ, B_OPCODE}: // BEQ
             begin
-                alu_pc_select = 1'b1;
+                alu_pc_select = 2'b01;
                 alu_mux1_select = 1'b1;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;
@@ -314,7 +314,7 @@ module control_unit
             end
             {FUNCT3_BNE, B_OPCODE}: // BNE
             begin
-                alu_pc_select = 1'b1;
+                alu_pc_select = 2'b01;
                 alu_mux1_select = 1'b1;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0001; 
@@ -324,7 +324,7 @@ module control_unit
             end
             {FUNCT3_BLT, B_OPCODE}: // BLT
             begin
-                alu_pc_select = 1'b1;
+                alu_pc_select = 2'b01;
                 alu_mux1_select = 1'b1;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0011; 
@@ -334,7 +334,7 @@ module control_unit
             end
             {FUNCT3_BGE, B_OPCODE}: // BGE
             begin
-                alu_pc_select = 1'b1;
+                alu_pc_select = 2'b01;
                 alu_mux1_select = 1'b1;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0010; 
@@ -344,7 +344,7 @@ module control_unit
             end
             {FUNCT3_BLTU, B_OPCODE}: // BLTU
             begin
-                alu_pc_select = 1'b1;
+                alu_pc_select = 2'b01;
                 alu_mux1_select = 1'b1;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0111; 
@@ -354,7 +354,7 @@ module control_unit
             end
             {FUNCT3_BGEU, B_OPCODE}: // BGEU
             begin
-                alu_pc_select = 1'b1;
+                alu_pc_select = 2'b01;
                 alu_mux1_select = 1'b1;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0110;
@@ -380,7 +380,7 @@ module control_unit
             end
             {FUNCT3_ECALL_EBREAK, SYSTEM_OPCODE}:
             begin
-                alu_pc_select = 1'b0;
+                alu_pc_select = 2'b00;
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;   
@@ -410,7 +410,7 @@ module control_unit
             end
             {FUNCT3_CSRRW, SYSTEM_OPCODE}:
             begin
-                alu_pc_select = 1'b0;
+                alu_pc_select = 2'b00;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;  
                 alu_imm_select = 1'b1;
@@ -423,7 +423,7 @@ module control_unit
             end
             {FUNCT3_CSRRS, SYSTEM_OPCODE}:
             begin
-                alu_pc_select = 1'b0;
+                alu_pc_select = 2'b00;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;  
                 alu_imm_select = 1'b1;
@@ -436,7 +436,7 @@ module control_unit
             end
             {FUNCT3_CSRRC, SYSTEM_OPCODE}:
             begin
-                alu_pc_select = 1'b0;
+                alu_pc_select = 2'b00;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;  
                 alu_imm_select = 1'b1;
@@ -482,7 +482,7 @@ module control_unit
                 case (instr[6:0])
                     JAL_OPCODE:
                     begin
-                        alu_pc_select = 1'b1;
+                        alu_pc_select = 2'b01;
                         alu_mux1_select = 1'b0;
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000; 
@@ -501,6 +501,7 @@ module control_unit
                     end
                     LUI_OPCODE:
                     begin
+                        alu_pc_select = 2'b10;
                         alu_mux1_select = 1'b0;
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000;
@@ -509,7 +510,7 @@ module control_unit
                     end
                     AUIPC_OPCODE:
                     begin
-                        alu_pc_select = 1'b1;
+                        alu_pc_select = 2'b01;
                         alu_mux1_select = 1'b0;
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000;
