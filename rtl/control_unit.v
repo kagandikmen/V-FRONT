@@ -1,11 +1,12 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-05-28
+// Modified:    2025-05-29
 // Author:      Kagan Dikmen
 
 module control_unit
     (
     input [31:0] instr,
+    input is_misaligned,
 
     // multiplexer select signals
     output reg alu_imm_select,
@@ -38,7 +39,7 @@ module control_unit
     output reg csr_w_en,
     output reg [2:0] csr_op,
     output reg [11:0] csr_addr,
-    output reg csr_imm_select
+    output reg [1:0] csr_imm_select
     );
 
     `include "../lib/common_library.vh"
@@ -58,7 +59,7 @@ module control_unit
         csr_r_en = 1'b0;
         csr_w_en = 1'b0;
         csr_addr = 12'b0;
-        csr_imm_select = 1'b0;
+        csr_imm_select = 2'b0;
         csr_op = 3'b000;
         mret = 1'b0;
         ecall = 1'b0;
@@ -467,7 +468,7 @@ module control_unit
                 csr_r_en = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
                 csr_w_en = 1'b1;
                 csr_addr = instr[31:20];
-                csr_imm_select = 1'b1;
+                csr_imm_select = 2'b01;
                 csr_op = 3'b101;
             end
             {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
@@ -477,7 +478,7 @@ module control_unit
                 csr_r_en = 1'b1;
                 csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr = instr[31:20];
-                csr_imm_select = 1'b1;
+                csr_imm_select = 2'b01;
                 csr_op = 3'b110;
             end
             {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
@@ -487,7 +488,7 @@ module control_unit
                 csr_r_en = 1'b1;
                 csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr = instr[31:20];
-                csr_imm_select = 1'b1;
+                csr_imm_select = 2'b01;
                 csr_op = 3'b111;
             end
             default:    // JAL / JALR / LUI / AUIPC
@@ -540,7 +541,16 @@ module control_unit
                     end
                 endcase
             end
-        endcase   
+        endcase  
+        
+        if(is_misaligned)
+        begin
+            csr_r_en = 1'b1;
+            csr_w_en = 1'b0;
+            csr_op = 3'b000;
+            csr_addr = CSR_MTVEC_ADDR;
+            csr_imm_select = 2'b10;     // select instr
+        end
     end
     
 

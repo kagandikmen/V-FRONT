@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-28
+// Modified:    2025-05-29
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -43,7 +43,8 @@ module cpu
     wire [31:0] rs1_data, rs2_data, rd_write_data;
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
-    wire csr_unit_r_en, csr_unit_w_en, csr_imm_select;
+    wire csr_unit_r_en, csr_unit_w_en;
+    wire [1:0] csr_imm_select;
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
 
@@ -54,6 +55,10 @@ module cpu
     wire [OP_LENGTH-1:0] mem_acc_in, mem_acc_out;
 
     wire ecall, ebreak, mret;
+
+    wire is_misaligned, is_misalignment_store;
+
+    wire [11:0] dmem_addr;
 
     alu #(.OPERAND_LENGTH(OP_LENGTH)) 
         alu_cpu
@@ -98,6 +103,7 @@ module cpu
     control_unit control_unit_cpu
         (
             .instr(instr),
+            .is_misaligned(is_misaligned),
             .alu_imm_select(alu_imm_select),
             .alu_pc_select(alu_pc_select),
             .rf_w_select(rf_w_select),
@@ -120,10 +126,12 @@ module cpu
             .csr_imm_select(csr_imm_select)
         );
 
-    two_input_mux #(.INPUT_LENGTH(32)) csr_unit_mux
+    four_input_mux #(.INPUT_LENGTH(32)) csr_unit_mux
         (
             .a(alu_result),
             .b(imm),
+            .c(instr),
+            .d(),
             .sel(csr_imm_select),
             .z(csr_in)
         );
@@ -136,17 +144,22 @@ module cpu
             .w_en(csr_unit_w_en),
             .ecall(ecall),
             .ebreak(ebreak),
+            .mret(mret),
             .pc(pc),
             .op(csr_unit_op),
             .in(csr_in),
             .csr_addr(csr_unit_addr),
-            .out(csr_unit_out)
+            .out(csr_unit_out),
+            .is_misaligned(is_misaligned),
+            .is_misalignment_store(is_misalignment_store),
+            .mem_addr(alu_result[11:0]),
+            .rd_addr(rd_addr)
         );
     
     bram #(.INIT_FILE(DMEM_INIT_FILE)) data_memory_cpu
         (
-            .wr_addr(alu_result[13:2]),
-            .rd_addr(alu_result[13:2]),
+            .wr_addr(dmem_addr),
+            .rd_addr(dmem_addr),
             .ram_in(mem_acc_out),
             .clk(sysclk_inv),
             .byte_w_en(wr_mode),
@@ -180,13 +193,16 @@ module cpu
     memory_access_unit #(.BYTE_WIDTH(8))
         memory_access_unit_cpu
         (
+            .addr_in(alu_result),
+            .addr_out(dmem_addr),
             .ldst_mask(ldst_mask),
-            .offset(alu_result[1:0]),
             .ldst_is_unsigned(ldst_is_unsigned),
             .st_en(st_en),
             .in(mem_acc_in),
             .out(mem_acc_out),
-            .wr_mode(wr_mode)
+            .wr_mode(wr_mode),
+            .is_misaligned(is_misaligned),
+            .is_misalignment_store(is_misalignment_store)
         );
 
     four_input_mux #(.INPUT_LENGTH(OP_LENGTH)) 
@@ -207,7 +223,7 @@ module cpu
             .rst(rst),
             .branch(branch),
             .jump(jump),
-            .csr_sel(ecall || ebreak || mret),
+            .csr_sel(ecall || ebreak || mret || is_misaligned),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
@@ -235,7 +251,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf),
+            .w_en(w_en_rf && !is_misaligned),
             .rs1_addr(rs1_addr),
             .rs2_addr(rs2_addr),
             .rd_addr(rd_addr),
