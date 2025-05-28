@@ -32,6 +32,9 @@ module control_unit
     output reg ebreak,
     output reg mret,
 
+    output reg [3:0] ldst_mask,
+    output reg ldst_is_unsigned,
+
     // to CSR unit
     output reg csr_r_en,
     output reg csr_w_en,
@@ -62,6 +65,8 @@ module control_unit
         mret = 1'b0;
         ecall = 1'b0;
         ebreak = 1'b0;
+        ldst_is_unsigned = 1'b0;
+        ldst_mask = 4'b0000;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
@@ -242,6 +247,7 @@ module control_unit
                 alu_op_select = 4'b0000; 
                 w_en_rf = 1'b1;
                 rf_w_select = 2'b01;
+                ldst_mask = 4'b0001;
             end
             {FUNCT3_LH, LOAD_OPCODE}: // LH
             begin
@@ -250,6 +256,7 @@ module control_unit
                 alu_op_select = 4'b0000; 
                 w_en_rf = 1'b1;
                 rf_w_select = 2'b01;
+                ldst_mask = 4'b0011;
             end
             {FUNCT3_LW, LOAD_OPCODE}: // LW
             begin
@@ -258,6 +265,7 @@ module control_unit
                 alu_op_select = 4'b0000; 
                 w_en_rf = 1'b1;
                 rf_w_select = 2'b01;
+                ldst_mask = 4'b1111;
             end
             {FUNCT3_LBU, LOAD_OPCODE}: // LBU
             begin
@@ -266,6 +274,8 @@ module control_unit
                 alu_op_select = 4'b0000; 
                 w_en_rf = 1'b1;
                 rf_w_select = 2'b01;
+                ldst_is_unsigned = 1'b1;
+                ldst_mask = 4'b0001;
             end
             {FUNCT3_LHU, LOAD_OPCODE}: // LHU
             begin
@@ -274,6 +284,8 @@ module control_unit
                 alu_op_select = 4'b0000; 
                 w_en_rf = 1'b1;
                 rf_w_select = 2'b01;
+                ldst_is_unsigned = 1'b1;
+                ldst_mask = 4'b0011;
             end
             {FUNCT3_SB, S_OPCODE}:  // SB
             begin
@@ -283,6 +295,7 @@ module control_unit
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
                 wr_mode = BYTE;
+                ldst_mask = 4'b0001;
             end
             {FUNCT3_SH, S_OPCODE}:  // SH
             begin
@@ -292,6 +305,7 @@ module control_unit
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
                 wr_mode = HALFWORD;
+                ldst_mask = 4'b0011;
             end
             {FUNCT3_SW, S_OPCODE}:  // SW
             begin
@@ -301,6 +315,7 @@ module control_unit
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
                 wr_mode = WORD;
+                ldst_mask = 4'b1111;
             end
             {FUNCT3_BEQ, B_OPCODE}: // BEQ
             begin

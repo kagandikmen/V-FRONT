@@ -10,6 +10,7 @@
 `include "./immediate_generator.v"
 `include "./instruction_decoder.v"
 `include "./bram.v"
+`include "./memory_access_unit.v"
 `include "./mux.v"
 `include "./pc_counter.v"
 `include "./register_file.v"
@@ -37,7 +38,7 @@ module cpu
     wire [OP_LENGTH-1:0] alu_result, comp_result, opd1, opd2, pc_plus4, pc;
     wire [OP_LENGTH-1:0] alu_opd1, alu_opd2;
     wire [OP_LENGTH-1:0] imm;
-    wire [DMEM_DATA_WIDTH-1:0] r_data;
+    wire [DMEM_DATA_WIDTH-1:0] r_data, r_data_masked;
     wire [4:0] rs1_addr, rs2_addr, rd_addr;
     wire [31:0] rs1_data, rs2_data, rd_write_data;
 
@@ -45,6 +46,9 @@ module cpu
     wire csr_unit_r_en, csr_unit_w_en, csr_imm_select;
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
+
+    wire [3:0] ldst_mask;
+    wire ldst_is_unsigned;
 
     wire ecall, ebreak, mret;
 
@@ -104,6 +108,8 @@ module cpu
             .ecall(ecall),
             .ebreak(ebreak),
             .mret(mret),
+            .ldst_mask(ldst_mask),
+            .ldst_is_unsigned(ldst_is_unsigned),
             .csr_r_en(csr_unit_r_en),
             .csr_w_en(csr_unit_w_en),
             .csr_op(csr_unit_op),
@@ -165,12 +171,22 @@ module cpu
             .opd1(opd1),
             .opd2(opd2)
         );
+    
+    memory_access_unit #(.BYTE_WIDTH(8))
+        memory_access_unit_cpu
+        (
+            .ldst_mask(ldst_mask),
+            .offset(alu_result[1:0]),
+            .ldst_is_unsigned(ldst_is_unsigned),
+            .memory_out(r_data),
+            .out(r_data_masked)
+        );
 
     four_input_mux #(.INPUT_LENGTH(OP_LENGTH)) 
         rf_write_select_mux_cpu
         (
             .a(alu_result),
-            .b(r_data),
+            .b(r_data_masked),
             .c(pc_plus4),
             .d(csr_unit_out),
             .sel(rf_w_select),
