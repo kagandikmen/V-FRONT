@@ -1,6 +1,6 @@
 // Testbench for the main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-26
+// Modified:    2025-05-28
 // Author:      Kagan Dikmen
 
 `include "../rtl/cpu.v"
@@ -40,6 +40,8 @@ module cpu_tb
         rst = ~rst;
 
         wait (^cpu_ut.data_memory_cpu.ram[TOHOST_ADDR[13:2]] !== 1'bx);
+
+        wait (|cpu_ut.data_memory_cpu.ram[TOHOST_ADDR[13:2]] !== 1'b0);
         
         if (cpu_ut.data_memory_cpu.ram[TOHOST_ADDR[13:2]] == 32'd1)
             $display("Note: Success!");

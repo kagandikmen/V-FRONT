@@ -13,10 +13,11 @@ if [ -z "$TOOLCHAIN_PREFIX" ]; then
 fi;
 
 $TOOLCHAIN_PREFIX-objdump -d -w $1 | sed '1,5d' | awk '!/:$/ { print $2; }' | sed '/^$/d' > $2; \
-: > "$3" \
+: > "$3"; \
 test -z "$($TOOLCHAIN_PREFIX-readelf -l $1 | grep .data)" || \
 	$TOOLCHAIN_PREFIX-objdump -s -j .data $1 | sed '1,4d' | \
-	awk '!/:$/ { for (i = 2; i < 6; i++) print $i; }' | sed '/^$/d' > $3;
+	awk '!/:$/ { for (i = 2; i < 6; i++) print $i; }' | sed '/^$/d' | \
+	awk 'length($0)==8 { print substr($0, 7, 2) substr($0, 5, 2) substr($0, 3, 2) substr($0, 1, 2) }' > $3;
 
 exit 0
 

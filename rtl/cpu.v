@@ -4,6 +4,7 @@
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
+`include "./clock_inverter.v"
 `include "./control_unit.v"
 `include "./csr_unit.v"
 `include "./immediate_generator.v"
@@ -27,6 +28,7 @@ module cpu
     output wire led     // does not serve any practical purpose other than preventing synthesisers from optimising the whole CPU away
     );
 
+    wire sysclk_inv;
     wire alu_imm_select, alu_mux1_select, w_en_rf, branch, jump;
     wire [1:0] alu_pc_select, alu_mux2_select, rf_w_select;
     wire [3:0] alu_op_select, wr_mode;
@@ -80,6 +82,12 @@ module cpu
             .z(alu_opd2)
         );
 
+    clock_inverter clock_inverter_cpu
+        (
+            .clk(sysclk),
+            .clk_inv(sysclk_inv)
+        );
+
     control_unit control_unit_cpu
         (
             .instr(instr),
@@ -131,7 +139,7 @@ module cpu
             .wr_addr(alu_result[13:2]),
             .rd_addr(alu_result[13:2]),
             .ram_in(opd2),
-            .clk(sysclk),
+            .clk(sysclk_inv),
             .byte_w_en(wr_mode),
             .r_en(1'b1),
             .out_res(),
