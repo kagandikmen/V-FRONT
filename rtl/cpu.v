@@ -49,6 +49,9 @@ module cpu
 
     wire [3:0] ldst_mask;
     wire ldst_is_unsigned;
+    wire st_en;
+
+    wire [OP_LENGTH-1:0] mem_acc_in, mem_acc_out;
 
     wire ecall, ebreak, mret;
 
@@ -102,7 +105,6 @@ module cpu
             .alu_mux2_select(alu_mux2_select),
             .alu_op_select(alu_op_select),
             .w_en_rf(w_en_rf),
-            .wr_mode(wr_mode),
             .branch(branch),
             .jump(jump),
             .ecall(ecall),
@@ -110,6 +112,7 @@ module cpu
             .mret(mret),
             .ldst_mask(ldst_mask),
             .ldst_is_unsigned(ldst_is_unsigned),
+            .st_en(st_en),
             .csr_r_en(csr_unit_r_en),
             .csr_w_en(csr_unit_w_en),
             .csr_op(csr_unit_op),
@@ -144,7 +147,7 @@ module cpu
         (
             .wr_addr(alu_result[13:2]),
             .rd_addr(alu_result[13:2]),
-            .ram_in(opd2),
+            .ram_in(mem_acc_out),
             .clk(sysclk_inv),
             .byte_w_en(wr_mode),
             .r_en(1'b1),
@@ -170,23 +173,27 @@ module cpu
             .rs2_data(rs2_data),
             .opd1(opd1),
             .opd2(opd2)
-        );
-    
+        ); 
+
+    assign mem_acc_in = (st_en==1'b1) ? opd2 : r_data;
+
     memory_access_unit #(.BYTE_WIDTH(8))
         memory_access_unit_cpu
         (
             .ldst_mask(ldst_mask),
             .offset(alu_result[1:0]),
             .ldst_is_unsigned(ldst_is_unsigned),
-            .memory_out(r_data),
-            .out(r_data_masked)
+            .st_en(st_en),
+            .in(mem_acc_in),
+            .out(mem_acc_out),
+            .wr_mode(wr_mode)
         );
 
     four_input_mux #(.INPUT_LENGTH(OP_LENGTH)) 
         rf_write_select_mux_cpu
         (
             .a(alu_result),
-            .b(r_data_masked),
+            .b(mem_acc_out),
             .c(pc_plus4),
             .d(csr_unit_out),
             .sel(rf_w_select),

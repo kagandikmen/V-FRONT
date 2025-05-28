@@ -21,9 +21,6 @@ module control_unit
     // to register file
     output reg w_en_rf,
 
-    // to data memory
-    output reg [3:0] wr_mode,
-
     // to PC counter
     output reg branch,
     output reg jump,
@@ -34,6 +31,7 @@ module control_unit
 
     output reg [3:0] ldst_mask,
     output reg ldst_is_unsigned,
+    output reg st_en,
 
     // to CSR unit
     output reg csr_r_en,
@@ -56,7 +54,7 @@ module control_unit
         alu_pc_select = 2'b0;      // don't select PC at ALU
         branch = 1'b0;
         jump = 1'b0;
-        wr_mode = MEM_IDLE;        // IDLE
+        st_en = 1'b0;
         csr_r_en = 1'b0;
         csr_w_en = 1'b0;
         csr_addr = 12'b0;
@@ -294,8 +292,8 @@ module control_unit
                 alu_op_select = 4'b0000;
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
-                wr_mode = BYTE;
                 ldst_mask = 4'b0001;
+                st_en = 1'b1;
             end
             {FUNCT3_SH, S_OPCODE}:  // SH
             begin
@@ -304,8 +302,8 @@ module control_unit
                 alu_op_select = 4'b0000;
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
-                wr_mode = HALFWORD;
                 ldst_mask = 4'b0011;
+                st_en = 1'b1;
             end
             {FUNCT3_SW, S_OPCODE}:  // SW
             begin
@@ -314,8 +312,8 @@ module control_unit
                 alu_op_select = 4'b0000;
                 w_en_rf = 1'b0;
                 rf_w_select = 2'b00;
-                wr_mode = WORD;
                 ldst_mask = 4'b1111;
+                st_en = 1'b1;
             end
             {FUNCT3_BEQ, B_OPCODE}: // BEQ
             begin
