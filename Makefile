@@ -5,7 +5,7 @@
 
 include ut/rv32ui/Makefrag
 
-FAILING_TESTS := fence_i
+FAILING_TESTS :=
 
 UNIT_TESTS := $(filter-out $(FAILING_TESTS), $(rv32ui_sc_tests))
 
@@ -46,7 +46,8 @@ compile_tests: copy_tests
 	for test in $(UNIT_TESTS) $(FAILING_TESTS); do \
 		$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
 		$(TOOLCHAIN_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o sw/mtvec_handler.o; \
-		sw/extract_hex.sh tests-build/$$test.elf tests-build/$$test-pmem.hex tests-build/$$test-dmem.hex; \
+		$(TOOLCHAIN_PREFIX)-objcopy -j .text -j .data -j .rodata -O binary tests-build/$$test.elf tests-build/$$test.bin; \
+		hexdump -v -e '1/4 "%08x\n"' tests-build/$$test.bin > tests-build/$$test.hex; \
 	done
 
 run_tests: compile_tests
@@ -55,8 +56,7 @@ run_tests: compile_tests
 		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		xelab cpu_tb -relax -timescale 1ns/1ns -debug all \
 			-i rtl/ -i sim/ -i lib/ \
-			-generic_top PMEM_INIT_FILE=\"tests-build/$$test-pmem.hex\" \
-			-generic_top DMEM_INIT_FILE=\"tests-build/$$test-dmem.hex\" \
+			-generic_top MEM_INIT_FILE=\"tests-build/$$test.hex\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 			-prj v-core.prj > /dev/null; \
 		xsim cpu_tb -R --onfinish quit > tests-build/$$test.results; \

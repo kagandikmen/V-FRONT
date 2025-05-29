@@ -8,7 +8,7 @@ module memory_access_unit
         parameter BYTE_WIDTH = 8
     )(
         input [31:0] addr_in,
-        output [11:0] addr_out,
+        output [12:0] addr_out,
         input [3:0] ldst_mask,
         input ldst_is_unsigned,
         input st_en,
@@ -28,7 +28,7 @@ module memory_access_unit
     wire access_misaligned;
     wire [1:0] offset;
 
-    assign addr_out = addr_in[13:2];
+    assign addr_out = addr_in[14:2];
     assign offset = addr_in[1:0];
 
     assign access_misaligned = (ldst_mask == 4'b1111 && offset != 2'b00) || (ldst_mask == 4'b0011 && offset[0] != 1'b0);

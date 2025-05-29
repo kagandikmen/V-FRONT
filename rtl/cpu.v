@@ -9,7 +9,7 @@
 `include "./csr_unit.v"
 `include "./immediate_generator.v"
 `include "./instruction_decoder.v"
-`include "./bram.v"
+`include "./bram_dual.v"
 `include "./memory_access_unit.v"
 `include "./mux.v"
 `include "./pc_counter.v"
@@ -17,12 +17,11 @@
 
 module cpu 
     #(
-    parameter DMEM_ADDR_WIDTH = 12,
+    parameter DMEM_ADDR_WIDTH = 13,
     parameter DMEM_DATA_WIDTH = 32,
     parameter OP_LENGTH = 32,
     parameter PC_WIDTH = 16,
-    parameter PMEM_INIT_FILE = "",
-    parameter DMEM_INIT_FILE = ""
+    parameter MEM_INIT_FILE = ""
     )(
     input rst,
     input sysclk,
@@ -58,7 +57,7 @@ module cpu
 
     wire is_misaligned, is_misalignment_store;
 
-    wire [11:0] dmem_addr;
+    wire [DMEM_ADDR_WIDTH-1:0] dmem_addr;
 
     alu #(.OPERAND_LENGTH(OP_LENGTH)) 
         alu_cpu
@@ -153,21 +152,8 @@ module cpu
             .is_misaligned(is_misaligned),
             .is_misalignment_store(is_misalignment_store),
             .misaligned_store_value(opd2),
-            .mem_addr(alu_result[11:0]),
+            .mem_addr(alu_result[14:0]),
             .rd_addr(rd_addr)
-        );
-    
-    bram #(.INIT_FILE(DMEM_INIT_FILE)) data_memory_cpu
-        (
-            .wr_addr(dmem_addr),
-            .rd_addr(dmem_addr),
-            .ram_in(mem_acc_out),
-            .clk(sysclk_inv),
-            .byte_w_en(wr_mode),
-            .r_en(1'b1),
-            .out_res(),
-            .out_r_en(),
-            .r_out(r_data)
         );
     
     immediate_generator immediate_generator_cpu
@@ -234,19 +220,6 @@ module cpu
         );
     
     
-    bram #(.INIT_FILE(PMEM_INIT_FILE)) program_memory_cpu
-        (
-            .wr_addr(),
-            .rd_addr(next_pc[PC_WIDTH-3:2]),
-            .ram_in(),
-            .clk(sysclk),
-            .byte_w_en(),
-            .r_en(1'b1),
-            .out_res(),
-            .out_r_en(),
-            .r_out(instr)
-        );
-    
     register_file #(.RF_ADDR_LEN(5), .RF_DATA_LEN(32)) 
         register_file_cpu
         (
@@ -259,6 +232,27 @@ module cpu
             .rs1_data(rs1_data),
             .rs2_data(rs2_data),
             .rd_write_data(rd_write_data)
+        );
+
+    bram_dual #(.INIT_FILE(MEM_INIT_FILE))
+        unified_memory_cpu
+        (
+            .addra(next_pc[14:2]),
+            .addrb(dmem_addr),
+            .dina(),
+            .dinb(mem_acc_out),
+            .clka(sysclk),
+            .clkb(sysclk_inv),
+            .wea(),
+            .web(wr_mode),
+            .ena(1'b1),
+            .enb(1'b1),
+            .rsta(),
+            .rstb(),
+            .regcea(),
+            .regceb(),
+            .douta(instr),
+            .doutb(r_data)
         );
     
     assign led = branch;
