@@ -27,6 +27,7 @@ module csr_unit
 
     input is_misaligned,
     input is_misalignment_store,
+    input [31:0] misaligned_store_value,
     input [11:0] mem_addr,
     input [4:0] rd_addr
     );
@@ -75,7 +76,7 @@ module csr_unit
             csr_registers[CSR_MCAUSE_ADDR] <= (is_misalignment_store) ? 32'd4 : 32'd6;
             csr_registers[CSR_MSCRATCH_ADDR] <= in;     // saves the instruction word
             csr_registers[CSR_CUSTOM1_ADDR] <= {20'b0, mem_addr};
-            csr_registers[CSR_CUSTOM2_ADDR] <= {27'b0, rd_addr};
+            csr_registers[CSR_CUSTOM2_ADDR] <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
         end
         else if (w_en == 1'b1)
         begin

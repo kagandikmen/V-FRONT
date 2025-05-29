@@ -152,6 +152,7 @@ module cpu
             .out(csr_unit_out),
             .is_misaligned(is_misaligned),
             .is_misalignment_store(is_misalignment_store),
+            .misaligned_store_value(opd2),
             .mem_addr(alu_result[11:0]),
             .rd_addr(rd_addr)
         );

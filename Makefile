@@ -1,11 +1,11 @@
 # V-CORE Main Makefile
 # Created:		2025-05-25
-# Modified:		2025-05-28
+# Modified:		2025-05-29
 # Author:		Kagan Dikmen (kagandikmen@outlook.com)
 
 include ut/rv32ui/Makefrag
 
-FAILING_TESTS := fence_i ma_data
+FAILING_TESTS := fence_i
 
 UNIT_TESTS := $(filter-out $(FAILING_TESTS), $(rv32ui_sc_tests))
 
@@ -42,9 +42,10 @@ copy_tests: create_project
 
 compile_tests: copy_tests
 	test -d tests-build || mkdir tests-build
+	$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
 	for test in $(UNIT_TESTS) $(FAILING_TESTS); do \
 		$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
-		$(TOOLCHAIN_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o; \
+		$(TOOLCHAIN_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o sw/mtvec_handler.o; \
 		sw/extract_hex.sh tests-build/$$test.elf tests-build/$$test-pmem.hex tests-build/$$test-dmem.hex; \
 	done
 
@@ -73,5 +74,5 @@ clean:
 	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid*
 
 clean_all: clean
-	rm -rf v-core.prj tests/ sim/*.hex
+	rm -rf v-core.prj sw/mtvec_handler.o tests/ sim/*.hex
 
