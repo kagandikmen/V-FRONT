@@ -4,12 +4,12 @@
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
+`include "./bram_dual.v"
 `include "./clock_inverter.v"
 `include "./control_unit.v"
 `include "./csr_unit.v"
 `include "./immediate_generator.v"
 `include "./instruction_decoder.v"
-`include "./bram_dual.v"
 `include "./memory_access_unit.v"
 `include "./mux.v"
 `include "./pc_counter.v"

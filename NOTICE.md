@@ -3,7 +3,7 @@ See the LICENSE file for full license text.
 
 ##### Third-Party Notices:
 
-The file `sw/extract_hex.sh` includes software developed by Kristian Klomsten Skordal, and is licensed under the following license:
+The file `sw/extract_hex.sh.obsolete` includes software developed by Kristian Klomsten Skordal, and is licensed under the following license:
 
 ```
 Copyright (c) Kristian Klomsten Skordal
