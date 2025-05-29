@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2025-05-23
+// Modified:    2025-05-29
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -55,7 +55,15 @@ localparam FUNCT3_OR        = 3'b110;
 localparam FUNCT3_AND       = 3'b111;
 localparam FUNCT3_FENCE     = 3'b000;
 localparam FUNCT3_FENCEI    = 3'b001;
-localparam FUNCT3_SYSTEM    = 3'b000;
+
+localparam FUNCT3_ECALL_EBREAK = 3'b000;
+
+localparam FUNCT3_CSRRW     = 3'b001;
+localparam FUNCT3_CSRRS     = 3'b010;
+localparam FUNCT3_CSRRC     = 3'b011;
+localparam FUNCT3_CSRRWI    = 3'b101;
+localparam FUNCT3_CSRRSI    = 3'b110;
+localparam FUNCT3_CSRRCI    = 3'b111;
 
 
 // FUNCT7
@@ -88,8 +96,9 @@ localparam DMEM_DEPTH        = 4096;
 localparam DMEM_ADDR_LENGTH  = 12;       // log2(MEM_DEPTH) = 12
 
 localparam WORD         = 4'b1111;
-localparam HALFWORD     = 4'b1100;
-localparam BYTE         = 4'b1000;
+localparam HALFWORD     = 4'b0011;
+localparam BYTE         = 4'b0001;
+localparam MEM_IDLE     = 4'b0000;
 
 
 // PMEM
@@ -103,3 +112,40 @@ localparam BYTE         = 4'b1000;
 localparam RF_WIDTH         = 32;
 localparam RF_DEPTH         = 32;
 localparam RF_ADDR_LENGTH   = 5;        // log2(RF_DEPTH) = 5
+
+
+// CSR
+
+localparam CSR_JVT_ADDR     = 12'h017;
+localparam CSR_MSTATUS_ADDR = 12'h300;
+localparam CSR_MISA_ADDR    = 12'h301;
+localparam CSR_MIE_ADDR     = 12'h304;
+localparam CSR_MTVEC_ADDR   = 12'h305;
+localparam CSR_MTVT_ADDR    = 12'h307;
+localparam CSR_MSCRATCH_ADDR = 12'h340;
+localparam CSR_MEPC_ADDR    = 12'h341;
+localparam CSR_MCAUSE_ADDR  = 12'h342;
+localparam CSR_MTVAL_ADDR   = 12'h343;
+localparam CSR_CUSTOM1_ADDR = 12'h7f0;
+localparam CSR_CUSTOM2_ADDR = 12'h7f1;
+
+localparam CSR_JVT_RST      = 32'h0000_0000;
+localparam CSR_MSTATUS_RST  = 32'h0000_1800;
+localparam CSR_MISA_RST     = 32'h4000_0000;    // RV32I with no extensions
+localparam CSR_MIE_RST      = 32'h0000_0000;
+localparam CSR_MTVEC_RST    = 32'h0000_0000;
+localparam CSR_MTVT_RST     = 32'h0000_0000;
+localparam CSR_MSCRATCH_RST = 32'h0000_0000;
+localparam CSR_MEPC_RST     = 32'h0000_0000;
+localparam CSR_MCAUSE_RST   = 32'h0000_0000;
+localparam CSR_MTVAL_RST    = 32'h0000_0000;
+localparam CSR_CUSTOM1_RST  = 32'h0000_0000;
+localparam CSR_CUSTOM2_RST  = 32'h0000_0000;
+
+
+//  The following function calculates the address width based on specified RAM depth
+function integer clogb2;
+    input integer depth;
+    for (clogb2=0; depth>0; clogb2=clogb2+1)
+        depth = depth >> 1;
+endfunction

@@ -1,6 +1,6 @@
 // Register file of the CPU
 // Created:     2024-01-20
-// Modified:    2024-08-15 (last status: working fine)
+// Modified:    2025-05-24
 // Author:      Kagan Dikmen
 
 module register_file
@@ -36,14 +36,6 @@ module register_file
             begin
                 rf[i] <= 'b0;
             end
-
-            // a little bit of cheating for testing purposes
-            rf[2] <= 'd6;
-            rf[3] <= 'd9;
-            rf[4] <= 'd12;
-            rf[5] <= 'd15;
-            rf[6] <= 'd18;
-            rf[7] <= 'd21;
         end
         else if (w_en == 1'b1)  // synchronous write
             rf[rd_addr] <= rd_write_data;
