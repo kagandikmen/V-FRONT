@@ -15,6 +15,10 @@ jobs:
         run: |
           sudo ./.github/build-toolchain.sh
 
+      - name: Set PATH
+        run: |
+          echo "/opt/riscv/bin" >> "$GITHUB_PATH"
+
       - name: Run the tests
         run: |
           make MODE=ci
