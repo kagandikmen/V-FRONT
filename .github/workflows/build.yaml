@@ -1,0 +1,24 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up the environment
+        run: |
+          sudo ./.github/setup-ci.sh
+
+      - name: Build the toolchain
+        run: |
+          sudo ./.github/build-toolchain.sh
+
+      - name: Run the tests
+        run: |
+          make MODE=ci
+
+      - name: Clean
+        run: |
+          make clean_all
