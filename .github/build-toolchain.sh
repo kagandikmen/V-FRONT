@@ -6,4 +6,4 @@ mkdir riscv
 cd riscv-gnu-toolchain/
 ./configure --prefix=/opt/riscv --with-abi=ilp32 --with-arch=rv32i
 make -j $(nproc)
-export PATH=$PATH:/opt/riscv/bin
+echo "/opt/riscv/bin" >> "$GITHUB_PATH"
