@@ -1,6 +1,6 @@
 # V-CORE Main Makefile
 # Created:		2025-05-25
-# Modified:		2025-05-29
+# Modified:		2025-05-30
 # Author:		Kagan Dikmen (kagandikmen@outlook.com)
 
 include ut/rv32ui/Makefrag
@@ -26,7 +26,7 @@ LDFLAGS += -march=rv32i_zicsr_zifencei -nostartfiles \
 	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,--no-relax -Wl,--gc-sections \
 	-Wl,-Tsw/v-core.ld
 
-all: run_tests
+all: run_iverilog
 
 create_project:
 	rm -rf v-core.prj
@@ -50,16 +50,35 @@ compile_tests: copy_tests
 		hexdump -v -e '1/4 "%08x\n"' tests-build/$$test.bin > tests-build/$$test.hex; \
 	done
 
-run_tests: compile_tests
+run_vivado: compile_tests
 	for test in $(UNIT_TESTS); do \
 		echo -ne "Running test $$test:\t"; \
 		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
-		xelab cpu_tb -relax -timescale 1ns/1ns -debug all \
-			-i rtl/ -i sim/ -i lib/ \
+		xelab cpu_tb -relax -debug all \
 			-generic_top MEM_INIT_FILE=\"tests-build/$$test.hex\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 			-prj v-core.prj > /dev/null; \
 		xsim cpu_tb -R --onfinish quit > tests-build/$$test.results; \
+		RESULT=$$(cat tests-build/$$test.results | awk '/Note:/ {print}' | sed 's/Note://' | awk '/Success|Failure/ {print}'); \
+		echo "$$RESULT"; \
+		if [ "$(MODE)" = "ci" ] || [ "$(MODE)" = "CI" ]; then \
+			if echo "$$RESULT" | grep -q 'Failure'; then \
+				echo "Test $$test failed!"; \
+				exit 1; \
+			fi; \
+		fi; \
+	done
+
+run_iverilog: compile_tests
+	for test in $(UNIT_TESTS); do \
+		echo -ne "Running test $$test:\t"; \
+		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		iverilog -o tests-build/$$test.out \
+			-Irtl/ -Isim/ -Irtl/luftALU/rtl/ -Irtl/luftALU/rtl/subunits/ \
+			-Pcpu_tb.MEM_INIT_FILE=\"tests-build/$$test.hex\" \
+			-Pcpu_tb.TOHOST_ADDR=$$TOHOST_ADDR \
+			sim/cpu_tb.v; \
+		vvp tests-build/$$test.out > tests-build/$$test.results; \
 		RESULT=$$(cat tests-build/$$test.results | awk '/Note:/ {print}' | sed 's/Note://' | awk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
 		if [ "$(MODE)" = "ci" ] || [ "$(MODE)" = "CI" ]; then \
