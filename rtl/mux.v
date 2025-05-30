@@ -1,7 +1,10 @@
 // 2-input and 4-input multiplexers
 // Created:     2024-01-17
-// Modified:    2024-01-17 (last status: working fine)
+// Modified:    2025-05-30
 // Author:      Kagan Dikmen
+
+`ifndef DEFINES_MUX
+`define DEFINES_MUX
 
 module two_input_mux
     #(
@@ -32,3 +35,5 @@ module four_input_mux
     assign z = (sel == 2'b00) ? a : (sel == 2'b01) ? b : (sel == 2'b10) ? c : d;
 
 endmodule
+
+`endif
