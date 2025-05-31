@@ -1,0 +1,8 @@
+# Makefrag for VCORE specific tests
+# Created:      2025-05-31
+# Modified:     2025-05-31
+# Author:       Kagan Dikmen
+
+vcore_tests = \
+    bypass \
+    csr_hazard
