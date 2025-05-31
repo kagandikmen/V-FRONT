@@ -1,7 +1,7 @@
 /* Generic linker script for V-CORE */
 /* Created:     2025-05-24 */
 /* Modified:    2025-05-24 */
-/* Author:      Kagan Dikmen (kagandikmen@outlook.com) */
+/* Author:      Kagan Dikmen */
 
 ENTRY(_start)
 

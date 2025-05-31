@@ -1,13 +1,18 @@
 # V-CORE Main Makefile
 # Created:		2025-05-25
-# Modified:		2025-05-30
-# Author:		Kagan Dikmen (kagandikmen@outlook.com)
+# Modified:		2025-05-31
+# Author:		Kagan Dikmen
 
 include ut/rv32ui/Makefrag
+include ut/vcore/Makefrag
 
-FAILING_TESTS :=
+TESTDIRS := ut/rv32ui ut/vcore
 
-UNIT_TESTS := $(filter-out $(FAILING_TESTS), $(rv32ui_sc_tests))
+TESTS := $(rv32ui_sc_tests) $(vcore_tests)
+
+FAILING_TESTS := 
+
+PASSING_TESTS := $(filter-out $(FAILING_TESTS), $(TESTS))
 
 DESIGN_SOURCES := \
 	rtl/cpu.v
@@ -26,7 +31,9 @@ LDFLAGS += -march=rv32i_zicsr_zifencei -nostartfiles \
 	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,--no-relax -Wl,--gc-sections \
 	-Wl,-Tsw/v-core.ld
 
-all: run_iverilog
+all: clean run_iverilog
+
+vivado: clean run_vivado
 
 create_project:
 	rm -rf v-core.prj
@@ -36,14 +43,17 @@ create_project:
 
 copy_tests: create_project
 	test -d tests || mkdir tests
-	for test in $(UNIT_TESTS) $(FAILING_TESTS); do \
-		cp ut/rv32ui/$$test.S tests; \
+	for testdir in $(TESTDIRS); do \
+		for test in $$(ls $$testdir | grep .S); do \
+			cp $$testdir/$$test tests; \
+		done \
 	done
 
 compile_tests: copy_tests
 	test -d tests-build || mkdir tests-build
 	$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
-	for test in $(UNIT_TESTS) $(FAILING_TESTS); do \
+	for test in tests/* ; do \
+		test=$${test##*/}; test=$${test%.*}; \
 		$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
 		$(TOOLCHAIN_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o sw/mtvec_handler.o; \
 		$(TOOLCHAIN_PREFIX)-objcopy -j .text -j .data -j .rodata -O binary tests-build/$$test.elf tests-build/$$test.bin; \
@@ -51,8 +61,8 @@ compile_tests: copy_tests
 	done
 
 run_vivado: compile_tests
-	for test in $(UNIT_TESTS); do \
-		echo -ne "Running test $$test:\t"; \
+	for test in $(PASSING_TESTS) ; do \
+		printf "Running test %-15s\t" "$$test:"; \
 		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		xelab cpu_tb -relax -debug all \
 			-generic_top MEM_INIT_FILE=\"tests-build/$$test.hex\" \
@@ -70,8 +80,8 @@ run_vivado: compile_tests
 	done
 
 run_iverilog: compile_tests
-	for test in $(UNIT_TESTS); do \
-		echo -ne "Running test $$test:\t"; \
+	for test in $(PASSING_TESTS) ; do \
+		printf "Running test %-15s\t" "$$test:"; \
 		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		iverilog -o tests-build/$$test.out \
 			-Irtl/ -Isim/ -Irtl/luftALU/rtl/ -Irtl/luftALU/rtl/subunits/ \
