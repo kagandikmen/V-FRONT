@@ -1,10 +1,14 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-05-29
+// Modified:    2025-06-01
 // Author:      Kagan Dikmen
 
 module control_unit
     (
+    input clk,
+    input rst,
+    output fetch_instr,
+
     input [31:0] instr,
     input is_misaligned,
 
@@ -18,9 +22,8 @@ module control_unit
     output reg [1:0] alu_mux2_select,
     output reg [3:0] alu_op_select,
     
-
     // to register file
-    output reg w_en_rf,
+    output reg w_en_rf_if,
 
     // to PC counter
     output reg branch,
@@ -32,21 +35,59 @@ module control_unit
 
     output reg [3:0] ldst_mask,
     output reg ldst_is_unsigned,
-    output reg st_en,
+    output reg st_en_if,
 
     // to CSR unit
-    output reg csr_r_en,
-    output reg csr_w_en,
-    output reg [2:0] csr_op,
-    output reg [11:0] csr_addr,
-    output reg [1:0] csr_imm_select
+    output csr_r_en,
+    output csr_w_en,
+    output [2:0] csr_op,
+    output [11:0] csr_addr,
+    output [1:0] csr_imm_select,
+
+    input branch_true,
+    output make_nop
     );
 
     `include "../lib/common_library.vh"
 
     wire [16:0] instr_compressed;
 
+    reg branch_id, jump_id, ecall_id, ebreak_id, mret_id;
+    reg make_nop_buff, make_nop_id;
+
+    reg csr_r_en_if, csr_r_en_id;
+    reg csr_w_en_if, csr_w_en_id;
+    reg [2:0] csr_op_if, csr_op_id;
+    reg [11:0] csr_addr_if, csr_addr_id;
+    reg [1:0] csr_imm_select_if, csr_imm_select_id;
+
+    assign csr_r_en = csr_r_en_id;
+    assign csr_w_en = csr_w_en_id;
+    assign csr_op = csr_op_id;
+    assign csr_addr = csr_addr_id;
+    assign csr_imm_select = csr_imm_select_id;
+
+    assign make_nop = make_nop_buff;
+
     assign instr_compressed = {instr[14:12], instr[6:0]};
+
+    assign fetch_instr = ~rst;
+
+    always @(posedge clk)
+    begin
+        branch_id <= branch;
+        jump_id <= jump;
+        ecall_id <= ecall;
+        ebreak_id <= ebreak;
+        mret_id <= mret;
+        make_nop_id <= make_nop_buff;
+
+        csr_r_en_id <= csr_r_en_if;
+        csr_w_en_id <= csr_w_en_if;
+        csr_op_id <= csr_op_if;
+        csr_addr_id <= csr_addr_if;
+        csr_imm_select_id <= csr_imm_select_if;
+    end
 
     always @(*)
     begin
@@ -55,12 +96,12 @@ module control_unit
         alu_pc_select = 2'b0;      // don't select PC at ALU
         branch = 1'b0;
         jump = 1'b0;
-        st_en = 1'b0;
-        csr_r_en = 1'b0;
-        csr_w_en = 1'b0;
-        csr_addr = 12'b0;
-        csr_imm_select = 2'b0;
-        csr_op = 3'b000;
+        st_en_if = 1'b0;
+        csr_r_en_if = 1'b0;
+        csr_w_en_if = 1'b0;
+        csr_addr_if = 12'b0;
+        csr_imm_select_if = 2'b0;
+        csr_op_if = 3'b000;
         mret = 1'b0;
         ecall = 1'b0;
         ebreak = 1'b0;
@@ -76,7 +117,7 @@ module control_unit
                     alu_mux1_select = 1'b0;
                     alu_mux2_select = 2'b00; 
                     alu_op_select = 4'b0000;
-                    w_en_rf = 1'b1;
+                    w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
                 end
                 else                        // SUB
@@ -85,7 +126,7 @@ module control_unit
                     alu_mux1_select = 1'b0;
                     alu_mux2_select = 2'b00; 
                     alu_op_select = 4'b1000;
-                    w_en_rf = 1'b1;
+                    w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
                 end
             end
@@ -95,7 +136,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b10;
                 alu_op_select = 4'b0011;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SLT, R_OPCODE}: // SLT
@@ -104,7 +145,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b11;
                 alu_op_select = 4'b0011;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SLTU, R_OPCODE}: // SLTU
@@ -113,7 +154,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b11;
                 alu_op_select = 4'b0111;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_XOR, R_OPCODE}: // XOR
@@ -122,7 +163,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b01;
                 alu_op_select = 4'b0100;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SRL, R_OPCODE}: // SRL / SRA
@@ -133,7 +174,7 @@ module control_unit
                     alu_mux1_select = 1'b0;
                     alu_mux2_select = 2'b10; 
                     alu_op_select = 4'b0001; 
-                    w_en_rf = 1'b1;
+                    w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
                 end
                 else                    // SRA
@@ -142,7 +183,7 @@ module control_unit
                     alu_mux1_select = 1'b0;
                     alu_mux2_select = 2'b10;
                     alu_op_select = 4'b0111;
-                    w_en_rf = 1'b1;
+                    w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
                 end
             end
@@ -152,7 +193,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b01;
                 alu_op_select = 4'b0110;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_AND, R_OPCODE}: // AND
@@ -161,7 +202,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b01; 
                 alu_op_select = 4'b0111; 
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_ADDI, I_OPCODE}: // ADDI
@@ -169,7 +210,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SLTI, I_OPCODE}: // SLTI
@@ -177,7 +218,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b11;
                 alu_op_select = 4'b0011;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SLTIU, I_OPCODE}: // SLTIU
@@ -185,7 +226,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b11;
                 alu_op_select = 4'b0111;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_XORI, I_OPCODE}: // XORI
@@ -193,7 +234,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b01; 
                 alu_op_select = 4'b0100;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_ORI, I_OPCODE}: // ORI
@@ -201,7 +242,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b01; 
                 alu_op_select = 4'b0110;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_ANDI, I_OPCODE}: // ANDI
@@ -209,7 +250,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b01;
                 alu_op_select = 4'b0111;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SLLI, I_OPCODE}: // SLLI
@@ -217,7 +258,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b10;
                 alu_op_select = 4'b0011;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_SRLI, I_OPCODE}: // SRLI / SRAI
@@ -227,7 +268,7 @@ module control_unit
                     alu_mux1_select = 1'b0;
                     alu_mux2_select = 2'b10;
                     alu_op_select = 4'b0001;
-                    w_en_rf = 1'b1;
+                    w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
                 end
                 else                        // SRAI
@@ -235,7 +276,7 @@ module control_unit
                     alu_mux1_select = 1'b0;
                     alu_mux2_select = 2'b10;
                     alu_op_select = 4'b0111;
-                    w_en_rf = 1'b1;
+                    w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
                 end
             end
@@ -244,7 +285,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000; 
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b01;
                 ldst_mask = 4'b0001;
             end
@@ -253,7 +294,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000; 
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b01;
                 ldst_mask = 4'b0011;
             end
@@ -262,7 +303,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000; 
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b01;
                 ldst_mask = 4'b1111;
             end
@@ -271,7 +312,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000; 
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b01;
                 ldst_is_unsigned = 1'b1;
                 ldst_mask = 4'b0001;
@@ -281,7 +322,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000; 
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b01;
                 ldst_is_unsigned = 1'b1;
                 ldst_mask = 4'b0011;
@@ -291,30 +332,30 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00; 
                 alu_op_select = 4'b0000;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
                 ldst_mask = 4'b0001;
-                st_en = 1'b1;
+                st_en_if = 1'b1;
             end
             {FUNCT3_SH, S_OPCODE}:  // SH
             begin
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00; 
                 alu_op_select = 4'b0000;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
                 ldst_mask = 4'b0011;
-                st_en = 1'b1;
+                st_en_if = 1'b1;
             end
             {FUNCT3_SW, S_OPCODE}:  // SW
             begin
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00; 
                 alu_op_select = 4'b0000;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
                 ldst_mask = 4'b1111;
-                st_en = 1'b1;
+                st_en_if = 1'b1;
             end
             {FUNCT3_BEQ, B_OPCODE}: // BEQ
             begin
@@ -323,7 +364,7 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;
                 branch = 1'b1; 
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_BNE, B_OPCODE}: // BNE
@@ -333,7 +374,7 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0001; 
                 branch = 1'b1;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_BLT, B_OPCODE}: // BLT
@@ -343,7 +384,7 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0011; 
                 branch = 1'b1;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_BGE, B_OPCODE}: // BGE
@@ -353,7 +394,7 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0010; 
                 branch = 1'b1;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_BLTU, B_OPCODE}: // BLTU
@@ -363,7 +404,7 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0111; 
                 branch = 1'b1;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_BGEU, B_OPCODE}: // BGEU
@@ -373,7 +414,7 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0110;
                 branch = 1'b1; 
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_FENCE, FENCE_OPCODE}:   // FENCE
@@ -381,7 +422,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00; 
                 alu_op_select = 4'b0000;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_FENCEI, FENCE_OPCODE}:  // FENCE.I
@@ -389,7 +430,7 @@ module control_unit
                 alu_mux1_select = 1'b0;
                 alu_mux2_select = 2'b00; 
                 alu_op_select = 4'b0000;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
             end
             {FUNCT3_ECALL_EBREAK, SYSTEM_OPCODE}:
@@ -399,26 +440,26 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;   
                 alu_imm_select = 1'b1;
-                w_en_rf = 1'b0;
+                w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
-                csr_r_en = 1'b1;
-                csr_w_en = 1'b0;
-                csr_op = 3'b000;
+                csr_r_en_if = 1'b1;
+                csr_w_en_if = 1'b0;
+                csr_op_if = 3'b000;
                 case (instr[31:20])
                     12'h000:    // ECALL
                     begin
                         ecall = 1'b1;
-                        csr_addr <= CSR_MTVEC_ADDR;
+                        csr_addr_if <= CSR_MTVEC_ADDR;
                     end
                     12'h001:    // EBREAK
                     begin
                         ebreak = 1'b1;
-                        csr_addr <= CSR_MTVEC_ADDR;
+                        csr_addr_if <= CSR_MTVEC_ADDR;
                     end
                     12'h302:    // MRET
                     begin
                         mret = 1'b1;
-                        csr_addr <= CSR_MEPC_ADDR;
+                        csr_addr_if <= CSR_MEPC_ADDR;
                     end
                 endcase
             end
@@ -428,12 +469,12 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;  
                 alu_imm_select = 1'b1;
-                w_en_rf = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                w_en_rf_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
                 rf_w_select = 2'b11;
-                csr_r_en = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
-                csr_w_en = 1'b1;
-                csr_addr = instr[31:20];
-                csr_op = 3'b001;
+                csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                csr_w_en_if = 1'b1;
+                csr_addr_if = instr[31:20];
+                csr_op_if = 3'b001;
             end
             {FUNCT3_CSRRS, SYSTEM_OPCODE}:
             begin
@@ -441,12 +482,12 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;  
                 alu_imm_select = 1'b1;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b11;
-                csr_r_en = 1'b1;
-                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr = instr[31:20];
-                csr_op = 3'b010;
+                csr_r_en_if = 1'b1;
+                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr_if = instr[31:20];
+                csr_op_if = 3'b010;
             end
             {FUNCT3_CSRRC, SYSTEM_OPCODE}:
             begin
@@ -454,42 +495,42 @@ module control_unit
                 alu_mux2_select = 2'b00;
                 alu_op_select = 4'b0000;  
                 alu_imm_select = 1'b1;
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b11;
-                csr_r_en = 1'b1;
-                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr = instr[31:20];
-                csr_op = 3'b011;
+                csr_r_en_if = 1'b1;
+                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr_if = instr[31:20];
+                csr_op_if = 3'b011;
             end
             {FUNCT3_CSRRWI, SYSTEM_OPCODE}:
             begin
-                w_en_rf = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                w_en_rf_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
                 rf_w_select = 2'b11;
-                csr_r_en = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
-                csr_w_en = 1'b1;
-                csr_addr = instr[31:20];
-                csr_imm_select = 2'b01;
-                csr_op = 3'b101;
+                csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                csr_w_en_if = 1'b1;
+                csr_addr_if = instr[31:20];
+                csr_imm_select_if = 2'b01;
+                csr_op_if = 3'b101;
             end
             {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
             begin
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b11;
-                csr_r_en = 1'b1;
-                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr = instr[31:20];
-                csr_imm_select = 2'b01;
-                csr_op = 3'b110;
+                csr_r_en_if = 1'b1;
+                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr_if = instr[31:20];
+                csr_imm_select_if = 2'b01;
+                csr_op_if = 3'b110;
             end
             {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
             begin
-                w_en_rf = 1'b1;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b11;
-                csr_r_en = 1'b1;
-                csr_w_en = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr = instr[31:20];
-                csr_imm_select = 2'b01;
-                csr_op = 3'b111;
+                csr_r_en_if = 1'b1;
+                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                csr_addr_if = instr[31:20];
+                csr_imm_select_if = 2'b01;
+                csr_op_if = 3'b111;
             end
             default:    // JAL / JALR / LUI / AUIPC
             begin
@@ -501,7 +542,7 @@ module control_unit
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000; 
                         jump = 1'b1;
-                        w_en_rf = 1'b1;
+                        w_en_rf_if = 1'b1;
                         rf_w_select = 2'b10;
                     end
                     JALR_OPCODE:
@@ -510,7 +551,7 @@ module control_unit
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000;
                         jump = 1'b1;
-                        w_en_rf = 1'b1;
+                        w_en_rf_if = 1'b1;
                         rf_w_select = 2'b10;
                     end
                     LUI_OPCODE:
@@ -519,7 +560,7 @@ module control_unit
                         alu_mux1_select = 1'b0;
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000;
-                        w_en_rf = 1'b1;
+                        w_en_rf_if = 1'b1;
                         rf_w_select = 2'b00;
                     end
                     AUIPC_OPCODE:
@@ -528,7 +569,7 @@ module control_unit
                         alu_mux1_select = 1'b0;
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000;
-                        w_en_rf = 1'b1;
+                        w_en_rf_if = 1'b1;
                         rf_w_select = 2'b00;
                     end
                     default:
@@ -536,7 +577,7 @@ module control_unit
                         alu_mux1_select = 1'b0;
                         alu_mux2_select = 2'b00;
                         alu_op_select = 4'b0000;
-                        w_en_rf = 1'b0;
+                        w_en_rf_if = 1'b0;
                         rf_w_select = 2'b00;
                     end
                 endcase
@@ -545,12 +586,17 @@ module control_unit
         
         if(is_misaligned)
         begin
-            csr_r_en = 1'b1;
-            csr_w_en = 1'b0;
-            csr_op = 3'b000;
-            csr_addr = CSR_MTVEC_ADDR;
-            csr_imm_select = 2'b10;     // select instr
+            csr_r_en_id = 1'b1;
+            csr_w_en_id = 1'b0;
+            csr_op_id = 3'b000;
+            csr_addr_id = CSR_MTVEC_ADDR;
+            csr_imm_select_id = 2'b10;     // select instr
         end
+
+        if(((branch_id && branch_true) || jump_id || ecall_id || ebreak_id || mret_id || is_misaligned) && !make_nop_id)
+            make_nop_buff = 1'b1;
+        else
+            make_nop_buff = 1'b0;
     end
     
 
