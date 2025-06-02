@@ -73,7 +73,7 @@ module cpu
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
 
-    // ME + WB
+    // ME
     wire [3:0] wr_mode;
     wire [DMEM_DATA_WIDTH-1:0] r_data, r_data_masked;
     wire [31:0] rd_write_data;
@@ -94,6 +94,15 @@ module cpu
     reg w_en_rf_me;
     reg [OP_LENGTH-1:0] pc_me;
     reg [31:0] instr_me;
+
+    // WB
+    reg [OP_LENGTH-1:0] alu_result_wb;
+    reg [OP_LENGTH-1:0] mem_acc_out_wb;
+    reg [OP_LENGTH-1:0] csr_unit_out_wb;
+    reg [1:0] rf_w_select_wb;
+    reg w_en_rf_wb;
+    reg make_nop_wb;
+    reg [4:0] rd_addr_wb;
 
     //
     // STAGE 1: Instruction Fetch (IF) + Control Logic
@@ -180,7 +189,7 @@ module cpu
     end
 
     wire [OP_LENGTH-1:0] pc_plus4_if;
-    reg [OP_LENGTH-1:0] pc_plus4_id, pc_plus4_ex, pc_plus4_me;
+    reg [OP_LENGTH-1:0] pc_plus4_id, pc_plus4_ex, pc_plus4_me, pc_plus4_wb;
 
     pc_counter #(.OPD_WIDTH(OP_LENGTH), .PC_WIDTH(PC_WIDTH)) 
         pc_counter_cpu
@@ -465,6 +474,18 @@ module cpu
     //
     // STAGE 5: Register Writeback (WB)
     //
+
+    always @(posedge sysclk)
+    begin
+        alu_result_wb <= alu_result_me;
+        mem_acc_out_wb <= mem_acc_out;
+        pc_plus4_wb <= pc_plus4_me;
+        csr_unit_out_wb <= csr_unit_out_me;
+        rf_w_select_wb <= rf_w_select_me;
+        w_en_rf_wb <= w_en_rf_me;
+        make_nop_wb <= make_nop_me;
+        rd_addr_wb <= rd_addr_me;
+    end
 
     four_input_mux #(.INPUT_LENGTH(OP_LENGTH)) 
         rf_write_select_mux_cpu
