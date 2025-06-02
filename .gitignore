@@ -9,7 +9,7 @@ vivado_proj
 *.o
 tests/
 tests-build/
-v-core.prj
+v-front.prj
 *.jou
 *.log
 *.pb

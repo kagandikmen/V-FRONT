@@ -7,7 +7,7 @@
 2. Direct to this directory with
 
 ```
-cd <path>/V-CORE/vivado-setup/
+cd <path>/V-FRONT/vivado-setup/
 ```
 
 3. Run the Tcl script with

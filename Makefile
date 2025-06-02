@@ -1,14 +1,14 @@
-# V-CORE Main Makefile
+# V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2025-05-31
+# Modified:		2025-06-02
 # Author:		Kagan Dikmen
 
 include ut/rv32ui/Makefrag
-include ut/vcore/Makefrag
+include ut/v-front/Makefrag
 
-TESTDIRS := ut/rv32ui ut/vcore
+TESTDIRS := ut/rv32ui ut/v-front
 
-TESTS := $(rv32ui_sc_tests) $(vcore_tests)
+TESTS := $(rv32ui_sc_tests) $(v-front_tests)
 
 FAILING_TESTS := 
 
@@ -29,16 +29,16 @@ CFLAGS += -march=rv32i_zicsr_zifencei -Wall -Wextra -Os -fomit-frame-pointer \
 	-Wall -Werror=implicit-function-declaration -ffunction-sections -fdata-sections
 LDFLAGS += -march=rv32i_zicsr_zifencei -nostartfiles \
 	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,--no-relax -Wl,--gc-sections \
-	-Wl,-Tsw/v-core.ld
+	-Wl,-Tsw/v-front.ld
 
 all: clean run_iverilog
 
 vivado: clean run_vivado
 
 create_project:
-	rm -rf v-core.prj
+	rm -rf v-front.prj
 	for source in $(DESIGN_SOURCES) $(SIMULATION_SOURCES); do \
-		echo "verilog work $$source" >> v-core.prj; \
+		echo "verilog work $$source" >> v-front.prj; \
 	done
 
 copy_tests: create_project
@@ -67,7 +67,7 @@ run_vivado: compile_tests
 		xelab cpu_tb -relax -debug all \
 			-generic_top MEM_INIT_FILE=\"tests-build/$$test.hex\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
-			-prj v-core.prj > /dev/null; \
+			-prj v-front.prj > /dev/null; \
 		xsim cpu_tb -R --onfinish quit > tests-build/$$test.results; \
 		RESULT=$$(cat tests-build/$$test.results | awk '/Note:/ {print}' | sed 's/Note://' | awk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
@@ -103,5 +103,5 @@ clean:
 	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid*
 
 clean_all: clean
-	rm -rf v-core.prj sw/mtvec_handler.o tests/ sim/*.hex
+	rm -rf v-front.prj sw/mtvec_handler.o tests/ sim/*.hex
 

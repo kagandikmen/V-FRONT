@@ -1,8 +1,8 @@
-# V-CORE
+# V-FRONT
 
 *(The V stands for Verilog, RISC-V, or perhaps my intention to make the CPU 5-stage some day.)*
 
-**V-CORE** is a 32-bit RISC-V processor written in Verilog. It implements RISC-V ISA base module RV32I, version 2.1. 
+**V-FRONT** is a 32-bit RISC-V processor written in Verilog. It implements RISC-V ISA base module RV32I, version 2.1. 
 
 ### Features
 
@@ -15,11 +15,11 @@
 
 ## Prerequisites
 
-[RISC-V GNU TOOLCHAIN](https://github.com/riscv-collab/riscv-gnu-toolchain) needs to be installed on the host machine to run the unit tests, or just to compile a program for V-CORE. Installation instructions can be found in its own [README.md](https://github.com/riscv-collab/riscv-gnu-toolchain/blob/master/README.md) file. Please use 
+[RISC-V GNU TOOLCHAIN](https://github.com/riscv-collab/riscv-gnu-toolchain) needs to be installed on the host machine to run the unit tests, or just to compile a program for V-FRONT. Installation instructions can be found in its own [README.md](https://github.com/riscv-collab/riscv-gnu-toolchain/blob/master/README.md) file. Please use 
 ```
 ./configure --prefix=/opt/riscv --with-abi=ilp32 --with-arch=rv32i
 ```
-while installing RISC-V GNU Toolchain, as this is the configuration required by V-CORE. To run the unit tests, Icarus Verilog needs to be installed on the host machine. For this, run
+while installing RISC-V GNU Toolchain, as this is the configuration required by V-FRONT. To run the unit tests, Icarus Verilog needs to be installed on the host machine. For this, run
 ```
 sudo apt install iverilog
 ```
@@ -30,15 +30,15 @@ sudo apt install libncurses5 libtinfo5
 
 ## Getting Started
 
-To start working with V-CORE, run
+To start working with V-FRONT, run
 ```
-git clone --recursive https://github.com/kagandikmen/V-CORE.git
+git clone --recursive https://github.com/kagandikmen/V-FRONT.git
 ```
 from your working directory. To run the unit tests with Icarus Verilog, use
 ```
 make
 ```
-after navigating into the V-CORE directory. To run the tests using Vivado, run
+after navigating into the V-FRONT directory. To run the tests using Vivado, run
 ```
 make run_vivado
 ```
@@ -46,7 +46,7 @@ In correct setup, the tests should all pass; there is no test failing as of 2025
 ```
 make clean_all
 ```
-Find an example of how a generic C file can be compiled to run on V-CORE by navigating to [sw/test/](sw/test/). A Tcl script automatizing Vivado project generation is also offered with V-CORE; for this, please refer to [vivado-setup/README.md](vivado-setup/README.md).
+Find an example of how a generic C file can be compiled to run on V-FRONT by navigating to [sw/test/](sw/test/). A Tcl script automatizing Vivado project generation is also offered with V-FRONT; for this, please refer to [vivado-setup/README.md](vivado-setup/README.md).
 
 ## Project Structure
 
@@ -59,13 +59,13 @@ Find an example of how a generic C file can be compiled to run on V-CORE by navi
 
 ## Architectural Details
 
-V-CORE has been tested for full RV32I compliance using the unit tests in the [ut](ut/) folder, which are sourced from [riscv-tests](https://github.com/riscv-software-src/riscv-tests), the official test suite provided by RISC-V International.
+V-FRONT has been tested for full RV32I compliance using the unit tests in the [ut](ut/) folder, which are sourced from [riscv-tests](https://github.com/riscv-software-src/riscv-tests), the official test suite provided by RISC-V International.
 
-V-CORE implements a single-cycle von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for programs and the second 16 KB for data. Misaligned accesses to this unified BRAM memory are allowed, where the CPU then raises an exception and jumps to a trap vector to handle the misaligned access.
+V-FRONT implements a single-cycle von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for programs and the second 16 KB for data. Misaligned accesses to this unified BRAM memory are allowed, where the CPU then raises an exception and jumps to a trap vector to handle the misaligned access.
 
-V-CORE implements 4096 CSR registers in its CSR unit. As of 2025-05-29, the only exception the hardware itself can raise is when a misaligned memory access is attempted. But software can raise any exception through `ecall` and `ebreak` instructions, where the program then jumps to the address stored in the CSR register `MTVEC`.
+V-FRONT implements 4096 CSR registers in its CSR unit. As of 2025-05-29, the only exception the hardware itself can raise is when a misaligned memory access is attempted. But software can raise any exception through `ecall` and `ebreak` instructions, where the program then jumps to the address stored in the CSR register `MTVEC`.
 
-V-CORE implements `fence` and `fence_i` instructions as pure `NOP`s, as these instructions do not serve any meaningful purpose in a single-core setting.
+V-FRONT implements `fence` and `fence_i` instructions as pure `NOP`s, as these instructions do not serve any meaningful purpose in a single-core setting.
 
 ## Status
 
@@ -77,6 +77,6 @@ Pull requests, suggestions, and bug reports are all welcome.
 
 ## License
 
-V-CORE is licensed under MIT License. See [LICENSE](LICENSE) for details.
+V-FRONT is licensed under MIT License. See [LICENSE](LICENSE) for details.
 
-V-CORE incorporates components and code from external sources. For detailed license and copyright information regarding these components, please refer to [NOTICE.md](NOTICE.md).
+V-FRONT incorporates components and code from external sources. For detailed license and copyright information regarding these components, please refer to [NOTICE.md](NOTICE.md).

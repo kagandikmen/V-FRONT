@@ -7,7 +7,7 @@ CFLAGS += -march=rv32i -Wall -Wextra -Os -fomit-frame-pointer \
 	-Wall -Werror=implicit-function-declaration -ffunction-sections -fdata-sections
 LDFLAGS += -march=rv32i -nostartfiles \
 	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,--no-relax -Wl,--gc-sections \
-	-Wl,-T../v-core.ld -Wl,--Map,test.map
+	-Wl,-T../v-front.ld -Wl,--Map,test.map
 
 compile:
 	$(COMPILER_PREFIX)-gcc -c -o ../start.o $(CFLAGS) ../start.S

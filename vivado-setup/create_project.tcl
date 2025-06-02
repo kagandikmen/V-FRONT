@@ -27,11 +27,11 @@
 #
 # 3. The following remote source files that were added to the original project:-
 #
-#    "/home/kagandikmen/Desktop/V-CORE/rtl/cpu.v"
-#    "/home/kagandikmen/Desktop/V-CORE/vivado-setup/const.xdc"
-#    "/home/kagandikmen/Desktop/V-CORE/sim/cpu_tb.v"
-#    "/home/kagandikmen/Desktop/V-CORE/sim/pmem.hex"
-#    "/home/kagandikmen/Desktop/V-CORE/sim/dmem.hex"
+#    "/home/kagandikmen/Desktop/V-FRONT/rtl/cpu.v"
+#    "/home/kagandikmen/Desktop/V-FRONT/vivado-setup/const.xdc"
+#    "/home/kagandikmen/Desktop/V-FRONT/sim/cpu_tb.v"
+#    "/home/kagandikmen/Desktop/V-FRONT/sim/pmem.hex"
+#    "/home/kagandikmen/Desktop/V-FRONT/sim/dmem.hex"
 #
 #*****************************************************************************************
 

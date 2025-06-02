@@ -6,7 +6,7 @@ See the LICENSE file for full license text.
 The files
 
 - `sw/extract_hex.sh.obsolete`
-- `ut/vcore/csr_hazard.S`
+- `ut/v-front/csr_hazard.S`
 
 include software developed by Kristian Klomsten Skordal, and are licensed under the following license:
 

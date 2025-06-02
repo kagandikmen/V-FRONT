@@ -1,6 +1,6 @@
-/* Generic linker script for V-CORE */
+/* Generic linker script for V-FRONT */
 /* Created:     2025-05-24 */
-/* Modified:    2025-05-24 */
+/* Modified:    2025-06-02 */
 /* Author:      Kagan Dikmen */
 
 ENTRY(_start)
