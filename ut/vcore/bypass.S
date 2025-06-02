@@ -25,6 +25,17 @@ RVTEST_CODE_BEGIN
 	nop
 	bne x3, x2, fail
 
+	li TESTNUM, 3
+	addi x2, x0, -6
+	addi x3, x0, 6
+	add x4, x2, x3
+	nop
+	nop
+	nop
+	nop
+	nop
+	bnez x4, fail
+
 	TEST_PASSFAIL
 
 RVTEST_CODE_END

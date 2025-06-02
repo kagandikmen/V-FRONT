@@ -22,18 +22,23 @@ module instruction_decoder
     // ALU interface
     output reg [OPD_LENGTH-1:0] opd1,
     output reg [OPD_LENGTH-1:0] opd2,
-    output bypass_rs1,
-    output bypass_rs2
+    output bypass_ex_result_rs1,
+    output bypass_ex_result_rs2,
+    output bypass_me_result_rs1,
+    output bypass_me_result_rs2
     );
 
     `include "../lib/common_library.vh"
 
-    reg [4:0] rd_buff;
+    reg [4:0] rd_buff [1:0];
 
     reg rs1_sourced, rs2_sourced;
 
-    assign bypass_rs1 = ((rd_buff == rs1_addr) && (rd_buff != 5'b0) && rs1_sourced) ? 1'b1 : 1'b0;
-    assign bypass_rs2 = ((rd_buff == rs2_addr) && (rd_buff != 5'b0) && rs2_sourced) ? 1'b1 : 1'b0;
+    assign bypass_ex_result_rs1 = ((rd_buff[1] == rs1_addr) && (rd_buff[1] != 5'b0) && rs1_sourced) ? 1'b1 : 1'b0;
+    assign bypass_ex_result_rs2 = ((rd_buff[1] == rs2_addr) && (rd_buff[1] != 5'b0) && rs2_sourced) ? 1'b1 : 1'b0;
+
+    assign bypass_me_result_rs1 = ((rd_buff[0] == rs1_addr) && (rd_buff[0] != 5'b0) && rs1_sourced) ? 1'b1 : 1'b0;
+    assign bypass_me_result_rs2 = ((rd_buff[0] == rs2_addr) && (rd_buff[0] != 5'b0) && rs2_sourced) ? 1'b1 : 1'b0;
 
     always @(*)
     begin        
@@ -43,8 +48,6 @@ module instruction_decoder
 
         opd1 = rs1_data;
         opd2 = rs2_data;
-
-
 
         case(instr[6:0])
             R_OPCODE:
@@ -120,7 +123,8 @@ module instruction_decoder
 
     always @(posedge clk)
     begin
-        rd_buff <= rd_addr;
+        rd_buff[1] <= rd_addr;
+        rd_buff[0] <= rd_buff[1];
     end
 
 endmodule
