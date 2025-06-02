@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2025-05-29
+// Modified:    2025-06-03
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -87,6 +87,8 @@ module csr_unit
                     csr_registers[csr_addr] <= (csr_registers[csr_addr] | in);
                 3'b?11:
                     csr_registers[csr_addr] <= (csr_registers[csr_addr] & (~in));
+                default:
+                    csr_registers[csr_addr] <= in;
             endcase
         end
     end

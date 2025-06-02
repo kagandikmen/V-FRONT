@@ -1,6 +1,6 @@
 // Register file of the CPU
 // Created:     2024-01-20
-// Modified:    2025-05-24
+// Modified:    2025-06-03
 // Author:      Kagan Dikmen
 
 module register_file
@@ -46,8 +46,8 @@ module register_file
     // asynchronous read
     always @(*)
     begin
-        rs1_data <= rf[rs1_addr];
-        rs2_data <= rf[rs2_addr];
+        rs1_data = rf[rs1_addr];
+        rs2_data = rf[rs2_addr];
     end
 
 endmodule

@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-06-02
+// Modified:    2025-06-03
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -110,6 +110,9 @@ module control_unit
     always @(*)
     begin
 
+        alu_mux1_select = 1'b0;
+        alu_mux2_select = 2'b00;
+        alu_op_select = 4'b0000;
         alu_imm_select = 1'b1;      // choose the immediate
         alu_pc_select = 2'b00;      // don't select PC at ALU
         branch = 1'b0;
@@ -467,17 +470,17 @@ module control_unit
                     12'h000:    // ECALL
                     begin
                         ecall = 1'b1;
-                        csr_addr_if <= CSR_MTVEC_ADDR;
+                        csr_addr_if = CSR_MTVEC_ADDR;
                     end
                     12'h001:    // EBREAK
                     begin
                         ebreak = 1'b1;
-                        csr_addr_if <= CSR_MTVEC_ADDR;
+                        csr_addr_if = CSR_MTVEC_ADDR;
                     end
                     12'h302:    // MRET
                     begin
                         mret = 1'b1;
-                        csr_addr_if <= CSR_MEPC_ADDR;
+                        csr_addr_if = CSR_MEPC_ADDR;
                     end
                 endcase
             end
