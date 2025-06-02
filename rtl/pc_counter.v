@@ -1,6 +1,6 @@
 // PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2025-06-01
+// Modified:    2025-06-02
 // Author:      Kagan Dikmen
 
 module pc_counter
@@ -24,8 +24,6 @@ module pc_counter
 
     reg [31:0] pc;
     reg rst_buff;
-
-    reg branch_buff, jump_buff, csr_sel_buff;
 
     always @(posedge clk)
     begin

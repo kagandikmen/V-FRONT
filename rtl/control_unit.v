@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-06-01
+// Modified:    2025-06-02
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -53,21 +53,24 @@ module control_unit
     wire [16:0] instr_compressed;
 
     reg branch_id, jump_id, ecall_id, ebreak_id, mret_id;
-    reg make_nop_buff, make_nop_id;
+    reg branch_ex, jump_ex, ecall_ex, ebreak_ex, mret_ex;
 
-    reg csr_r_en_if, csr_r_en_id;
-    reg csr_w_en_if, csr_w_en_id;
-    reg [2:0] csr_op_if, csr_op_id;
-    reg [11:0] csr_addr_if, csr_addr_id;
-    reg [1:0] csr_imm_select_if, csr_imm_select_id;
+    reg make_nop_if, make_nop_id, make_nop_ex;
+    reg make_nop_if_buffer;
 
-    assign csr_r_en = csr_r_en_id;
-    assign csr_w_en = csr_w_en_id;
-    assign csr_op = csr_op_id;
-    assign csr_addr = csr_addr_id;
-    assign csr_imm_select = csr_imm_select_id;
+    reg csr_r_en_if, csr_r_en_id, csr_r_en_ex;
+    reg csr_w_en_if, csr_w_en_id, csr_w_en_ex;
+    reg [2:0] csr_op_if, csr_op_id, csr_op_ex;
+    reg [11:0] csr_addr_if, csr_addr_id, csr_addr_ex;
+    reg [1:0] csr_imm_select_if, csr_imm_select_id, csr_imm_select_ex;
 
-    assign make_nop = make_nop_buff;
+    assign csr_r_en = (is_misaligned && !make_nop_ex) ? 1'b1 : csr_r_en_ex;
+    assign csr_w_en = (is_misaligned && !make_nop_ex) ? 1'b0 : csr_w_en_ex;
+    assign csr_op = (is_misaligned && !make_nop_ex) ? 3'b000 :csr_op_ex;
+    assign csr_addr = (is_misaligned && !make_nop_ex) ? CSR_MTVEC_ADDR : csr_addr_ex;
+    assign csr_imm_select = (is_misaligned && !make_nop_ex) ? 2'b10 : csr_imm_select_ex;
+
+    assign make_nop = make_nop_ex;
 
     assign instr_compressed = {instr[14:12], instr[6:0]};
 
@@ -80,20 +83,35 @@ module control_unit
         ecall_id <= ecall;
         ebreak_id <= ebreak;
         mret_id <= mret;
-        make_nop_id <= make_nop_buff;
+
+        branch_ex <= branch_id;
+        jump_ex <= jump_id;
+        ecall_ex <= ecall_id;
+        ebreak_ex <= ebreak_id;
+        mret_ex <= mret_id;
+
+        make_nop_if <= 1'b0;
+        make_nop_id <= make_nop_if_buffer || make_nop_if;
+        make_nop_ex <= make_nop_if_buffer || make_nop_id;
 
         csr_r_en_id <= csr_r_en_if;
         csr_w_en_id <= csr_w_en_if;
         csr_op_id <= csr_op_if;
         csr_addr_id <= csr_addr_if;
         csr_imm_select_id <= csr_imm_select_if;
+
+        csr_r_en_ex <= csr_r_en_id;
+        csr_w_en_ex <= csr_w_en_id;
+        csr_op_ex <= csr_op_id;
+        csr_addr_ex <= csr_addr_id;
+        csr_imm_select_ex <= csr_imm_select_id;
     end
 
     always @(*)
     begin
 
-        alu_imm_select = 1'b1;     // choose the immediate
-        alu_pc_select = 2'b0;      // don't select PC at ALU
+        alu_imm_select = 1'b1;      // choose the immediate
+        alu_pc_select = 2'b00;      // don't select PC at ALU
         branch = 1'b0;
         jump = 1'b0;
         st_en_if = 1'b0;
@@ -582,22 +600,15 @@ module control_unit
                     end
                 endcase
             end
-        endcase  
-        
-        if(is_misaligned)
+        endcase
+
+        if(((branch_ex && branch_true) || jump_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned) && !make_nop_ex)
         begin
-            csr_r_en_id = 1'b1;
-            csr_w_en_id = 1'b0;
-            csr_op_id = 3'b000;
-            csr_addr_id = CSR_MTVEC_ADDR;
-            csr_imm_select_id = 2'b10;     // select instr
+            make_nop_if_buffer = 1'b1;
         end
-
-        if(((branch_id && branch_true) || jump_id || ecall_id || ebreak_id || mret_id || is_misaligned) && !make_nop_id)
-            make_nop_buff = 1'b1;
         else
-            make_nop_buff = 1'b0;
+        begin
+            make_nop_if_buffer = 1'b0;
+        end
     end
-    
-
 endmodule

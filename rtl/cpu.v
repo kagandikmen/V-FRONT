@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-06-01
+// Modified:    2025-06-02
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -29,21 +29,42 @@ module cpu
     );
 
     wire sysclk_inv;
-    reg alu_imm_select, alu_mux1_select, w_en_rf, branch, jump;
-    reg [1:0] alu_pc_select, alu_mux2_select, rf_w_select;
-    reg [3:0] alu_op_select;
-    wire [3:0] wr_mode;
-    wire [31:0] instr;
-    wire [PC_WIDTH-1:0] next_pc;
-    wire [OP_LENGTH-1:0] alu_result, comp_result, opd1, opd2;
-    
-    reg [OP_LENGTH-1:0] pc_plus4, pc;
 
-    wire [OP_LENGTH-1:0] alu_opd1, alu_opd2;
-    wire [OP_LENGTH-1:0] imm;
-    wire [DMEM_DATA_WIDTH-1:0] r_data, r_data_masked;
-    wire [4:0] rs1_addr, rs2_addr, rd_addr;
-    wire [31:0] rs1_data, rs2_data, rd_write_data;
+    // IF
+    wire [PC_WIDTH-1:0] next_pc;
+    wire [OP_LENGTH-1:0] pc_if;
+    wire [31:0] instr_if;
+    wire ctrl_fetch_instr_out;
+
+    // ID
+    reg alu_imm_select_id, alu_mux1_select_id, w_en_rf_id, branch_id, jump_id;
+    reg [1:0] alu_pc_select_id, alu_mux2_select_id, rf_w_select_id;
+    reg ecall_id, ebreak_id, mret_id;
+    reg [3:0] ldst_mask_id;
+    reg ldst_is_unsigned_id;
+    reg st_en_id;
+    reg [3:0] alu_op_select_id;
+    wire [31:0] rs1_data_id, rs2_data_id;
+    wire [4:0] rs1_addr_id, rs2_addr_id, rd_addr_id;
+    reg [31:0] instr_id;
+    reg [OP_LENGTH-1:0] pc_id;
+    wire bypass_rs1_id, bypass_rs2_id;
+
+    // EX
+    reg alu_imm_select_ex, alu_mux1_select_ex, w_en_rf_ex, branch_ex, jump_ex;
+    reg [1:0] alu_pc_select_ex, alu_mux2_select_ex, rf_w_select_ex;
+    reg ecall_ex, ebreak_ex, mret_ex;
+    reg [3:0] ldst_mask_ex;
+    reg ldst_is_unsigned_ex;
+    reg st_en_ex;
+    reg [3:0] alu_op_select_ex;
+    wire make_nop_ex;
+    reg [4:0] rd_addr_ex;
+    wire [OP_LENGTH-1:0] alu_opd1, alu_opd2, alu_mux1_out, alu_mux2_out;
+    wire [OP_LENGTH-1:0] alu_result, comp_result;
+    reg [OP_LENGTH-1:0] pc_ex;
+    reg bypass_rs1_ex, bypass_rs2_ex;
+    reg [OP_LENGTH-1:0] alu_result_bypass_buffer_ex;
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
     wire csr_unit_r_en, csr_unit_w_en;
@@ -51,24 +72,14 @@ module cpu
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
 
-    reg [3:0] ldst_mask;
-    reg ldst_is_unsigned;
-    reg st_en;
-
+    // ME + WB
+    wire [3:0] wr_mode;
+    wire [DMEM_DATA_WIDTH-1:0] r_data, r_data_masked;
+    wire [31:0] rd_write_data;
     wire [OP_LENGTH-1:0] mem_acc_in, mem_acc_out;
-
-    reg ecall, ebreak, mret;
-
     wire is_misaligned, is_misalignment_store;
-
     wire [DMEM_ADDR_WIDTH-1:0] dmem_addr;
 
-    wire [31:0] instr_if;
-
-    reg [31:0] instr_id;
-
-    wire ctrl_fetch_instr_out;
-    reg make_nop;
 
     //
     // STAGE 1: Instruction Fetch (IF) + Control Logic
@@ -127,82 +138,119 @@ module cpu
             .csr_addr(csr_unit_addr),
             .csr_imm_select(csr_imm_select),
             .branch_true(comp_result[0]),
-            .make_nop(ctrl_make_nop_out)
+            .make_nop(make_nop_ex)
         );
 
     always @(posedge sysclk)
     begin
-        alu_imm_select <= ctrl_alu_imm_select_out;
-        alu_pc_select <= ctrl_alu_pc_select_out;
-        rf_w_select <= ctrl_rf_w_select_out;
-        alu_mux1_select <= ctrl_alu_mux1_select_out;
-        alu_mux2_select <= ctrl_alu_mux2_select_out;
-        alu_op_select <= ctrl_alu_op_select_out;
-        w_en_rf <= ctrl_w_en_rf_if_out;
-        branch <= ctrl_branch_out;
-        jump <= ctrl_jump_out;
-        ecall <= ctrl_ecall_out;
-        ebreak <= ctrl_ebreak_out;
-        mret <= ctrl_mret_out;
-        ldst_mask <= ctrl_ldst_mask_out;
-        ldst_is_unsigned <= ctrl_ldst_is_unsigned_out;
-        st_en <= ctrl_st_en_if_out;
-        // csr_unit_r_en <= ctrl_csr_r_en_out;
-        // csr_unit_w_en <= ctrl_csr_w_en_out;
-        // csr_unit_op <= ctrl_csr_op_out;
-        // csr_unit_addr <= ctrl_csr_addr_out;
-        // csr_imm_select <= ctrl_csr_imm_select_out;
-        make_nop <= ctrl_make_nop_out;
+        alu_imm_select_id <= ctrl_alu_imm_select_out;
+        alu_pc_select_id <= ctrl_alu_pc_select_out;
+        rf_w_select_id <= ctrl_rf_w_select_out;
+        alu_mux1_select_id <= ctrl_alu_mux1_select_out;
+        alu_mux2_select_id <= ctrl_alu_mux2_select_out;
+        alu_op_select_id <= ctrl_alu_op_select_out;
+        w_en_rf_id <= ctrl_w_en_rf_if_out;
+        branch_id <= ctrl_branch_out;
+        jump_id <= ctrl_jump_out;
+        ecall_id <= ctrl_ecall_out;
+        ebreak_id <= ctrl_ebreak_out;
+        mret_id <= ctrl_mret_out;
+        ldst_mask_id <= ctrl_ldst_mask_out;
+        ldst_is_unsigned_id <= ctrl_ldst_is_unsigned_out;
+        st_en_id <= ctrl_st_en_if_out;
     end
 
-    wire [OP_LENGTH-1:0] pcctrl_pc_out;
-    wire [OP_LENGTH-1:0] pcctrl_pc_plus4_out;
-    wire [PC_WIDTH-1:0] pcctrl_next_pc_out;
+    wire [OP_LENGTH-1:0] pc_plus4_if;
+    reg [OP_LENGTH-1:0] pc_plus4_id, pc_plus4_ex;
 
     pc_counter #(.OPD_WIDTH(OP_LENGTH), .PC_WIDTH(PC_WIDTH)) 
         pc_counter_cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .branch(branch && !make_nop),
-            .jump(jump && !make_nop),
-            .csr_sel((ecall || ebreak || mret || is_misaligned) && !make_nop),
+            .branch(branch_ex && !make_nop_ex),
+            .jump(jump_ex && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
-            .pc_out(pcctrl_pc_out),
-            .pc_plus4(pcctrl_pc_plus4_out),
+            .pc_out(pc_if),
+            .pc_plus4(pc_plus4_if),
             .next_pc(next_pc)
         );
     
     always @(posedge sysclk)
     begin
-        pc <= pcctrl_pc_out;
-        pc_plus4 <= pcctrl_pc_plus4_out;
+        pc_id <= pc_if;
+        pc_ex <= pc_id;
+        pc_plus4_id <= pc_plus4_if;
+        pc_plus4_ex <= pc_plus4_id;
     end
+
 
     // 
     // STAGE 2: Instruction Decode (ID)
     //
 
+    wire [31:0] opd1_id, opd2_id;
+    wire [31:0] imm_id;
+
+    reg [31:0] instr_ex;
+    reg [31:0] opd1_ex, opd2_ex;
+    reg [31:0] imm_ex;
+
     instruction_decoder #(.OPD_LENGTH(OP_LENGTH), .REG_WIDTH(32)) 
         instruction_decoder_cpu
         (
+            .clk(sysclk),
             .instr(instr_id),
-            .rs1_addr(rs1_addr),
-            .rs2_addr(rs2_addr),
-            .rd_addr(rd_addr),
-            .rs1_data(rs1_data),
-            .rs2_data(rs2_data),
-            .opd1(opd1),
-            .opd2(opd2)
+            .rs1_addr(rs1_addr_id),
+            .rs2_addr(rs2_addr_id),
+            .rd_addr(rd_addr_id),
+            .rs1_data(rs1_data_id),
+            .rs2_data(rs2_data_id),
+            .opd1(opd1_id),
+            .opd2(opd2_id),
+            .bypass_rs1(bypass_rs1_id),
+            .bypass_rs2(bypass_rs2_id)
         );
     
     immediate_generator immediate_generator_cpu
         (
             .instr(instr_id),
-            .imm(imm)
+            .imm(imm_id)
         );
+
+    always @(posedge sysclk)
+    begin
+        instr_ex <= instr_id;
+        opd1_ex <= opd1_id;
+        opd2_ex <= opd2_id;
+        imm_ex <= imm_id;
+    end
+
+    always @(posedge sysclk)
+    begin
+        alu_imm_select_ex <= alu_imm_select_id;
+        alu_pc_select_ex <= alu_pc_select_id;
+        rf_w_select_ex <= rf_w_select_id;
+        alu_mux1_select_ex <= alu_mux1_select_id;
+        alu_mux2_select_ex <= alu_mux2_select_id;
+        alu_op_select_ex <= alu_op_select_id;
+        w_en_rf_ex <= w_en_rf_id;
+        branch_ex <= branch_id;
+        jump_ex <= jump_id;
+        ecall_ex <= ecall_id;
+        ebreak_ex <= ebreak_id;
+        mret_ex <= mret_id;
+        ldst_mask_ex <= ldst_mask_id;
+        ldst_is_unsigned_ex <= ldst_is_unsigned_id;
+        st_en_ex <= st_en_id;
+        rd_addr_ex <= rd_addr_id;
+        bypass_rs1_ex <= bypass_rs1_id;
+        bypass_rs2_ex <= bypass_rs2_id;
+    end
+
 
     //
     // STAGE 3: Execute (EX)
@@ -211,37 +259,54 @@ module cpu
     alu #(.OPERAND_LENGTH(OP_LENGTH)) 
         alu_cpu
         (
-            .opd1(alu_opd1),
-            .opd2(alu_opd2),
-            .opd3(opd1),
-            .opd4(opd2),
-            .alu_mux1_select(alu_mux1_select),
-            .alu_mux2_select(alu_mux2_select),
-            .alu_op_select(alu_op_select),
+            .opd1(alu_mux1_out),
+            .opd2(alu_mux2_out),
+            .opd3(alu_opd1),
+            .opd4(alu_opd2),
+            .alu_mux1_select(alu_mux1_select_ex),
+            .alu_mux2_select(alu_mux2_select_ex),
+            .alu_op_select(alu_op_select_ex),
             .alu_result(alu_result),
             .comp_result(comp_result)
         );
+
+    reg bypass_ready;
+    reg [1:0] alu_opd1_mux_sel, alu_opd2_mux_sel;
+
+    always @(posedge sysclk)
+    begin
+        if(w_en_rf_ex && !is_misaligned && !make_nop_ex)
+            bypass_ready <= 1'b1;
+        else
+            bypass_ready <= 1'b0;
+
+        alu_result_bypass_buffer_ex <= rd_write_data;
+    end
+
+    assign alu_opd1 = (bypass_rs1_ex && bypass_ready) ? alu_result_bypass_buffer_ex : opd1_ex;
+    assign alu_opd2 = (bypass_rs2_ex && bypass_ready) ? alu_result_bypass_buffer_ex : opd2_ex;
     
     four_input_mux #(.INPUT_LENGTH(32))
         alu_opd1_mux
         (
-            .a(opd1),
-            .b(pc),
+            .a(alu_opd1),
+            .b(pc_ex),
             .c('b0),
             .d(),
-            .sel(alu_pc_select),
-            .z(alu_opd1)
+            .sel(alu_pc_select_ex),
+            .z(alu_mux1_out)
         );
 
     two_input_mux #(.INPUT_LENGTH(32))
         alu_opd2_mux
         (
-            .a(opd2),
-            .b(imm),
-            .sel(alu_imm_select),
-            .z(alu_opd2)
+            .a(alu_opd2),
+            .b(imm_ex),
+            .sel(alu_imm_select_ex),
+            .z(alu_mux2_out)
         );
 
+    
     // 
     // STAGE 4: Memory Access (ME)
     //
@@ -255,8 +320,8 @@ module cpu
     four_input_mux #(.INPUT_LENGTH(32)) csr_unit_mux
         (
             .a(alu_result),
-            .b(imm),
-            .c(instr_id),
+            .b(imm_ex),
+            .c(instr_ex),
             .d(),
             .sel(csr_imm_select),
             .z(csr_in)
@@ -266,33 +331,33 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .r_en(csr_unit_r_en && !make_nop),
-            .w_en(csr_unit_w_en && !make_nop),
-            .ecall(ecall && !make_nop),
-            .ebreak(ebreak && !make_nop),
-            .mret(mret && !make_nop),
-            .pc(pc),
+            .r_en(csr_unit_r_en && !make_nop_ex),
+            .w_en(csr_unit_w_en && !make_nop_ex),
+            .ecall(ecall_ex && !make_nop_ex),
+            .ebreak(ebreak_ex && !make_nop_ex),
+            .mret(mret_ex && !make_nop_ex),
+            .pc(pc_ex),
             .op(csr_unit_op),
             .in(csr_in),
             .csr_addr(csr_unit_addr),
             .out(csr_unit_out),
-            .is_misaligned(is_misaligned && !make_nop),
+            .is_misaligned(is_misaligned && !make_nop_ex),
             .is_misalignment_store(is_misalignment_store),
-            .misaligned_store_value(opd2),
+            .misaligned_store_value(alu_opd2),
             .mem_addr(alu_result[14:0]),
-            .rd_addr(rd_addr)
+            .rd_addr(rd_addr_ex)
         );
 
-    assign mem_acc_in = (st_en==1'b1) ? opd2 : r_data;
+    assign mem_acc_in = (st_en_ex == 1'b1) ? alu_opd2 : r_data;
 
     memory_access_unit #(.BYTE_WIDTH(8))
         memory_access_unit_cpu
         (
             .addr_in(alu_result),
             .addr_out(dmem_addr),
-            .ldst_mask(ldst_mask),
-            .ldst_is_unsigned(ldst_is_unsigned),
-            .st_en(st_en && !make_nop),
+            .ldst_mask(ldst_mask_ex),
+            .ldst_is_unsigned(ldst_is_unsigned_ex),
+            .st_en(st_en_ex && !make_nop_ex),
             .in(mem_acc_in),
             .out(mem_acc_out),
             .wr_mode(wr_mode),
@@ -322,6 +387,7 @@ module cpu
             .doutb(r_data)
         );
 
+    
     //
     // STAGE 5: Register Writeback (WB)
     //
@@ -331,9 +397,9 @@ module cpu
         (
             .a(alu_result),
             .b(mem_acc_out),
-            .c(pc_plus4),
+            .c(pc_plus4_ex),
             .d(csr_unit_out),
-            .sel(rf_w_select),
+            .sel(rf_w_select_ex),
             .z(rd_write_data)
         );
     
@@ -342,12 +408,12 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf && !is_misaligned && !make_nop),
-            .rs1_addr(rs1_addr),
-            .rs2_addr(rs2_addr),
-            .rd_addr(rd_addr),
-            .rs1_data(rs1_data),
-            .rs2_data(rs2_data),
+            .w_en(w_en_rf_ex && !is_misaligned && !make_nop_ex),
+            .rs1_addr(rs1_addr_id),
+            .rs2_addr(rs2_addr_id),
+            .rd_addr(rd_addr_ex),
+            .rs1_data(rs1_data_id),
+            .rs2_data(rs2_data_id),
             .rd_write_data(rd_write_data)
         );
 
@@ -356,6 +422,6 @@ module cpu
     //
     
     // See the comment at the declaration of the output led
-    assign led = branch;
+    assign led = branch_ex;
 
 endmodule
