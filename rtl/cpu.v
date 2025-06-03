@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-06-02
+// Modified:    2025-06-03
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -44,7 +44,6 @@ module cpu
     reg ldst_is_unsigned_id;
     reg st_en_id;
     reg [3:0] alu_op_select_id;
-    wire [31:0] rs1_data_id, rs2_data_id;
     wire [4:0] rs1_addr_id, rs2_addr_id, rd_addr_id;
     reg [31:0] instr_id;
     reg [OP_LENGTH-1:0] pc_id;
@@ -66,6 +65,8 @@ module cpu
     reg bypass_ex_result_rs1_ex, bypass_ex_result_rs2_ex;
     reg bypass_me_result_rs1_ex, bypass_me_result_rs2_ex;
     reg [OP_LENGTH-1:0] alu_result_bypass_buffer_ex, csr_result_bypass_buffer_ex;
+    wire [31:0] rs1_data_ex, rs2_data_ex;
+    reg [4:0] rs1_addr_ex, rs2_addr_ex;
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
     wire csr_unit_r_en, csr_unit_w_en;
@@ -235,10 +236,10 @@ module cpu
             .rs1_addr(rs1_addr_id),
             .rs2_addr(rs2_addr_id),
             .rd_addr(rd_addr_id),
-            .rs1_data(rs1_data_id),
-            .rs2_data(rs2_data_id),
-            .opd1(opd1_id),
-            .opd2(opd2_id),
+            .rs1_data(),
+            .rs2_data(),
+            .opd1(),
+            .opd2(),
             .bypass_ex_result_rs1(bypass_ex_result_rs1_id),
             .bypass_ex_result_rs2(bypass_ex_result_rs2_id),
             .bypass_me_result_rs1(bypass_me_result_rs1_id),
@@ -310,6 +311,9 @@ module cpu
     always @(posedge sysclk)
     begin
 
+        rs1_addr_ex <= rs1_addr_id;
+        rs2_addr_ex <= rs2_addr_id;
+
         bypass_alu_ready <= 1'b0;
         bypass_csr_ready <= 1'b0;
         bypass_ld_ready <= 1'b0;
@@ -331,13 +335,13 @@ module cpu
     assign alu_opd1 = (bypass_ex_result_rs1_ex && bypass_alu_ready) ? alu_result_bypass_buffer_ex
                     : (bypass_ex_result_rs1_ex && bypass_csr_ready) ? csr_result_bypass_buffer_ex
                     : (bypass_ex_result_rs1_ex && bypass_ld_ready)  ? mem_acc_out
-                    : (bypass_me_result_rs1_ex && bypass_mem_ready) ? mem_result_bypass_buffer_me
-                    : opd1_ex;
+                    : (bypass_me_result_rs1_ex && bypass_mem_ready) ? rd_write_data // mem_result_bypass_buffer_me
+                    : rs1_data_ex;
     assign alu_opd2 = (bypass_ex_result_rs2_ex && bypass_alu_ready) ? alu_result_bypass_buffer_ex
                     : (bypass_ex_result_rs2_ex && bypass_csr_ready) ? csr_result_bypass_buffer_ex
                     : (bypass_ex_result_rs2_ex && bypass_ld_ready)  ? mem_acc_out
-                    : (bypass_me_result_rs2_ex && bypass_mem_ready) ? mem_result_bypass_buffer_me
-                    : opd2_ex;
+                    : (bypass_me_result_rs2_ex && bypass_mem_ready) ? rd_write_data // mem_result_bypass_buffer_me
+                    : rs2_data_ex;
     
     four_input_mux #(.INPUT_LENGTH(32))
         alu_opd1_mux
@@ -490,11 +494,11 @@ module cpu
     four_input_mux #(.INPUT_LENGTH(OP_LENGTH)) 
         rf_write_select_mux_cpu
         (
-            .a(alu_result_me),
-            .b(mem_acc_out),
-            .c(pc_plus4_me),
-            .d(csr_unit_out_me),
-            .sel(rf_w_select_me),
+            .a(alu_result_wb),
+            .b(mem_acc_out_wb),
+            .c(pc_plus4_wb),
+            .d(csr_unit_out_wb),
+            .sel(rf_w_select_wb),
             .z(rd_write_data)
         );
     
@@ -503,12 +507,12 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf_me && !make_nop_me),
-            .rs1_addr(rs1_addr_id),
-            .rs2_addr(rs2_addr_id),
-            .rd_addr(rd_addr_me),
-            .rs1_data(rs1_data_id),
-            .rs2_data(rs2_data_id),
+            .w_en(w_en_rf_wb && !make_nop_wb),
+            .rs1_addr(rs1_addr_ex),
+            .rs2_addr(rs2_addr_ex),
+            .rd_addr(rd_addr_wb),
+            .rs1_data(rs1_data_ex),
+            .rs2_data(rs2_data_ex),
             .rd_write_data(rd_write_data)
         );
 
