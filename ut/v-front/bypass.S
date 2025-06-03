@@ -5,36 +5,36 @@ RVTEST_RV32M
 RVTEST_CODE_BEGIN
 
 	li TESTNUM, 1
-	addi x2, x0, 4
-	addi x3, x2, 0
+	addi x5, x0, 4
+	addi x6, x5, 0
 	nop
 	nop
 	nop
 	nop
 	nop
-	bne x3, x2, fail
+	bne x5, x6, fail
 
 	li TESTNUM, 2
-	addi x2, x0, 4
+	addi x5, x0, 4
 	nop
-	addi x3, x2, 0
-	nop
-	nop
+	addi x6, x5, 0
 	nop
 	nop
 	nop
-	bne x3, x2, fail
+	nop
+	nop
+	bne x6, x5, fail
 
 	li TESTNUM, 3
-	addi x2, x0, -6
-	addi x3, x0, 6
-	add x4, x2, x3
+	addi x5, x0, -6
+	addi x6, x0, 6
+	add x7, x5, x6
 	nop
 	nop
 	nop
 	nop
 	nop
-	bnez x4, fail
+	bnez x7, fail
 
 	TEST_PASSFAIL
 

@@ -1,6 +1,6 @@
 # Constraints for Xilinx' PYNQ-Z1 Board
 
-# 62.5 MHz clock signal
+# 16.67 MHz clock signal
 set_property -dict { PACKAGE_PIN H16    IOSTANDARD LVCMOS33 } [get_ports sysclk]
     create_clock -add -name sysclk -period 60.00 [get_ports sysclk]
 

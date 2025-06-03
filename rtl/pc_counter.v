@@ -27,7 +27,7 @@ module pc_counter
 
     always @(posedge clk)
     begin
-        if (rst == 1'b1)
+        if (rst)
             pc <= 32'b0;
         else
             pc <= next_pc;
@@ -35,9 +35,9 @@ module pc_counter
         rst_buff <= rst;
     end
 
-    assign next_pc = (rst == 1'b1 || rst_buff == 1'b1) ? 32'b0 :
-                     (csr_sel == 1'b1) ? csr_out :
-                     ((branch == 1'b1 && comp_result == 'b1) || jump == 1'b1) ? alu_result :
+    assign next_pc = (rst || rst_buff) ? 32'b0 :
+                     csr_sel ? csr_out :
+                     ((branch && comp_result == 'b1) || jump) ? alu_result :
                      pc + 4;
     assign pc_out = pc;
     assign pc_plus4 = pc + 4;

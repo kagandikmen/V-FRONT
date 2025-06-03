@@ -55,7 +55,7 @@ module control_unit
     reg branch_id, jump_id, ecall_id, ebreak_id, mret_id;
     reg branch_ex, jump_ex, ecall_ex, ebreak_ex, mret_ex;
 
-    reg make_nop_if, make_nop_id, make_nop_ex;
+    reg make_nop_id, make_nop_ex;
     reg make_nop_if_buffer;
 
     reg csr_r_en_if, csr_r_en_id, csr_r_en_ex;
@@ -90,8 +90,7 @@ module control_unit
         ebreak_ex <= ebreak_id;
         mret_ex <= mret_id;
 
-        make_nop_if <= 1'b0;
-        make_nop_id <= make_nop_if_buffer || make_nop_if;
+        make_nop_id <= make_nop_if_buffer;
         make_nop_ex <= make_nop_if_buffer || make_nop_id;
 
         csr_r_en_id <= csr_r_en_if;
@@ -120,7 +119,6 @@ module control_unit
             ebreak_ex <= 1'b0;
             mret_ex <= 1'b0;
 
-            make_nop_if <= 1'b0;
             make_nop_id <= 1'b0;
             make_nop_ex <= 1'b0;
 
@@ -159,6 +157,7 @@ module control_unit
         ebreak = 1'b0;
         ldst_is_unsigned = 1'b0;
         ldst_mask = 4'b0000;
+        w_en_rf_if = 1'b0;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
