@@ -1,0 +1,8 @@
+# Makefrag for V-FRONT specific tests
+# Created:      2025-05-31
+# Modified:     2025-06-03
+# Author:       Kagan Dikmen
+
+v-front_tests = \
+    bypass \
+    csr_hazard

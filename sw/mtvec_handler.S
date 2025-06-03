@@ -1,6 +1,6 @@
 # Trap vector mtvec_handler to manage misaligned loads and stores
 # Created:      2025-05-28
-# Modified:     2025-05-29
+# Modified:     2025-06-02
 # Author:       Kagan Dikmen
 
 .section .text.mtvec
@@ -237,7 +237,7 @@ gpr_save:
 gpr_restore:
     lw x0, 0(sp)
     lw x1, 4(sp)
-    lw x2, 8(sp)    
+#   lw x2, 8(sp)    
     lw x3, 12(sp)
     lw x4, 16(sp)
     lw x5, 20(sp)
