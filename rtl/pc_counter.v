@@ -1,6 +1,6 @@
 // PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2025-06-02
+// Modified:    2025-06-03
 // Author:      Kagan Dikmen
 
 module pc_counter
@@ -19,10 +19,10 @@ module pc_counter
 
     output [OPD_WIDTH-1:0] pc_out,
     output [OPD_WIDTH-1:0] pc_plus4,
-    output [PC_WIDTH-1:0] next_pc
+    output [OPD_WIDTH-1:0] next_pc
     );
 
-    reg [31:0] pc;
+    reg [OPD_WIDTH:0] pc;
     reg rst_buff;
 
     always @(posedge clk)

@@ -34,11 +34,10 @@ module csr_unit
 
     `include "../lib/common_library.vh"
 
-    wire [11:0] csr_bram_wr_addr;
-    reg [11:0] csr_bram_rd_addr;
+    wire [11:0] csr_bram_rd_addr, csr_bram_wr_addr;
     reg [31:0] csr_bram_ram_in;
     wire [31:0] csr_bram_r_out;
-    reg [3:0] csr_bram_r_en, csr_bram_w_en;
+    reg [3:0] csr_bram_w_en;
     reg spec_reg_r_en, spec_reg_w_en;
 
     // a for reads, b for writes
@@ -131,6 +130,7 @@ module csr_unit
     end
 
     assign csr_bram_wr_addr = csr_addr;
+    assign csr_bram_rd_addr = csr_addr;
 
     always @(*)
     begin
@@ -186,9 +186,6 @@ module csr_unit
     // read
     always @(*)
     begin
-        csr_bram_rd_addr = csr_addr;
-        csr_bram_r_en = {4{r_en}};
-
         casez (op)
             3'b?01:
                 csr_bram_ram_in = in;

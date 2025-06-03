@@ -28,7 +28,7 @@ module cpu
     );
 
     // IF
-    wire [PC_WIDTH-1:0] next_pc;
+    wire [OP_LENGTH-1:0] next_pc;
     wire [OP_LENGTH-1:0] pc_if;
     wire [31:0] instr_if;
     wire ctrl_fetch_instr_out;
@@ -45,6 +45,7 @@ module cpu
     reg [31:0] instr_id;
     reg [OP_LENGTH-1:0] pc_id;
     wire bypass_ex_result_rs1_id, bypass_ex_result_rs2_id;
+    wire bypass_me_result_rs1_id, bypass_me_result_rs2_id;
 
     // EX
     reg alu_imm_select_ex, alu_mux1_select_ex, w_en_rf_ex, branch_ex, jump_ex;
