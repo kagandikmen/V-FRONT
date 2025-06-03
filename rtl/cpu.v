@@ -229,6 +229,7 @@ module cpu
         instruction_decoder_cpu
         (
             .clk(sysclk),
+            .rst(rst),
             .instr(instr_id),
             .rs1_addr(rs1_addr_id),
             .rs2_addr(rs2_addr_id),

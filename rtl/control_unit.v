@@ -105,6 +105,37 @@ module control_unit
         csr_op_ex <= csr_op_id;
         csr_addr_ex <= csr_addr_id;
         csr_imm_select_ex <= csr_imm_select_id;
+
+        if(rst)
+        begin
+            branch_id <= 1'b0;
+            jump_id <= 1'b0;
+            ecall_id <= 1'b0;
+            ebreak_id <= 1'b0;
+            mret_id <= 1'b0;
+
+            branch_ex <= 1'b0;
+            jump_ex <= 1'b0;
+            ecall_ex <= 1'b0;
+            ebreak_ex <= 1'b0;
+            mret_ex <= 1'b0;
+
+            make_nop_if <= 1'b0;
+            make_nop_id <= 1'b0;
+            make_nop_ex <= 1'b0;
+
+            csr_r_en_id <= 1'b0;
+            csr_w_en_id <= 1'b0;
+            csr_op_id <= 3'b0;
+            csr_addr_id <= 12'b0;
+            csr_imm_select_id <= 2'b0;
+
+            csr_r_en_ex <= 1'b0;
+            csr_w_en_ex <= 1'b0;
+            csr_op_ex <= 3'b0;
+            csr_addr_ex <= 12'b0;
+            csr_imm_select_ex <= 2'b0;
+        end
     end
 
     always @(*)
