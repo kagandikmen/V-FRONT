@@ -100,7 +100,7 @@ run_iverilog: compile_tests
 	done
 
 clean:
-	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid*
+	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid* *.jou vivado*.log
 
 clean_all: clean
 	rm -rf v-front.prj sw/mtvec_handler.o tests/ sim/*.hex
