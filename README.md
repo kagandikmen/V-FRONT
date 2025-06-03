@@ -14,7 +14,7 @@
 
 ### Summary
 
-![Static Badge](https://img.shields.io/badge/RISC--V-2e3168) ![GitHub last commit](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT?label=last%20commit%20to%20master) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT/dev?label=last%20commit%20to%20dev) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/kagandikmen/V-FRONT/.github%2Fworkflows%2Fbuild.yaml) ![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT) 
+![Static Badge](https://img.shields.io/badge/RISC--V-2e3168) ![GitHub last commit](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT?label=latest%20commit%20to%20master) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT/dev?label=latest%20commit%20to%20dev) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/kagandikmen/V-FRONT/.github%2Fworkflows%2Fbuild.yaml) ![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT) 
 
 - RV32I (v2.1) compliant, with Zicsr and Zifencei extensions
 - Five-stage von Neumann architecture
