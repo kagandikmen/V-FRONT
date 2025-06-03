@@ -8,7 +8,6 @@ module csr_unit
     parameter CSR_REG_COUNT = 4096
     )(
     input clk,
-    input clkinv,
     input rst,
 
     input r_en,
@@ -49,7 +48,7 @@ module csr_unit
         .addrb(csr_bram_wr_addr),
         .dina(),
         .dinb(csr_bram_ram_in),
-        .clka(clkinv),
+        .clka(clk),
         .clkb(clk),
         .wea(4'b0000),
         .web(csr_bram_w_en),
@@ -161,7 +160,7 @@ module csr_unit
             csr_bram_w_en <= {4{w_en}};
     end
 
-    always @(posedge clkinv)
+    always @(negedge clk)
     begin
 
         out <= csr_bram_r_out;

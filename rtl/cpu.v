@@ -5,7 +5,6 @@
 
 `include "./luftALU/rtl/alu.v"
 `include "./bram_dual.v"
-`include "./clock_inverter.v"
 `include "./control_unit.v"
 `include "./csr_unit.v"
 `include "./immediate_generator.v"
@@ -27,8 +26,6 @@ module cpu
     input sysclk,
     output wire led     // does not serve any practical purpose other than preventing synthesisers from optimising the whole CPU away
     );
-
-    wire sysclk_inv;
 
     // IF
     wire [PC_WIDTH-1:0] next_pc;
@@ -376,7 +373,6 @@ module cpu
     csr_unit #(.CSR_REG_COUNT(4096)) csr_unit_cpu
         (
             .clk(sysclk),
-            .clkinv(sysclk_inv),
             .rst(rst),
             .r_en(csr_unit_r_en && !make_nop_ex),
             .w_en(csr_unit_w_en && !make_nop_ex),
@@ -401,12 +397,6 @@ module cpu
     // 
     // STAGE 4: Memory Access (ME)
     //
-
-    clock_inverter clock_inverter_cpu
-        (
-            .clk(sysclk),
-            .clk_inv(sysclk_inv)
-        );
 
     assign mem_acc_in = (st_en_me == 1'b1) ? alu_opd2_me : r_data;
 
@@ -462,7 +452,7 @@ module cpu
             .dina(),
             .dinb(mem_acc_out),
             .clka(sysclk),
-            .clkb(sysclk_inv),
+            .clkb(sysclk),
             .wea(),
             .web(wr_mode),
             .ena(ctrl_fetch_instr_out),

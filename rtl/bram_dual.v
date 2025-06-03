@@ -1,6 +1,6 @@
 // Block RAM Module (Dual Port, Dual Clock)
 // Created:     2025-05-29
-// Modified:    2025-05-29
+// Modified:    2025-06-03
 // Taken from Xilinx' module examples, partly modified by Kagan Dikmen
 
 //  Xilinx True Dual Port RAM Byte Write Read First Dual Clock RAM
@@ -57,7 +57,7 @@ module bram_dual #(
       ram_data_a <= BRAM[addra];
     end
 
-  always @(posedge clkb)
+  always @(negedge clkb)
     if (enb) begin
       ram_data_b <= BRAM[addrb];
     end
@@ -69,7 +69,7 @@ module bram_dual #(
          if (ena)
            if (wea[i])
              BRAM[addra][(i+1)*COL_WIDTH-1:i*COL_WIDTH] <= dina[(i+1)*COL_WIDTH-1:i*COL_WIDTH];
-       always @(posedge clkb)
+       always @(negedge clkb)
          if (enb)
            if (web[i])
              BRAM[addrb][(i+1)*COL_WIDTH-1:i*COL_WIDTH] <= dinb[(i+1)*COL_WIDTH-1:i*COL_WIDTH];
@@ -97,7 +97,7 @@ end
         else if (regcea)
           douta_reg <= ram_data_a;
 
-      always @(posedge clkb)
+      always @(negedge clkb)
         if (rstb)
           doutb_reg <= {(NB_COL*COL_WIDTH){1'b0}};
         else if (regceb)
