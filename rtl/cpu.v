@@ -376,6 +376,7 @@ module cpu
     csr_unit #(.CSR_REG_COUNT(4096)) csr_unit_cpu
         (
             .clk(sysclk),
+            .clkinv(sysclk_inv),
             .rst(rst),
             .r_en(csr_unit_r_en && !make_nop_ex),
             .w_en(csr_unit_w_en && !make_nop_ex),
