@@ -365,7 +365,7 @@ module cpu
 
     four_input_mux #(.INPUT_LENGTH(32)) csr_unit_mux
         (
-            .a(alu_result),
+            .a(alu_opd1),
             .b(imm_ex),
             .c(instr_ex),
             .d(),
