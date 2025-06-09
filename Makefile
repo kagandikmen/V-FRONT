@@ -10,7 +10,7 @@ TESTDIRS := ut/rv32ui ut/v-front
 
 TESTS := $(rv32ui_sc_tests) $(v-front_tests)
 
-FAILING_TESTS := 
+FAILING_TESTS :=
 
 PASSING_TESTS := $(filter-out $(FAILING_TESTS), $(TESTS))
 
@@ -22,7 +22,7 @@ SIMULATION_SOURCES := \
 
 MODE ?=
 
-TOOLCHAIN_PREFIX := riscv32-unknown-elf
+RISCV_PREFIX ?= riscv32-unknown-elf
 
 CFLAGS += -march=rv32i_zicsr_zifencei -Wall -Wextra -Os -fomit-frame-pointer \
 	-ffreestanding -fno-builtin -fanalyzer -std=gnu99 \
@@ -51,19 +51,19 @@ copy_tests: create_project
 
 compile_tests: copy_tests
 	test -d tests-build || mkdir tests-build
-	$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
+	$(RISCV_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
 	for test in tests/* ; do \
 		test=$${test##*/}; test=$${test%.*}; \
-		$(TOOLCHAIN_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
-		$(TOOLCHAIN_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o sw/mtvec_handler.o; \
-		$(TOOLCHAIN_PREFIX)-objcopy -j .text -j .data -j .rodata -O binary tests-build/$$test.elf tests-build/$$test.bin; \
+		$(RISCV_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
+		$(RISCV_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o sw/mtvec_handler.o; \
+		$(RISCV_PREFIX)-objcopy -j .text -j .data -j .rodata -O binary tests-build/$$test.elf tests-build/$$test.bin; \
 		hexdump -v -e '1/4 "%08x\n"' tests-build/$$test.bin > tests-build/$$test.hex; \
 	done
 
 run_vivado: compile_tests
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-15s\t" "$$test:"; \
-		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		xelab cpu_tb -relax -debug all \
 			-generic_top MEM_INIT_FILE=\"tests-build/$$test.hex\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
@@ -82,7 +82,7 @@ run_vivado: compile_tests
 run_iverilog: compile_tests
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-15s\t" "$$test:"; \
-		TOHOST_ADDR=$$($(TOOLCHAIN_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		iverilog -o tests-build/$$test.out \
 			-Irtl/ -Isim/ -Irtl/luftALU/rtl/ -Irtl/luftALU/rtl/subunits/ \
 			-Pcpu_tb.MEM_INIT_FILE=\"tests-build/$$test.hex\" \
@@ -104,4 +104,3 @@ clean:
 
 clean_all: clean
 	rm -rf v-front.prj sw/mtvec_handler.o tests/ sim/*.hex
-

@@ -8,14 +8,14 @@ if [ -z "$1" -o -z "$2" -o -z "$3" ]; then
 	exit 1
 fi
 
-if [ -z "$TOOLCHAIN_PREFIX" ]; then
-	TOOLCHAIN_PREFIX=riscv32-unknown-elf
+if [ -z "$RISCV_PREFIX" ]; then
+	RISCV_PREFIX=riscv32-unknown-elf
 fi;
 
-$TOOLCHAIN_PREFIX-objdump -d -w $1 | sed '1,5d' | awk '!/:$/ { print $2; }' | sed '/^$/d' > $2; \
+$RISCV_PREFIX-objdump -d -w $1 | sed '1,5d' | awk '!/:$/ { print $2; }' | sed '/^$/d' > $2; \
 : > "$3"; \
-test -z "$($TOOLCHAIN_PREFIX-readelf -l $1 | grep .data)" || \
-	$TOOLCHAIN_PREFIX-objdump -s -j .data $1 | sed '1,4d' | \
+test -z "$($RISCV_PREFIX-readelf -l $1 | grep .data)" || \
+	$RISCV_PREFIX-objdump -s -j .data $1 | sed '1,4d' | \
 	awk '!/:$/ { for (i = 2; i < 6; i++) print $i; }' | sed '/^$/d' | \
 	awk 'length($0)==8 { print substr($0, 7, 2) substr($0, 5, 2) substr($0, 3, 2) substr($0, 1, 2) }' > $3;
 
