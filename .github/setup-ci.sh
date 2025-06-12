@@ -26,7 +26,7 @@ elif [[ "$OS" == "Darwin" ]]; then
 
     # Update and install packages
     brew update
-    brew install npm icarus-verilog
+    brew install npm icarus-verilog gawk
 
 else
     echo "Unsupported OS: $OS"

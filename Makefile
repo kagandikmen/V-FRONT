@@ -63,13 +63,13 @@ compile_tests: copy_tests
 run_vivado: compile_tests
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-15s\t" "$$test:"; \
-		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		xelab cpu_tb -relax -debug all \
 			-generic_top MEM_INIT_FILE=\"tests-build/$$test.hex\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 			-prj v-front.prj > /dev/null; \
 		xsim cpu_tb -R --onfinish quit > tests-build/$$test.results; \
-		RESULT=$$(cat tests-build/$$test.results | awk '/Note:/ {print}' | sed 's/Note://' | awk '/Success|Failure/ {print}'); \
+		RESULT=$$(cat tests-build/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
 		if [ "$(MODE)" = "ci" ] || [ "$(MODE)" = "CI" ]; then \
 			if echo "$$RESULT" | grep -q 'Failure'; then \
@@ -82,14 +82,14 @@ run_vivado: compile_tests
 run_iverilog: compile_tests
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-15s\t" "$$test:"; \
-		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | awk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		iverilog -o tests-build/$$test.out \
 			-Irtl/ -Isim/ -Irtl/luftALU/rtl/ -Irtl/luftALU/rtl/subunits/ \
 			-Pcpu_tb.MEM_INIT_FILE=\"tests-build/$$test.hex\" \
 			-Pcpu_tb.TOHOST_ADDR=$$TOHOST_ADDR \
 			sim/cpu_tb.v; \
 		vvp tests-build/$$test.out > tests-build/$$test.results; \
-		RESULT=$$(cat tests-build/$$test.results | awk '/Note:/ {print}' | sed 's/Note://' | awk '/Success|Failure/ {print}'); \
+		RESULT=$$(cat tests-build/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
 		if [ "$(MODE)" = "ci" ] || [ "$(MODE)" = "CI" ]; then \
 			if echo "$$RESULT" | grep -q 'Failure'; then \
