@@ -4,7 +4,11 @@ on: push
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-latest]
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -12,16 +16,22 @@ jobs:
 
       - name: Set up the environment
         run: |
-          sudo ./.github/setup-ci.sh
+          ./.github/setup-ci.sh
 
       - name: Install the toolchain
         run: |
           # Install pre-compiled toolchain (for all distributions)
           xpm install @xpack-dev-tools/riscv-none-elf-gcc@14.2.0-3.1 --verbose --global
 
-      - name: Set PATH
+      - name: Set PATH (Linux)
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
           echo "$HOME/.local/xPacks/@xpack-dev-tools/riscv-none-elf-gcc/14.2.0-3.1/.content/bin" >> $GITHUB_PATH
+
+      - name: Set PATH (macOS)
+        if: startsWith(matrix.os, 'macos-')
+        run: |
+          echo "$HOME/Library/xPacks/@xpack-dev-tools/riscv-none-elf-gcc/14.2.0-3.1/.content/bin" >> $GITHUB_PATH
 
       - name: Set RISCV_PREFIX
         run: |
