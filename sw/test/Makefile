@@ -1,4 +1,4 @@
-COMPILER_PREFIX = riscv32-unknown-elf
+COMPILER_PREFIX ?= riscv32-unknown-elf
 
 all: clean compile generate_hex
 
@@ -21,4 +21,3 @@ generate_hex: compile
 
 clean:
 	rm -rf *.o *.hex *.bin *.elf *.map ../start.o ../../sim/pmem.hex ../../sim/dmem.hex
-	
