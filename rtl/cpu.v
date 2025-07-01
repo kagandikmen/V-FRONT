@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-06-03
+// Modified:    2025-07-01
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -34,13 +34,13 @@ module cpu
     wire ctrl_fetch_instr_out;
 
     // ID
-    reg alu_imm_select_id, alu_mux1_select_id, w_en_rf_id, branch_id, jump_id;
-    reg [1:0] alu_pc_select_id, alu_mux2_select_id, rf_w_select_id;
+    reg alu_imm_select_id, alu_cu_input_sel_id, w_en_rf_id, branch_id, jump_id;
+    reg [1:0] alu_pc_select_id, alu_subunit_res_sel_id, rf_w_select_id;
     reg ecall_id, ebreak_id, mret_id;
     reg [3:0] ldst_mask_id;
     reg ldst_is_unsigned_id;
     reg st_en_id;
-    reg [3:0] alu_op_select_id;
+    reg [3:0] alu_subunit_op_sel_id;
     wire [4:0] rs1_addr_id, rs2_addr_id, rd_addr_id;
     reg [31:0] instr_id;
     reg [OP_LENGTH-1:0] pc_id;
@@ -48,13 +48,13 @@ module cpu
     wire bypass_me_result_rs1_id, bypass_me_result_rs2_id;
 
     // EX
-    reg alu_imm_select_ex, alu_mux1_select_ex, w_en_rf_ex, branch_ex, jump_ex;
-    reg [1:0] alu_pc_select_ex, alu_mux2_select_ex, rf_w_select_ex;
+    reg alu_imm_select_ex, alu_cu_input_sel, w_en_rf_ex, branch_ex, jump_ex;
+    reg [1:0] alu_pc_select_ex, alu_subunit_res_sel, rf_w_select_ex;
     reg ecall_ex, ebreak_ex, mret_ex;
     reg [3:0] ldst_mask_ex;
     reg ldst_is_unsigned_ex;
     reg st_en_ex;
-    reg [3:0] alu_op_select_ex;
+    reg [3:0] alu_subunit_op_sel;
     wire make_nop_ex;
     reg [4:0] rd_addr_ex;
     wire [OP_LENGTH-1:0] alu_opd1, alu_opd2, alu_mux1_out, alu_mux2_out;
@@ -113,9 +113,9 @@ module cpu
     wire ctrl_alu_imm_select_out;
     wire [1:0] ctrl_alu_pc_select_out;
     wire [1:0] ctrl_rf_w_select_out;
-    wire ctrl_alu_mux1_select_out;
-    wire [1:0] ctrl_alu_mux2_select_out;
-    wire [3:0] ctrl_alu_op_select_out;
+    wire ctrl_alu_cu_input_sel_out;
+    wire [1:0] ctrl_alu_subunit_res_sel_out;
+    wire [3:0] ctrl_alu_subunit_op_sel_out;
     wire ctrl_w_en_rf_if_out;
     wire ctrl_branch_out;
     wire ctrl_jump_out;
@@ -142,9 +142,9 @@ module cpu
             .alu_imm_select(ctrl_alu_imm_select_out),
             .alu_pc_select(ctrl_alu_pc_select_out),
             .rf_w_select(ctrl_rf_w_select_out),
-            .alu_mux1_select(ctrl_alu_mux1_select_out),
-            .alu_mux2_select(ctrl_alu_mux2_select_out),
-            .alu_op_select(ctrl_alu_op_select_out),
+            .alu_cu_input_sel(ctrl_alu_cu_input_sel_out),
+            .alu_subunit_res_sel(ctrl_alu_subunit_res_sel_out),
+            .alu_subunit_op_sel(ctrl_alu_subunit_op_sel_out),
             .w_en_rf_if(ctrl_w_en_rf_if_out),
             .branch(ctrl_branch_out),
             .jump(ctrl_jump_out),
@@ -173,9 +173,9 @@ module cpu
         alu_imm_select_id <= ctrl_alu_imm_select_out;
         alu_pc_select_id <= ctrl_alu_pc_select_out;
         rf_w_select_id <= ctrl_rf_w_select_out;
-        alu_mux1_select_id <= ctrl_alu_mux1_select_out;
-        alu_mux2_select_id <= ctrl_alu_mux2_select_out;
-        alu_op_select_id <= ctrl_alu_op_select_out;
+        alu_cu_input_sel_id <= ctrl_alu_cu_input_sel_out;
+        alu_subunit_res_sel_id <= ctrl_alu_subunit_res_sel_out;
+        alu_subunit_op_sel_id <= ctrl_alu_subunit_op_sel_out;
         w_en_rf_id <= ctrl_w_en_rf_if_out;
         branch_id <= ctrl_branch_out;
         jump_id <= ctrl_jump_out;
@@ -264,9 +264,9 @@ module cpu
         alu_imm_select_ex <= alu_imm_select_id;
         alu_pc_select_ex <= alu_pc_select_id;
         rf_w_select_ex <= rf_w_select_id;
-        alu_mux1_select_ex <= alu_mux1_select_id;
-        alu_mux2_select_ex <= alu_mux2_select_id;
-        alu_op_select_ex <= alu_op_select_id;
+        alu_cu_input_sel <= alu_cu_input_sel_id;
+        alu_subunit_res_sel <= alu_subunit_res_sel_id;
+        alu_subunit_op_sel <= alu_subunit_op_sel_id;
         w_en_rf_ex <= w_en_rf_id;
         branch_ex <= branch_id;
         jump_ex <= jump_id;
@@ -297,9 +297,9 @@ module cpu
             .opd2(alu_mux2_out),
             .opd3(alu_opd1),
             .opd4(alu_opd2),
-            .alu_mux1_select(alu_mux1_select_ex),
-            .alu_mux2_select(alu_mux2_select_ex),
-            .alu_op_select(alu_op_select_ex),
+            .cu_input_sel(alu_cu_input_sel),
+            .subunit_res_sel(alu_subunit_res_sel),
+            .subunit_op_sel(alu_subunit_op_sel),
             .alu_result(alu_result),
             .comp_result(comp_result)
         );
