@@ -9,6 +9,9 @@ authors:
   - family-names: Dikmen
     given-names: Kagan
     orcid: 'https://orcid.org/0009-0002-7128-1359'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.20783633
 repository-code: 'https://github.com/kagandikmen/V-FRONT'
 license: MIT
 version: 1.0.0
