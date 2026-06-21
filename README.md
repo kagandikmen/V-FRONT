@@ -10,11 +10,16 @@
   <img src="docs/v-front_lightbanner.png" alt="V-FRONT Banner" />
 </picture>
 
-**V-FRONT** is a **five**-stage, 32-bit RISC-**V** processor implemented in **V**erilog. It supports the base RISC-V ISA module RV32I, version 2.1.
+**V-FRONT** is a **five**-stage, 32-bit RISC-**V** CPU implemented in **V**erilog. It supports the base RISC-V ISA module RV32I, version 2.1.
 
 ### Summary
 
-![Static Badge](https://img.shields.io/badge/RISC--V-2e3168) ![GitHub last commit](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT?label=latest%20commit%20to%20master) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT/dev?label=latest%20commit%20to%20dev) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/kagandikmen/V-FRONT/.github%2Fworkflows%2Fbuild.yaml) ![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT) 
+![RISC-V Badge (Static)](https://img.shields.io/badge/RISC--V-2e3168)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT?label=last%20commit%20to%20master)](https://github.com/kagandikmen/V-FRONT/commits/master/)
+[![GitHub Last Commit (dev)](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT/dev?label=last%20commit%20to%20dev)](https://github.com/kagandikmen/V-FRONT/commits/dev/)
+[![GitHub Actions Build Workflow Status](https://github.com/kagandikmen/V-FRONT/actions/workflows/build.yaml/badge.svg)](https://github.com/kagandikmen/V-FRONT/actions/workflows/build.yaml)
+[![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT)](LICENSE)
+[![Zenodo DOI Badge/Link](https://zenodo.org/badge/DOI/10.5281/zenodo.20783633.svg)](https://doi.org/10.5281/zenodo.20783633)
 
 - RV32I (v2.1) compliant, with Zicsr and Zifencei extensions
 - Five-stage von Neumann architecture
@@ -33,10 +38,9 @@ while installing RISC-V GNU Toolchain, as this is the configuration required by 
 ```bash
 sudo apt install iverilog
 ```
-The tests can be run using Vivado, as well. To download Vivado, please see AMD's [Downloads](https://www.xilinx.com/support/download.html) portal for Vivado Design Suite. To run the unit tests using Vivado, libraries `libncurses5` and `libtinfo5` are also required, which can be installed with:
-```bash
-sudo apt install libncurses5 libtinfo5
-```
+The tests can be run using Vivado, as well. To download Vivado, please see AMD's [Downloads](https://www.xilinx.com/support/download.html) portal for Vivado Design Suite. You may need to agree to certain terms and conditions.
+
+To run the unit tests using Vivado, packages `libncurses5` and `libtinfo5` may also be required.
 
 ## Getting Started
 
@@ -97,8 +101,6 @@ Pull requests, suggestions, and bug reports are all welcome.
 
 ## License
 
-V-FRONT is licensed under MIT License. See [LICENSE](LICENSE) for details.
+V-FRONT is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 V-FRONT incorporates components and code from external sources. For detailed license and copyright information regarding these components, please refer to [NOTICE.md](NOTICE.md).
-
----
