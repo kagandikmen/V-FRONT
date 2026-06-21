@@ -1,0 +1,15 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: 'V-FRONT: Five-Stage 32-bit RISC-V CPU in Verilog'
+message: 'If you use V-FRONT in your work, please cite it as below.'
+type: software
+authors:
+  - family-names: Dikmen
+    given-names: Kagan
+    orcid: 'https://orcid.org/0009-0002-7128-1359'
+repository-code: 'https://github.com/kagandikmen/V-FRONT'
+license: MIT
+version: 1.0.0
+date-released: '2026-06-21'
