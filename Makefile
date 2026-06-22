@@ -1,12 +1,12 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2025-06-02
+# Modified:		2026-06-22
 # Author:		Kagan Dikmen
 
-include ut/rv32ui/Makefrag
+include ut/riscv-tests/isa/rv32ui/Makefrag
 include ut/v-front/Makefrag
 
-TESTDIRS := ut/rv32ui ut/v-front
+TESTDIRS := ut/riscv-tests/isa/rv32ui ut/v-front
 
 TESTS := $(rv32ui_sc_tests) $(v-front_tests)
 
@@ -54,7 +54,7 @@ compile_tests: copy_tests
 	$(RISCV_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
 	for test in tests/* ; do \
 		test=$${test##*/}; test=$${test%.*}; \
-		$(RISCV_PREFIX)-gcc -c $(CFLAGS) -Iut -Iut/rv32ui -o tests-build/$$test.o tests/$$test.S; \
+		$(RISCV_PREFIX)-gcc -c $(CFLAGS) -Iut/riscv-tests/env/p -Iut/riscv-tests/isa/macros/scalar -Iut/riscv-tests/isa/rv32ui -o tests-build/$$test.o tests/$$test.S; \
 		$(RISCV_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o sw/mtvec_handler.o; \
 		$(RISCV_PREFIX)-objcopy -j .text -j .data -j .rodata -O binary tests-build/$$test.elf tests-build/$$test.bin; \
 		hexdump -v -e '1/4 "%08x\n"' tests-build/$$test.bin > tests-build/$$test.hex; \
