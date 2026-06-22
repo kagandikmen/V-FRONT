@@ -99,6 +99,10 @@ The unit tests all pass as of 2026-06-22. The design is fully synthesizable.
 
 Pull requests, suggestions, and bug reports are all welcome.
 
+## Citing
+
+If you use V-FRONT in your work, please cite it. You can use GitHub's "Cite this repository" button on the top right of the repository page to export a citation in APA or BibTeX format.
+
 ## License
 
 V-FRONT is licensed under the MIT License. See [LICENSE](LICENSE) for details.
