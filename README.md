@@ -26,7 +26,7 @@
 - 32 KB unified dual-port dual-clock BRAM-based memory (16 KB program, 16 KB data)
 - CSR unit with 4096 CSR registers
 - Handles misaligned memory accesses via trap vector `mtvec_handler`
-- Fully tested with riscv-tests as of 2025-06-03
+- Fully tested with riscv-tests as of 2026-06-22
 
 ## Prerequisites
 
@@ -60,7 +60,7 @@ after navigating into the V-FRONT directory. To run the tests using Vivado, run:
 ```bash
 make run_vivado
 ```
-In correct setup, the tests should all pass; there is no test failing as of 2025-06-03. To get rid of all the files generated during the tests, run:
+In correct setup, the tests should all pass; there is no test failing as of 2026-06-22. To get rid of all the files generated during the tests, run:
 ```bash
 make clean_all
 ```
@@ -74,7 +74,7 @@ Find an example of how a generic C file can be compiled to run on V-FRONT by nav
 - `rtl/` - Verilog source code
 - `sim/` - Verilog testbenches
 - `sw/` - Software helpers such as trap vectors and linker scripts; also includes demo software
-- `ut/` - Unit tests taken from [riscv-tests](https://github.com/riscv-software-src/riscv-tests)
+- `ut/` - Unit tests
 - `vivado-setup/` - Helpers for easy setup on Vivado
 
 ## Architectural Details
@@ -89,7 +89,7 @@ V-FRONT has been tested for full RV32I compliance using the unit tests in the [u
 
 ## Status
 
-The unit tests all pass as of 2025-06-03. The design is fully synthesizable.
+The unit tests all pass as of 2026-06-22. The design is fully synthesizable.
 
 ### Known Issues
 
@@ -98,6 +98,10 @@ The unit tests all pass as of 2025-06-03. The design is fully synthesizable.
 ## Contributing
 
 Pull requests, suggestions, and bug reports are all welcome.
+
+## Citing
+
+If you use V-FRONT in your work, please cite it. You can use GitHub's "Cite this repository" button on the top right of the repository page to export a citation in APA or BibTeX format.
 
 ## License
 

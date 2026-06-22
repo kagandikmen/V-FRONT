@@ -1,3 +1,6 @@
 [submodule "rtl/luftALU"]
 	path = rtl/luftALU
 	url = git@github.com:kagandikmen/luftALU.git
+[submodule "ut/riscv-tests"]
+	path = ut/riscv-tests
+	url = https://github.com/riscv-software-src/riscv-tests.git
