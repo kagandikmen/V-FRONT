@@ -34,7 +34,7 @@
 ```bash
 ./configure --prefix=/opt/riscv --with-abi=ilp32 --with-arch=rv32i
 ```
-while installing RISC-V GNU Toolchain, as this is the configuration required by V-FRONT. To run the unit tests, Icarus Verilog needs to be installed on the host machine. For this, run:
+while installing RISC-V GNU Toolchain, as this is the configuration required by V-FRONT. To run the unit tests, Icarus Verilog needs to be installed on the host machine. If you are using Ubuntu, you can install Icarus Verilog via:
 ```bash
 sudo apt install iverilog
 ```
@@ -68,14 +68,18 @@ Find an example of how a generic C file can be compiled to run on V-FRONT by nav
 
 ## Project Structure
 
-- `.github` - GitHub Actions setup
-- `docs/` - Project documentation and images
-- `lib/` - Verilog libraries for constants and functions commonly used throughout the design
-- `rtl/` - Verilog source code
-- `sim/` - Verilog testbenches
-- `sw/` - Software helpers such as trap vectors and linker scripts; also includes demo software
-- `ut/` - Unit tests
-- `vivado-setup/` - Helpers for easy setup on Vivado
+```
+.
+├── .github          # GitHub Actions setup
+├── docs             # Project documentation and images           
+├── lib              # Verilog libraries for constants and functions
+├── rtl              # Verilog source code
+├── sim              # Verilog testbenches
+├── sw               # Software helpers (e.g. trap vectors and linker scripts)
+│   └── test         # Demo software
+├── ut               # Unit tests (riscv-tests + V-FRONT's own)
+└── vivado-setup     # Help for an easy Vivado setup
+```
 
 ## Architectural Details
 
