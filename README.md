@@ -19,7 +19,7 @@
 [![GitHub Last Commit (dev)](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT/dev?label=last%20commit%20to%20dev)](https://github.com/kagandikmen/V-FRONT/commits/dev/)
 [![GitHub Actions Build Workflow Status](https://github.com/kagandikmen/V-FRONT/actions/workflows/build.yaml/badge.svg)](https://github.com/kagandikmen/V-FRONT/actions/workflows/build.yaml)
 [![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT)](LICENSE)
-[![Zenodo DOI Badge/Link](https://zenodo.org/badge/DOI/10.5281/zenodo.20783633.svg)](https://doi.org/10.5281/zenodo.20783633)
+[![Zenodo DOI Badge/Link](https://img.shields.io/badge/DOI-10.5281/zenodo.20783633-blue)](https://doi.org/10.5281/zenodo.20783633)
 
 - RV32I (v2.1) compliant, with Zicsr and Zifencei extensions
 - Five-stage von Neumann architecture
@@ -34,7 +34,7 @@
 ```bash
 ./configure --prefix=/opt/riscv --with-abi=ilp32 --with-arch=rv32i
 ```
-while installing RISC-V GNU Toolchain, as this is the configuration required by V-FRONT. To run the unit tests, Icarus Verilog needs to be installed on the host machine. For this, run:
+while installing RISC-V GNU Toolchain, as this is the configuration required by V-FRONT. To run the unit tests, Icarus Verilog needs to be installed on the host machine. If you are using Ubuntu, you can install Icarus Verilog via:
 ```bash
 sudo apt install iverilog
 ```
@@ -68,14 +68,18 @@ Find an example of how a generic C file can be compiled to run on V-FRONT by nav
 
 ## Project Structure
 
-- `.github` - GitHub Actions setup
-- `docs/` - Project documentation and images
-- `lib/` - Verilog libraries for constants and functions commonly used throughout the design
-- `rtl/` - Verilog source code
-- `sim/` - Verilog testbenches
-- `sw/` - Software helpers such as trap vectors and linker scripts; also includes demo software
-- `ut/` - Unit tests
-- `vivado-setup/` - Helpers for easy setup on Vivado
+```
+.
+├── .github          # GitHub Actions setup
+├── docs             # Project documentation and images           
+├── lib              # Verilog libraries for constants and functions
+├── rtl              # Verilog source code
+├── sim              # Verilog testbenches
+├── sw               # Software helpers (e.g. trap vectors and linker scripts)
+│   └── test         # Demo software
+├── ut               # Unit tests (riscv-tests + V-FRONT's own)
+└── vivado-setup     # Help for an easy Vivado setup
+```
 
 ## Architectural Details
 
