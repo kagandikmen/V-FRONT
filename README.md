@@ -19,7 +19,7 @@
 [![GitHub Last Commit (dev)](https://img.shields.io/github/last-commit/kagandikmen/V-FRONT/dev?label=last%20commit%20to%20dev)](https://github.com/kagandikmen/V-FRONT/commits/dev/)
 [![GitHub Actions Build Workflow Status](https://github.com/kagandikmen/V-FRONT/actions/workflows/build.yaml/badge.svg)](https://github.com/kagandikmen/V-FRONT/actions/workflows/build.yaml)
 [![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT)](LICENSE)
-[![Zenodo DOI Badge/Link](https://zenodo.org/badge/DOI/10.5281/zenodo.20783633.svg)](https://doi.org/10.5281/zenodo.20783633)
+[![Zenodo DOI Badge/Link](https://img.shields.io/badge/DOI-10.5281/zenodo.20783633-blue)](https://doi.org/10.5281/zenodo.20783633)
 
 - RV32I (v2.1) compliant, with Zicsr and Zifencei extensions
 - Five-stage von Neumann architecture
