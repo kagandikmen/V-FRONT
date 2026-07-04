@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-06-22
+# Modified:		2026-07-04
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -56,17 +56,18 @@ compile_tests: copy_tests
 		test=$${test##*/}; test=$${test%.*}; \
 		$(RISCV_PREFIX)-gcc -c $(CFLAGS) -Iut/riscv-tests/env/p -Iut/riscv-tests/isa/macros/scalar -Iut/riscv-tests/isa/rv32ui -o tests-build/$$test.o tests/$$test.S; \
 		$(RISCV_PREFIX)-gcc -o tests-build/$$test.elf $(LDFLAGS) tests-build/$$test.o sw/mtvec_handler.o; \
-		$(RISCV_PREFIX)-objcopy -j .text -j .data -j .rodata -O binary tests-build/$$test.elf tests-build/$$test.bin; \
-		hexdump -v -e '1/4 "%08x\n"' tests-build/$$test.bin > tests-build/$$test.hex; \
+		$(RISCV_PREFIX)-objcopy -j .text -j .data -j .rodata -O verilog --verilog-data-width=4 tests-build/$$test.elf tests-build/$$test.mem; \
 	done
 
 run_vivado: compile_tests
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-15s\t" "$$test:"; \
 		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
 		xelab cpu_tb -relax -debug all \
-			-generic_top MEM_INIT_FILE=\"tests-build/$$test.hex\" \
+			-generic_top MEM_INIT_FILE=\"tests-build/$$test.mem\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
+			-generic_top RESET_ADDR=32\'h$$RESET_ADDR \
 			-prj v-front.prj > /dev/null; \
 		xsim cpu_tb -R --onfinish quit > tests-build/$$test.results; \
 		RESULT=$$(cat tests-build/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
@@ -83,10 +84,12 @@ run_iverilog: compile_tests
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-15s\t" "$$test:"; \
 		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
 		iverilog -o tests-build/$$test.out \
 			-Irtl/ -Isim/ -Irtl/luftALU/rtl/ -Irtl/luftALU/rtl/subunits/ \
-			-Pcpu_tb.MEM_INIT_FILE=\"tests-build/$$test.hex\" \
+			-Pcpu_tb.MEM_INIT_FILE=\"tests-build/$$test.mem\" \
 			-Pcpu_tb.TOHOST_ADDR=$$TOHOST_ADDR \
+			-Pcpu_tb.RESET_ADDR=32\'h$$RESET_ADDR \
 			sim/cpu_tb.v; \
 		vvp tests-build/$$test.out > tests-build/$$test.results; \
 		RESULT=$$(cat tests-build/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
@@ -103,4 +106,4 @@ clean:
 	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid* *.jou vivado*.log
 
 clean_all: clean
-	rm -rf v-front.prj sw/mtvec_handler.o tests/ sim/*.hex
+	rm -rf v-front.prj sw/mtvec_handler.o tests/ sim/*.mem
