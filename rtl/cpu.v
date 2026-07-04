@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-04
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -81,7 +81,6 @@ module cpu
     wire is_misaligned, is_misalignment_store;
     wire [DMEM_ADDR_WIDTH-1:0] dmem_addr;
     reg bypass_me_result_rs1_me, bypass_me_result_rs2_me;
-    reg [OP_LENGTH-1:0] mem_result_bypass_buffer_me;
     reg make_nop_me;
     reg [1:0] rf_w_select_me;
     reg [4:0] rd_addr_me;
@@ -441,8 +440,6 @@ module cpu
             bypass_mem_ready <= 1'b1;
         else
             bypass_mem_ready <= 1'b0;
-
-        mem_result_bypass_buffer_me <= rd_write_data;
     end
 
 
