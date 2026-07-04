@@ -1,10 +1,7 @@
-// Dummy instructions for the Vivado setup
-// Created: 2024-08-15
-// Modified: 2025-05-26
-// Author: Kagan Dikmen
-
-// You can use these test instructions to test the cpu "out-of-the-shelf"
-// or replace it with your own test.
+// Dummy instructions for the simulations
+// Created:     2024-08-15
+// Modified:    2026-07-04
+// Author:      Kagan Dikmen
 
 @0000 00418133  // ADD x2, x3, x4
 @0001 00518133  // ADD x2, x3, x5

@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-07-01
+// Modified:    2026-07-04
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
@@ -20,7 +20,8 @@ module cpu
     parameter DMEM_DATA_WIDTH = 32,
     parameter OP_LENGTH = 32,
     parameter PC_WIDTH = 16,
-    parameter MEM_INIT_FILE = ""
+    parameter MEM_INIT_FILE = "",
+    parameter RESET_ADDR = 32'h00000000
     )(
     input rst,
     input sysclk,
@@ -190,7 +191,7 @@ module cpu
     wire [OP_LENGTH-1:0] pc_plus4_if;
     reg [OP_LENGTH-1:0] pc_plus4_id, pc_plus4_ex, pc_plus4_me, pc_plus4_wb;
 
-    pc_counter #(.OPD_WIDTH(OP_LENGTH), .PC_WIDTH(PC_WIDTH)) 
+    pc_counter #(.OPD_WIDTH(OP_LENGTH), .PC_WIDTH(PC_WIDTH), .RESET_ADDR(RESET_ADDR)) 
         pc_counter_cpu
         (
             .clk(sysclk),

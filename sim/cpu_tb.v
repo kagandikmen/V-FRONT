@@ -1,6 +1,6 @@
 // Testbench for the main body of the CPU
 // Created:     2024-01-26
-// Modified:    2025-05-29
+// Modified:    2026-07-04
 // Author:      Kagan Dikmen
 
 `include "../rtl/cpu.v"
@@ -9,15 +9,16 @@
 
 module cpu_tb
     #(
-        parameter MEM_INIT_FILE = "mem.hex",
-        parameter TOHOST_ADDR    = 16384
+        parameter MEM_INIT_FILE = "init.mem",
+        parameter TOHOST_ADDR   = 16384,
+        parameter RESET_ADDR    = 32'h00000000
     )(
     );
 
     reg rst, sysclk_t;
     wire led_t;
 
-    cpu #(.DMEM_ADDR_WIDTH(13), .DMEM_DATA_WIDTH(32), .OP_LENGTH(32), .PC_WIDTH(16), .MEM_INIT_FILE(MEM_INIT_FILE)) 
+    cpu #(.DMEM_ADDR_WIDTH(13), .DMEM_DATA_WIDTH(32), .OP_LENGTH(32), .PC_WIDTH(16), .MEM_INIT_FILE(MEM_INIT_FILE), .RESET_ADDR(RESET_ADDR)) 
         cpu_ut 
         (
             .rst(rst),

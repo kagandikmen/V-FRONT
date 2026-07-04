@@ -1,12 +1,13 @@
 // PC Counter of the CPU
 // Created:     2024-01-25
-// Modified:    2025-06-03
+// Modified:    2026-07-04
 // Author:      Kagan Dikmen
 
 module pc_counter
     #(
     parameter OPD_WIDTH = 32,
-    parameter PC_WIDTH = 12
+    parameter PC_WIDTH = 12, 
+    parameter RESET_ADDR = 32'h00000000
     )(
     input clk,
     input rst,
@@ -28,14 +29,14 @@ module pc_counter
     always @(posedge clk)
     begin
         if (rst)
-            pc <= 32'b0;
+            pc <= RESET_ADDR;
         else
             pc <= next_pc;
         
         rst_buff <= rst;
     end
 
-    assign next_pc = (rst || rst_buff) ? 32'b0 :
+    assign next_pc = (rst || rst_buff) ? RESET_ADDR :
                      csr_sel ? csr_out :
                      ((branch && comp_result == 'b1) || jump) ? alu_result :
                      pc + 4;
