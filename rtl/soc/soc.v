@@ -3,9 +3,6 @@
 // Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "bram_dual.v"
-`include "cpu.v"
-
 module soc
     #(
     parameter DMEM_ADDR_WIDTH  = 13,
