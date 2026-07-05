@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-07-04
+# Modified:		2026-07-05
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -15,10 +15,10 @@ FAILING_TESTS :=
 PASSING_TESTS := $(filter-out $(FAILING_TESTS), $(TESTS))
 
 DESIGN_SOURCES := \
-	rtl/cpu.v
+	rtl/soc.v
 
 SIMULATION_SOURCES := \
-	sim/cpu_tb.v
+	sim/soc_tb.v
 
 MODE ?=
 
@@ -64,12 +64,12 @@ run_vivado: compile_tests
 		printf "Running test %-15s\t" "$$test:"; \
 		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
-		xelab cpu_tb -relax -debug all \
+		xelab soc_tb -relax -debug all \
 			-generic_top MEM_INIT_FILE=\"tests-build/$$test.mem\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 			-generic_top RESET_ADDR=32\'h$$RESET_ADDR \
 			-prj v-front.prj > /dev/null; \
-		xsim cpu_tb -R --onfinish quit > tests-build/$$test.results; \
+		xsim soc_tb -R --onfinish quit > tests-build/$$test.results; \
 		RESULT=$$(cat tests-build/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
 		if [ "$(MODE)" = "ci" ] || [ "$(MODE)" = "CI" ]; then \
@@ -87,10 +87,10 @@ run_iverilog: compile_tests
 		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
 		iverilog -o tests-build/$$test.out \
 			-Irtl/ -Isim/ -Irtl/luftALU/rtl/ -Irtl/luftALU/rtl/subunits/ \
-			-Pcpu_tb.MEM_INIT_FILE=\"tests-build/$$test.mem\" \
-			-Pcpu_tb.TOHOST_ADDR=$$TOHOST_ADDR \
-			-Pcpu_tb.RESET_ADDR=32\'h$$RESET_ADDR \
-			sim/cpu_tb.v; \
+			-Psoc_tb.MEM_INIT_FILE=\"tests-build/$$test.mem\" \
+			-Psoc_tb.TOHOST_ADDR=$$TOHOST_ADDR \
+			-Psoc_tb.RESET_ADDR=32\'h$$RESET_ADDR \
+			sim/soc_tb.v; \
 		vvp tests-build/$$test.out > tests-build/$$test.results; \
 		RESULT=$$(cat tests-build/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \

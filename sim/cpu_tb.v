@@ -1,6 +1,6 @@
 // Testbench for the main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-04
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
 `include "../rtl/cpu.v"
@@ -9,22 +9,46 @@
 
 module cpu_tb
     #(
-        parameter MEM_INIT_FILE = "init.mem",
         parameter TOHOST_ADDR   = 16384,
+        parameter DMEM_ADDR_WIDTH = 13,
+        parameter DMEM_DATA_WIDTH = 32,
+        parameter OP_LENGTH = 32,
+        parameter PC_WIDTH = 16,
         parameter RESET_ADDR    = 32'h00000000
     )(
     );
 
+    `include "../lib/common_library.vh"
+    `include "../lib/instr_generator.vh"
+
     reg rst, sysclk_t;
+    reg [31:0] instr_if_t;
+    reg [31:0] r_data_t;
+    wire ctrl_fetch_instr_out_t;
+    wire [3:0] wr_mode_t;
+    wire [12:0] bram_addra_t;
+    wire [DMEM_ADDR_WIDTH-1:0] bram_addrb_t;
+    wire [OP_LENGTH-1:0] bram_dinb_t;
     wire led_t;
 
-    cpu #(.DMEM_ADDR_WIDTH(13), .DMEM_DATA_WIDTH(32), .OP_LENGTH(32), .PC_WIDTH(16), .MEM_INIT_FILE(MEM_INIT_FILE), .RESET_ADDR(RESET_ADDR)) 
-        cpu_ut 
-        (
-            .rst(rst),
-            .sysclk(sysclk_t),
-            .led(led_t)
-        );
+    cpu #(
+        .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH),
+        .DMEM_DATA_WIDTH(DMEM_DATA_WIDTH),
+        .OP_LENGTH(OP_LENGTH),
+        .PC_WIDTH(PC_WIDTH),
+        .RESET_ADDR(RESET_ADDR)
+    ) cpu_ut (
+        .rst(rst),
+        .sysclk(sysclk_t),
+        .instr_if(instr_if_t),
+        .r_data(r_data_t),
+        .ctrl_fetch_instr_out(ctrl_fetch_instr_out_t),
+        .wr_mode(wr_mode_t),
+        .bram_addra(bram_addra_t),
+        .bram_addrb(bram_addrb_t),
+        .bram_dinb(bram_dinb_t),
+        .led(led_t)
+    );
     
     always #5 sysclk_t = ~sysclk_t;
     
@@ -32,24 +56,40 @@ module cpu_tb
     begin
         rst = 1'b0;
         sysclk_t = 1'b0;
+        r_data_t = 32'd7;
         
-        #4;
+        #5;
         rst = ~rst;
 
         #20;
         rst = ~rst;
 
-        wait (^cpu_ut.unified_memory_cpu.BRAM[TOHOST_ADDR[14:2]] !== 1'bx);
-
-        wait (|cpu_ut.unified_memory_cpu.BRAM[TOHOST_ADDR[14:2]] !== 1'b0);
+        instr_if_t <= i_instr(FUNCT3_ADDI, 5'd1, 5'd0, 12'd4);
+        #10;
+        instr_if_t <= i_instr(FUNCT3_ADDI, 5'd2, 5'd0, 12'd8);
+        #10;
+        instr_if_t <= r_instr(FUNCT3_ADD, FUNCT7_ADD, 5'd3, 5'd1, 5'd2);
+        #10;
+        instr_if_t <= i_instr(FUNCT3_ADDI, 5'd4, 5'd3, 12'd4);
+        #10;
+        instr_if_t <= load_instr(FUNCT3_LW, 5'd3, 12'd12, 5'd0);
+        #10; 
+        instr_if_t <= s_instr(FUNCT3_SW, 5'd3, 12'd12, 5'd2);
+        #10;
+        instr_if_t <= b_instr(FUNCT3_BGE, 'd4, 'd3, 'd72);
+        #40;
+        instr_if_t <= jal_instr('d3, 'd80);
+        #40;
+        instr_if_t <= jalr_instr('d3, 'd4, 'd120);
+        #10;
+        instr_if_t <= lui_instr('d10, 'd2);
+        #10;
+        instr_if_t <= auipc_instr('d15, 'd2);
+        #10;
+        instr_if_t <= 32'b0;
         
-        if (cpu_ut.unified_memory_cpu.BRAM[TOHOST_ADDR[14:2]] == 32'd1)
-            $display("Note: Success!");
-        else
-            $display("Note: Failure!");
-        
+        #100;
         $finish;
-        
     end
 
 endmodule

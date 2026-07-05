@@ -4,7 +4,6 @@
 // Author:      Kagan Dikmen
 
 `include "./luftALU/rtl/alu.v"
-`include "./bram_dual.v"
 `include "./control_unit.v"
 `include "./csr_unit.v"
 `include "./immediate_generator.v"
@@ -20,19 +19,26 @@ module cpu
     parameter DMEM_DATA_WIDTH = 32,
     parameter OP_LENGTH = 32,
     parameter PC_WIDTH = 16,
-    parameter MEM_INIT_FILE = "",
     parameter RESET_ADDR = 32'h00000000
     )(
     input rst,
     input sysclk,
+
+    // BRAM interface
+    input wire [31:0] instr_if,
+    input wire [31:0] r_data,
+    output wire ctrl_fetch_instr_out,
+    output wire [3:0] wr_mode,
+    output wire [12:0] bram_addra,
+    output wire [DMEM_ADDR_WIDTH-1:0] bram_addrb,
+    output wire [OP_LENGTH-1:0] bram_dinb,
+
     output wire led     // does not serve any practical purpose other than preventing synthesisers from optimising the whole CPU away
     );
 
     // IF
     wire [OP_LENGTH-1:0] next_pc;
     wire [OP_LENGTH-1:0] pc_if;
-    wire [31:0] instr_if;
-    wire ctrl_fetch_instr_out;
 
     // ID
     reg alu_imm_select_id, alu_cu_input_sel_id, w_en_rf_id, branch_id, jump_id;
@@ -74,12 +80,10 @@ module cpu
     wire [2:0] csr_unit_op;
 
     // ME
-    wire [3:0] wr_mode;
-    wire [DMEM_DATA_WIDTH-1:0] r_data, r_data_masked;
+    wire [DMEM_DATA_WIDTH-1:0] r_data_masked;
     wire [31:0] rd_write_data;
     wire [OP_LENGTH-1:0] mem_acc_in, mem_acc_out;
     wire is_misaligned, is_misalignment_store;
-    wire [DMEM_ADDR_WIDTH-1:0] dmem_addr;
     reg bypass_me_result_rs1_me, bypass_me_result_rs2_me;
     reg make_nop_me;
     reg [1:0] rf_w_select_me;
@@ -213,7 +217,6 @@ module cpu
         pc_plus4_id <= pc_plus4_if;
         pc_plus4_ex <= pc_plus4_id;
     end
-
 
     // 
     // STAGE 2: Instruction Decode (ID)
@@ -423,7 +426,7 @@ module cpu
         memory_access_unit_cpu
         (
             .addr_in(alu_result_me),
-            .addr_out(dmem_addr),
+            .addr_out(bram_addrb),
             .ldst_mask(ldst_mask_me),
             .ldst_is_unsigned(ldst_is_unsigned_me),
             .st_en(st_en_me && !make_nop_me),
@@ -441,30 +444,6 @@ module cpu
         else
             bypass_mem_ready <= 1'b0;
     end
-
-
-    // NOTE: a for program memory, b for data memory
-    bram_dual #(.INIT_FILE(MEM_INIT_FILE))
-        unified_memory_cpu
-        (
-            .addra(next_pc[14:2]),
-            .addrb(dmem_addr),
-            .dina(),
-            .dinb(mem_acc_out),
-            .clka(sysclk),
-            .clkb(sysclk),
-            .wea(),
-            .web(wr_mode),
-            .ena(ctrl_fetch_instr_out),
-            .enb(1'b1),
-            .rsta(),
-            .rstb(),
-            .regcea(),
-            .regceb(),
-            .douta(instr_if),
-            .doutb(r_data)
-        );
-
 
     //
     // STAGE 5: Register Writeback (WB)
@@ -513,5 +492,8 @@ module cpu
     
     // See the comment at the declaration of the output led
     assign led = branch_ex;
+
+    assign bram_addra = next_pc[14:2];
+    assign bram_dinb = mem_acc_out;
 
 endmodule
