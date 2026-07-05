@@ -1,12 +1,14 @@
 // Memory access unit of the CPU
 // Created:     2025-05-28
-// Modified:    2025-05-29
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
 module memory_access_unit
     #(
         parameter BYTE_WIDTH = 8
     )(
+        input sysclk,
+        input rst,
         input [31:0] addr_in,
         output [12:0] addr_out,
         input [3:0] ldst_mask,
@@ -18,7 +20,15 @@ module memory_access_unit
         output [3:0] wr_mode,
 
         output is_misaligned,
-        output is_misalignment_store
+        output is_misalignment_store,
+
+        // Multicycle memory access control
+        input is_mem_rdata_valid_i,
+        input is_mem_wdata_valid_i,
+        output is_load_ongoing_o,
+        output is_store_ongoing_o,
+
+        output mem_enb_o
     );
 
     genvar i;
@@ -27,6 +37,28 @@ module memory_access_unit
     wire [3:0] wr_mode_temp;
     wire access_misaligned;
     wire [1:0] offset;
+
+    reg is_store_ongoing_reg;
+    reg is_load_ongoing_reg;
+
+    always @(posedge sysclk) begin
+        is_store_ongoing_reg <= 1'b0;
+        is_load_ongoing_reg <= 1'b0;
+
+        if(|ldst_mask || (is_load_ongoing_reg && !is_mem_rdata_valid_i))
+            is_load_ongoing_reg <= 1'b1;
+
+        if(st_en || (is_store_ongoing_reg && !is_mem_wdata_valid_i))
+            is_store_ongoing_reg <= 1'b1;
+        
+        if(rst) begin
+            is_store_ongoing_reg <= 1'b0;
+            is_load_ongoing_reg <= 1'b0;
+        end
+    end
+
+    assign is_store_ongoing_o = is_store_ongoing_reg;
+    assign is_load_ongoing_o = is_load_ongoing_reg;
 
     assign addr_out = addr_in[14:2];
     assign offset = addr_in[1:0];
@@ -74,5 +106,7 @@ module memory_access_unit
 
     assign is_misaligned = access_misaligned;
     assign is_misalignment_store = access_misaligned && st_en;
+
+    assign mem_enb_o = (|ldst_mask || st_en) && !access_misaligned;
 
 endmodule

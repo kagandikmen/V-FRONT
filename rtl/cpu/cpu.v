@@ -27,7 +27,10 @@ module cpu
     // Memory interface
     input wire [31:0] mem_instr_i,
     input wire [31:0] mem_rdata_i,
+    input wire mem_rdata_valid_i,
+    input wire mem_wdata_valid_i,
     output wire mem_if_en_o,
+    output wire mem_enb_o,
     output wire [3:0] mem_wr_mode_o,
     output wire [12:0] mem_addra_o,
     output wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o,
@@ -95,6 +98,7 @@ module cpu
     reg w_en_rf_me;
     reg [OP_LENGTH-1:0] pc_me;
     reg [31:0] instr_me;
+    wire is_load_ongoing, is_store_ongoing;
 
     // WB
     reg [OP_LENGTH-1:0] alu_result_wb;
@@ -432,7 +436,12 @@ module cpu
             .out(mem_acc_out),
             .wr_mode(mem_wr_mode_o),
             .is_misaligned(),
-            .is_misalignment_store()
+            .is_misalignment_store(),
+            .is_mem_rdata_valid_i(mem_rdata_valid_i),
+            .is_mem_wdata_valid_i(mem_wdata_valid_i),
+            .is_load_ongoing_o(is_load_ongoing),
+            .is_store_ongoing_o(is_store_ongoing),
+            .mem_enb_o(mem_enb_o)
         );
 
     always @(posedge sysclk)
