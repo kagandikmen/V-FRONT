@@ -19,9 +19,6 @@ module memory_access_unit
         output [4*BYTE_WIDTH-1:0] out,
         output [3:0] wr_mode,
 
-        output is_misaligned,
-        output is_misalignment_store,
-
         // Multicycle memory access control
         input is_mem_rdata_valid_i,
         input is_mem_wdata_valid_i,
@@ -104,9 +101,6 @@ module memory_access_unit
     assign out = access_misaligned ? 32'b0
                : st_en ? out_temp_store
                : out_temp_load;
-
-    assign is_misaligned = access_misaligned;
-    assign is_misalignment_store = access_misaligned && st_en;
 
     assign mem_enb_o = (|ldst_mask || st_en) && !access_misaligned;
 
