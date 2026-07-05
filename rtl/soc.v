@@ -20,13 +20,13 @@ module soc
     output wire led     // dummy signal to prevent overoptimization
     );
 
-    wire [31:0] cpu_instr_if_in;
-    wire [31:0] cpu_r_data_in;
-    wire cpu_ctrl_fetch_instr_out_out;
-    wire [3:0] cpu_wr_mode_out;
-    wire [12:0] cpu_bram_addra_out;
-    wire [DMEM_ADDR_WIDTH-1:0] cpu_bram_addrb_out;
-    wire [OP_LENGTH-1:0] cpu_bram_dinb_out;
+    wire [31:0] instr;
+    wire [31:0] rdata;
+    wire if_en;
+    wire [3:0] wr_mode;
+    wire [12:0] mem_addra;
+    wire [DMEM_ADDR_WIDTH-1:0] mem_addrb;
+    wire [OP_LENGTH-1:0] mem_dinb;
 
     cpu #(
         .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH),
@@ -37,36 +37,37 @@ module soc
     ) cpu (
         .rst(rst),
         .sysclk(sysclk),
-        .instr_if(cpu_instr_if_in),
-        .r_data(cpu_r_data_in),
-        .ctrl_fetch_instr_out(cpu_ctrl_fetch_instr_out_out),
-        .wr_mode(cpu_wr_mode_out),
-        .bram_addra(cpu_bram_addra_out),
-        .bram_addrb(cpu_bram_addrb_out),
-        .bram_dinb(cpu_bram_dinb_out),
-        .led(led)
+        .mem_instr_i(instr),
+        .mem_rdata_i(rdata),
+        .mem_if_en_o(if_en),
+        .mem_wr_mode_o(wr_mode),
+        .mem_addra_o(mem_addra),
+        .mem_addrb_o(mem_addrb),
+        .mem_dinb_o(mem_dinb)
     );
 
     // NOTE: a for program memory, b for data memory
     bram_dual #(
         .INIT_FILE(MEM_INIT_FILE)
-    ) unified_memory (
-        .addra(cpu_bram_addra_out),
-        .addrb(cpu_bram_addrb_out),
+    ) mem (
+        .addra(mem_addra),
+        .addrb(mem_addrb),
         .dina(),
-        .dinb(cpu_bram_dinb_out),
+        .dinb(mem_dinb),
         .clka(sysclk),
         .clkb(sysclk),
         .wea(),
-        .web(cpu_wr_mode_out),
-        .ena(cpu_ctrl_fetch_instr_out_out),
+        .web(wr_mode),
+        .ena(if_en),
         .enb(1'b1),
         .rsta(),
         .rstb(),
         .regcea(),
         .regceb(),
-        .douta(cpu_instr_if_in),
-        .doutb(cpu_r_data_in)
+        .douta(instr),
+        .doutb(rdata)
     );
+
+    assign led = |wr_mode;
 
 endmodule

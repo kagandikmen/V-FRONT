@@ -22,14 +22,13 @@ module cpu_tb
     `include "../lib/instr_generator.vh"
 
     reg rst, sysclk_t;
-    reg [31:0] instr_if_t;
-    reg [31:0] r_data_t;
-    wire ctrl_fetch_instr_out_t;
-    wire [3:0] wr_mode_t;
-    wire [12:0] bram_addra_t;
-    wire [DMEM_ADDR_WIDTH-1:0] bram_addrb_t;
-    wire [OP_LENGTH-1:0] bram_dinb_t;
-    wire led_t;
+    reg [31:0] mem_instr_i_t;
+    reg [31:0] mem_rdata_i_t;
+    wire mem_if_en_o_t;
+    wire [3:0] mem_wr_mode_o_t;
+    wire [12:0] mem_addra_o_t;
+    wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o_t;
+    wire [OP_LENGTH-1:0] mem_dinb_o_t;
 
     cpu #(
         .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH),
@@ -40,14 +39,13 @@ module cpu_tb
     ) cpu_ut (
         .rst(rst),
         .sysclk(sysclk_t),
-        .instr_if(instr_if_t),
-        .r_data(r_data_t),
-        .ctrl_fetch_instr_out(ctrl_fetch_instr_out_t),
-        .wr_mode(wr_mode_t),
-        .bram_addra(bram_addra_t),
-        .bram_addrb(bram_addrb_t),
-        .bram_dinb(bram_dinb_t),
-        .led(led_t)
+        .mem_instr_i(mem_instr_i_t),
+        .mem_rdata_i(mem_rdata_i_t),
+        .mem_if_en_o(mem_if_en_o_t),
+        .mem_wr_mode_o(mem_wr_mode_o_t),
+        .mem_addra_o(mem_addra_o_t),
+        .mem_addrb_o(mem_addrb_o_t),
+        .mem_dinb_o(mem_dinb_o_t)
     );
     
     always #5 sysclk_t = ~sysclk_t;
@@ -56,7 +54,7 @@ module cpu_tb
     begin
         rst = 1'b0;
         sysclk_t = 1'b0;
-        r_data_t = 32'd7;
+        mem_rdata_i_t = 32'd7;
         
         #5;
         rst = ~rst;
@@ -64,29 +62,29 @@ module cpu_tb
         #20;
         rst = ~rst;
 
-        instr_if_t <= i_instr(FUNCT3_ADDI, 5'd1, 5'd0, 12'd4);
+        mem_instr_i_t <= i_instr(FUNCT3_ADDI, 5'd1, 5'd0, 12'd4);
         #10;
-        instr_if_t <= i_instr(FUNCT3_ADDI, 5'd2, 5'd0, 12'd8);
+        mem_instr_i_t <= i_instr(FUNCT3_ADDI, 5'd2, 5'd0, 12'd8);
         #10;
-        instr_if_t <= r_instr(FUNCT3_ADD, FUNCT7_ADD, 5'd3, 5'd1, 5'd2);
+        mem_instr_i_t <= r_instr(FUNCT3_ADD, FUNCT7_ADD, 5'd3, 5'd1, 5'd2);
         #10;
-        instr_if_t <= i_instr(FUNCT3_ADDI, 5'd4, 5'd3, 12'd4);
+        mem_instr_i_t <= i_instr(FUNCT3_ADDI, 5'd4, 5'd3, 12'd4);
         #10;
-        instr_if_t <= load_instr(FUNCT3_LW, 5'd3, 12'd12, 5'd0);
+        mem_instr_i_t <= load_instr(FUNCT3_LW, 5'd3, 12'd12, 5'd0);
         #10; 
-        instr_if_t <= s_instr(FUNCT3_SW, 5'd3, 12'd12, 5'd2);
+        mem_instr_i_t <= s_instr(FUNCT3_SW, 5'd3, 12'd12, 5'd2);
         #10;
-        instr_if_t <= b_instr(FUNCT3_BGE, 'd4, 'd3, 'd72);
+        mem_instr_i_t <= b_instr(FUNCT3_BGE, 'd4, 'd3, 'd72);
         #40;
-        instr_if_t <= jal_instr('d3, 'd80);
+        mem_instr_i_t <= jal_instr('d3, 'd80);
         #40;
-        instr_if_t <= jalr_instr('d3, 'd4, 'd120);
+        mem_instr_i_t <= jalr_instr('d3, 'd4, 'd120);
         #10;
-        instr_if_t <= lui_instr('d10, 'd2);
+        mem_instr_i_t <= lui_instr('d10, 'd2);
         #10;
-        instr_if_t <= auipc_instr('d15, 'd2);
+        mem_instr_i_t <= auipc_instr('d15, 'd2);
         #10;
-        instr_if_t <= 32'b0;
+        mem_instr_i_t <= 32'b0;
         
         #100;
         $finish;

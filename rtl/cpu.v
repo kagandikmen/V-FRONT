@@ -24,16 +24,14 @@ module cpu
     input rst,
     input sysclk,
 
-    // BRAM interface
-    input wire [31:0] instr_if,
-    input wire [31:0] r_data,
-    output wire ctrl_fetch_instr_out,
-    output wire [3:0] wr_mode,
-    output wire [12:0] bram_addra,
-    output wire [DMEM_ADDR_WIDTH-1:0] bram_addrb,
-    output wire [OP_LENGTH-1:0] bram_dinb,
-
-    output wire led     // does not serve any practical purpose other than preventing synthesisers from optimising the whole CPU away
+    // Memory interface
+    input wire [31:0] mem_instr_i,
+    input wire [31:0] mem_rdata_i,
+    output wire mem_if_en_o,
+    output wire [3:0] mem_wr_mode_o,
+    output wire [12:0] mem_addra_o,
+    output wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o,
+    output wire [OP_LENGTH-1:0] mem_dinb_o
     );
 
     // IF
@@ -112,7 +110,7 @@ module cpu
     //
 
     always @(posedge sysclk)
-        instr_id <= instr_if;
+        instr_id <= mem_instr_i;
 
     wire ctrl_alu_imm_select_out;
     wire [1:0] ctrl_alu_pc_select_out;
@@ -140,8 +138,8 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .fetch_instr(ctrl_fetch_instr_out),
-            .instr(instr_if),
+            .fetch_instr(mem_if_en_o),
+            .instr(mem_instr_i),
             .is_misaligned(is_misaligned),
             .alu_imm_select(ctrl_alu_imm_select_out),
             .alu_pc_select(ctrl_alu_pc_select_out),
@@ -403,7 +401,7 @@ module cpu
     // STAGE 4: Memory Access (ME)
     //
 
-    assign mem_acc_in = (st_en_me == 1'b1) ? alu_opd2_me : r_data;
+    assign mem_acc_in = (st_en_me == 1'b1) ? alu_opd2_me : mem_rdata_i;
 
     always @(posedge sysclk)
     begin
@@ -426,13 +424,13 @@ module cpu
         memory_access_unit_cpu
         (
             .addr_in(alu_result_me),
-            .addr_out(bram_addrb),
+            .addr_out(mem_addrb_o),
             .ldst_mask(ldst_mask_me),
             .ldst_is_unsigned(ldst_is_unsigned_me),
             .st_en(st_en_me && !make_nop_me),
             .in(mem_acc_in),
             .out(mem_acc_out),
-            .wr_mode(wr_mode),
+            .wr_mode(mem_wr_mode_o),
             .is_misaligned(),
             .is_misalignment_store()
         );
@@ -489,11 +487,8 @@ module cpu
     //
     // Output Logic
     //
-    
-    // See the comment at the declaration of the output led
-    assign led = branch_ex;
 
-    assign bram_addra = next_pc[14:2];
-    assign bram_dinb = mem_acc_out;
+    assign mem_addra_o = next_pc[14:2];
+    assign mem_dinb_o = mem_acc_out;
 
 endmodule

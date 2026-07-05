@@ -39,11 +39,11 @@ module soc_tb
         #20;
         rst = ~rst;
 
-        wait (^soc_ut.unified_memory.BRAM[TOHOST_ADDR[14:2]] !== 1'bx);
+        wait (^soc_ut.mem.BRAM[TOHOST_ADDR[14:2]] !== 1'bx);
 
-        wait (|soc_ut.unified_memory.BRAM[TOHOST_ADDR[14:2]] !== 1'b0);
+        wait (|soc_ut.mem.BRAM[TOHOST_ADDR[14:2]] !== 1'b0);
         
-        if (soc_ut.unified_memory.BRAM[TOHOST_ADDR[14:2]] == 32'd1)
+        if (soc_ut.mem.BRAM[TOHOST_ADDR[14:2]] == 32'd1)
             $display("Note: Success!");
         else
             $display("Note: Failure!");
