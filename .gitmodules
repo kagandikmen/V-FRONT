@@ -4,3 +4,6 @@
 [submodule "riscv-tests"]
 	path = ut/riscv-tests
 	url = https://github.com/riscv-software-src/riscv-tests.git
+[submodule "cohesive"]
+	path = rtl/soc
+	url = git@github.com:kagandikmen/cohesive.git
