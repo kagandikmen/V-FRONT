@@ -1,6 +1,6 @@
 // Block RAM Module (Dual Port, Dual Clock)
 // Created:     2025-05-29
-// Modified:    2025-06-03
+// Modified:    2026-07-05
 // Taken from Xilinx' module examples, partly modified by Kagan Dikmen
 
 //  Xilinx True Dual Port RAM Byte Write Read First Dual Clock RAM

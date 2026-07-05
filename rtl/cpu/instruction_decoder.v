@@ -1,6 +1,6 @@
 // Instruction decoder of the CPU
 // Created:     2024-01-20
-// Modified:    2025-06-03
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
 module instruction_decoder

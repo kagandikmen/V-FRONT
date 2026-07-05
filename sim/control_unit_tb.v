@@ -1,6 +1,6 @@
 // Testbench for the control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2024-08-15
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
 `include "control_unit.v"

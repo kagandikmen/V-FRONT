@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-07-01
+// Modified:    2025-07-05
 // Author:      Kagan Dikmen
 
 module control_unit
