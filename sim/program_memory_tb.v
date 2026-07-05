@@ -3,7 +3,7 @@
 // Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "../rtl/program_memory.v"
+`include "program_memory.v"
 
 `timescale 1ns/1ps
 

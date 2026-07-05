@@ -3,8 +3,8 @@
 // Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "./bram_dual.v"
-`include "./cpu.v"
+`include "bram_dual.v"
+`include "cpu.v"
 
 module soc
     #(

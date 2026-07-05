@@ -3,7 +3,7 @@
 // Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "../rtl/pc_counter.v"
+`include "pc_counter.v"
 
 `timescale 1ns/1ps
 

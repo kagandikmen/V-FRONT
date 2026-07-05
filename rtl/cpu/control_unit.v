@@ -48,7 +48,7 @@ module control_unit
     output make_nop
     );
 
-    `include "../lib/common_library.vh"
+    `include "common_library.vh"
 
     wire [16:0] instr_compressed;
 

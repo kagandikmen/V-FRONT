@@ -3,7 +3,7 @@
 // Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "../rtl/register_file.v"
+`include "register_file.v"
 
 `timescale 1ns/1ps
 

@@ -3,15 +3,15 @@
 // Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "./luftALU/rtl/alu.v"
-`include "./control_unit.v"
-`include "./csr_unit.v"
-`include "./immediate_generator.v"
-`include "./instruction_decoder.v"
-`include "./memory_access_unit.v"
-`include "./mux.v"
-`include "./pc_counter.v"
-`include "./register_file.v"
+`include "luftALU/rtl/alu.v"
+`include "control_unit.v"
+`include "csr_unit.v"
+`include "immediate_generator.v"
+`include "instruction_decoder.v"
+`include "memory_access_unit.v"
+`include "mux.v"
+`include "pc_counter.v"
+`include "register_file.v"
 
 module cpu 
     #(

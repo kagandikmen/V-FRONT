@@ -3,7 +3,7 @@
 // Modified:    2025-05-28
 // Author:      Kagan Dikmen
 
-`include "../rtl/memory_access_unit.v"
+`include "memory_access_unit.v"
 
 `timescale 1ns/1ps
 

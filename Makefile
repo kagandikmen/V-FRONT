@@ -15,7 +15,7 @@ FAILING_TESTS :=
 PASSING_TESTS := $(filter-out $(FAILING_TESTS), $(TESTS))
 
 DESIGN_SOURCES := \
-	rtl/soc.v
+	rtl/soc/soc.v
 
 SIMULATION_SOURCES := \
 	sim/soc_tb.v
@@ -65,6 +65,7 @@ run_vivado: compile_tests
 		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
 		xelab soc_tb -relax -debug all \
+			-i ./rtl/cpu -i ./rtl/soc -i ./sim -i ./rtl/cpu/luftALU/rtl/ -i ./rtl/cpu/luftALU/rtl/subunits/  -i ./lib/\
 			-generic_top MEM_INIT_FILE=\"tests-build/$$test.mem\" \
 			-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 			-generic_top RESET_ADDR=32\'h$$RESET_ADDR \
@@ -86,7 +87,7 @@ run_iverilog: compile_tests
 		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
 		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n tests-build/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
 		iverilog -o tests-build/$$test.out \
-			-Irtl/ -Isim/ -Irtl/luftALU/rtl/ -Irtl/luftALU/rtl/subunits/ \
+			-Irtl/cpu/ -Irtl/soc/ -Isim/ -Irtl/cpu/luftALU/rtl/ -Irtl/cpu/luftALU/rtl/subunits/ -Ilib/\
 			-Psoc_tb.MEM_INIT_FILE=\"tests-build/$$test.mem\" \
 			-Psoc_tb.TOHOST_ADDR=$$TOHOST_ADDR \
 			-Psoc_tb.RESET_ADDR=32\'h$$RESET_ADDR \

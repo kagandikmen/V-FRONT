@@ -3,7 +3,7 @@
 // Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "../rtl/cpu.v"
+`include "cpu.v"
 
 `timescale 1ns/1ns
 
@@ -18,8 +18,8 @@ module cpu_tb
     )(
     );
 
-    `include "../lib/common_library.vh"
-    `include "../lib/instr_generator.vh"
+    `include "common_library.vh"
+    `include "instr_generator.vh"
 
     reg rst, sysclk_t;
     reg [31:0] mem_instr_i_t;

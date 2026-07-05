@@ -3,7 +3,7 @@
 // Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "../rtl/soc.v"
+`include "soc.v"
 
 `timescale 1ns/1ns
 

@@ -26,7 +26,7 @@ module instruction_decoder
     output bypass_me_result_rs2
     );
 
-    `include "../lib/common_library.vh"
+    `include "common_library.vh"
 
     reg [4:0] rd_buff [1:0];
 

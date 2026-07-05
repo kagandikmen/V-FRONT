@@ -33,7 +33,7 @@ module bram_dual #(
   output [(NB_COL*COL_WIDTH)-1:0] doutb  // Port B RAM output data
 );
 
-    `include "../lib/common_library.vh"
+    `include "common_library.vh"
 
   (* ram_style = "block" *) reg [(NB_COL*COL_WIDTH)-1:0] BRAM [RAM_DEPTH-1:0];
   reg [(NB_COL*COL_WIDTH)-1:0] ram_data_a = {(NB_COL*COL_WIDTH){1'b0}};

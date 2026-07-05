@@ -3,7 +3,7 @@
 // Modified:    2025-05-25
 // Author:      Kagan Dikmen
 
-`include "../rtl/csr_unit.v"
+`include "csr_unit.v"
 
 `timescale 1ns/1ps
 

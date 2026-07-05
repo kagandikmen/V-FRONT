@@ -3,7 +3,7 @@
 // Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "../rtl/immediate_generator.v"
+`include "immediate_generator.v"
 
 `timescale 1ns/1ps
 
@@ -11,8 +11,8 @@ module immediate_generator_tb
     (
     );
 
-    `include "../lib/common_library.vh"
-    `include "../lib/instr_generator.vh"
+    `include "common_library.vh"
+    `include "instr_generator.vh"
 
     reg [31:0] instr;
     wire [31:0] imm;

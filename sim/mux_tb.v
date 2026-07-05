@@ -3,7 +3,7 @@
 // Modified:    2024-08-15
 // Author:      Kagan Dikmen
 
-`include "../rtl/mux.v"
+`include "mux.v"
 
 module mux_tb
     ();
