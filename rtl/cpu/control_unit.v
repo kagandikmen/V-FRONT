@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-07-01
+// Modified:    2025-07-05
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -48,7 +48,7 @@ module control_unit
     output make_nop
     );
 
-    `include "../lib/common_library.vh"
+    `include "common_library.vh"
 
     wire [16:0] instr_compressed;
 

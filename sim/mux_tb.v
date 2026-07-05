@@ -1,9 +1,9 @@
 // Testbench for the 2-input and 4-input multiplexers
 // Created:     2024-01-17
-// Modified:    2024-08-15
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "../rtl/mux.v"
+`include "mux.v"
 
 module mux_tb
     ();

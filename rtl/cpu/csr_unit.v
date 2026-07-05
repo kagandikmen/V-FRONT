@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2025-06-03
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -32,7 +32,7 @@ module csr_unit
     input [4:0] rd_addr
     );
 
-    `include "../lib/common_library.vh"
+    `include "common_library.vh"
 
     wire [11:0] csr_bram_rd_addr, csr_bram_wr_addr;
     reg [31:0] csr_bram_ram_in;

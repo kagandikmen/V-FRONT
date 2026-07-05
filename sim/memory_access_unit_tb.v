@@ -1,9 +1,9 @@
 // Testbench for the memory access unit of the CPU
 // Created:     2025-05-28
-// Modified:    2025-05-28
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "../rtl/memory_access_unit.v"
+`include "memory_access_unit.v"
 
 `timescale 1ns/1ps
 

@@ -1,9 +1,9 @@
 // Testbench for the register file of the CPU
 // Created:     2024-01-20
-// Modified:    2024-08-15
+// Modified:    2026-07-05
 // Author:      Kagan Dikmen
 
-`include "../rtl/register_file.v"
+`include "register_file.v"
 
 `timescale 1ns/1ps
 
