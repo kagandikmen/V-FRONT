@@ -3,12 +3,11 @@ See the LICENSE file for full license text.
 
 ##### Third-Party Notices:
 
-The files
+The file
 
-- `sw/extract_hex.sh.obsolete`
 - `ut/v-front/csr_hazard.S`
 
-include software developed by Kristian Klomsten Skordal, and are licensed under the following license:
+includes software developed by Kristian Klomsten Skordal, and are licensed under the following license:
 
 ```
 Copyright (c) Kristian Klomsten Skordal

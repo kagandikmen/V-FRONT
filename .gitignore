@@ -10,10 +10,11 @@ vivado_proj
 tests/
 tests-build/
 v-front.prj
+v-front.f
 *.jou
 *.log
 *.pb
 xsim.dir/
 *.wdb
 *.zip
-*.f
+*.mem
