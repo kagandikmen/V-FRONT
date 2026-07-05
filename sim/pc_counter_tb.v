@@ -14,7 +14,7 @@ module pc_counter_tb
     )(
     );
 
-    reg clk_t, rst_t, branch_t, jump_t;
+    reg clk_t, rst_t, stall_t, branch_t, jump_t;
     reg [OPD_WIDTH-1:0] alu_result_t, comp_result_t;
     wire [PC_WIDTH-1:0] next_pc_t, pc_plus4_t;
 
@@ -23,6 +23,7 @@ module pc_counter_tb
                 (
                     .clk(clk_t),
                     .rst(rst_t),
+                    .stall(stall_t),
                     .branch(branch_t),
                     .jump(jump_t),
                     .alu_result(alu_result_t),
@@ -38,6 +39,7 @@ module pc_counter_tb
         
         clk_t <= 1'b0;
         rst_t <= 1'b0;
+        stall_t <= 1'b0;
         branch_t <= 1'b0;
         jump_t <= 1'b0;
         alu_result_t <= 8'hee;

@@ -7,6 +7,8 @@
 
 `timescale 1ns/1ps
 
+// TODO: update this testbench
+
 module memory_access_unit_tb
     ();
 

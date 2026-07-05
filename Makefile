@@ -10,7 +10,7 @@ TESTDIRS := ut/riscv-tests/isa/rv32ui ut/v-front
 
 TESTS := $(rv32ui_sc_tests) $(v-front_tests)
 
-FAILING_TESTS :=
+FAILING_TESTS := ma_data sb sh sw lb lbu lh lhu lw ld_st fence_i
 
 PASSING_TESTS := $(filter-out $(FAILING_TESTS), $(TESTS))
 

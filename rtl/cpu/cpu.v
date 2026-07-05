@@ -37,9 +37,12 @@ module cpu
     output wire [OP_LENGTH-1:0] mem_dinb_o
     );
 
+    wire cpu_stall;
+
     // IF
     wire [OP_LENGTH-1:0] next_pc;
     wire [OP_LENGTH-1:0] pc_if;
+    reg filled_if;
 
     // ID
     reg alu_imm_select_id, alu_cu_input_sel_id, w_en_rf_id, branch_id, jump_id;
@@ -54,6 +57,7 @@ module cpu
     reg [OP_LENGTH-1:0] pc_id;
     wire bypass_ex_result_rs1_id, bypass_ex_result_rs2_id;
     wire bypass_me_result_rs1_id, bypass_me_result_rs2_id;
+    reg filled_id;
 
     // EX
     reg alu_imm_select_ex, alu_cu_input_sel, w_en_rf_ex, branch_ex, jump_ex;
@@ -73,6 +77,7 @@ module cpu
     reg [OP_LENGTH-1:0] alu_result_bypass_buffer_ex, csr_result_bypass_buffer_ex;
     wire [31:0] rs1_data_ex, rs2_data_ex;
     reg [4:0] rs1_addr_ex, rs2_addr_ex;
+    reg filled_ex;
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
     wire csr_unit_r_en, csr_unit_w_en;
@@ -99,6 +104,9 @@ module cpu
     reg [OP_LENGTH-1:0] pc_me;
     reg [31:0] instr_me;
     wire is_load_ongoing, is_store_ongoing;
+    wire mem_enb_buf;
+    reg filled_me;
+    reg is_first_me_cycle;
 
     // WB
     reg [OP_LENGTH-1:0] alu_result_wb;
@@ -108,13 +116,11 @@ module cpu
     reg w_en_rf_wb;
     reg make_nop_wb;
     reg [4:0] rd_addr_wb;
+    reg filled_wb;
 
     //
     // STAGE 1: Instruction Fetch (IF) + Control Logic
     //
-
-    always @(posedge sysclk)
-        instr_id <= mem_instr_i;
 
     wire ctrl_alu_imm_select_out;
     wire [1:0] ctrl_alu_pc_select_out;
@@ -171,26 +177,24 @@ module cpu
 
     always @(posedge sysclk)
     begin
-        make_nop_me <= make_nop_ex;
-    end
-
-    always @(posedge sysclk)
-    begin
-        alu_imm_select_id <= ctrl_alu_imm_select_out;
-        alu_pc_select_id <= ctrl_alu_pc_select_out;
-        rf_w_select_id <= ctrl_rf_w_select_out;
-        alu_cu_input_sel_id <= ctrl_alu_cu_input_sel_out;
-        alu_subunit_res_sel_id <= ctrl_alu_subunit_res_sel_out;
-        alu_subunit_op_sel_id <= ctrl_alu_subunit_op_sel_out;
-        w_en_rf_id <= ctrl_w_en_rf_if_out;
-        branch_id <= ctrl_branch_out;
-        jump_id <= ctrl_jump_out;
-        ecall_id <= ctrl_ecall_out;
-        ebreak_id <= ctrl_ebreak_out;
-        mret_id <= ctrl_mret_out;
-        ldst_mask_id <= ctrl_ldst_mask_out;
-        ldst_is_unsigned_id <= ctrl_ldst_is_unsigned_out;
-        st_en_id <= ctrl_st_en_if_out;
+        if(!cpu_stall) begin
+            instr_id <= mem_instr_i;
+            alu_imm_select_id <= ctrl_alu_imm_select_out;
+            alu_pc_select_id <= ctrl_alu_pc_select_out;
+            rf_w_select_id <= ctrl_rf_w_select_out;
+            alu_cu_input_sel_id <= ctrl_alu_cu_input_sel_out;
+            alu_subunit_res_sel_id <= ctrl_alu_subunit_res_sel_out;
+            alu_subunit_op_sel_id <= ctrl_alu_subunit_op_sel_out;
+            w_en_rf_id <= ctrl_w_en_rf_if_out;
+            branch_id <= ctrl_branch_out;
+            jump_id <= ctrl_jump_out;
+            ecall_id <= ctrl_ecall_out;
+            ebreak_id <= ctrl_ebreak_out;
+            mret_id <= ctrl_mret_out;
+            ldst_mask_id <= ctrl_ldst_mask_out;
+            ldst_is_unsigned_id <= ctrl_ldst_is_unsigned_out;
+            st_en_id <= ctrl_st_en_if_out;
+        end
     end
 
     wire [OP_LENGTH-1:0] pc_plus4_if;
@@ -201,6 +205,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
+            .stall(cpu_stall),
             .branch(branch_ex && !make_nop_ex),
             .jump(jump_ex && !make_nop_ex),
             .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned) && !make_nop_ex),
@@ -214,10 +219,12 @@ module cpu
     
     always @(posedge sysclk)
     begin
-        pc_id <= pc_if;
-        pc_ex <= pc_id;
-        pc_plus4_id <= pc_plus4_if;
-        pc_plus4_ex <= pc_plus4_id;
+        if(!cpu_stall) begin
+            pc_id <= pc_if;
+            pc_ex <= pc_id;
+            pc_plus4_id <= pc_plus4_if;
+            pc_plus4_ex <= pc_plus4_id;
+        end
     end
 
     // 
@@ -258,36 +265,40 @@ module cpu
 
     always @(posedge sysclk)
     begin
-        instr_ex <= instr_id;
-        opd1_ex <= opd1_id;
-        opd2_ex <= opd2_id;
-        imm_ex <= imm_id;
+        if(!cpu_stall) begin
+            instr_ex <= instr_id;
+            opd1_ex <= opd1_id;
+            opd2_ex <= opd2_id;
+            imm_ex <= imm_id;
+        end
     end
 
     always @(posedge sysclk)
     begin
-        alu_imm_select_ex <= alu_imm_select_id;
-        alu_pc_select_ex <= alu_pc_select_id;
-        rf_w_select_ex <= rf_w_select_id;
-        alu_cu_input_sel <= alu_cu_input_sel_id;
-        alu_subunit_res_sel <= alu_subunit_res_sel_id;
-        alu_subunit_op_sel <= alu_subunit_op_sel_id;
-        w_en_rf_ex <= w_en_rf_id;
-        branch_ex <= branch_id;
-        jump_ex <= jump_id;
-        ecall_ex <= ecall_id;
-        ebreak_ex <= ebreak_id;
-        mret_ex <= mret_id;
-        ldst_mask_ex <= ldst_mask_id;
-        ldst_is_unsigned_ex <= ldst_is_unsigned_id;
-        st_en_ex <= st_en_id;
-        rd_addr_ex <= rd_addr_id;
-        bypass_ex_result_rs1_ex <= bypass_ex_result_rs1_id;
-        bypass_ex_result_rs2_ex <= bypass_ex_result_rs2_id;
-        bypass_me_result_rs1_ex <= bypass_me_result_rs1_id;
-        bypass_me_result_rs2_ex <= bypass_me_result_rs2_id;
-        bypass_me_result_rs1_me <= bypass_me_result_rs1_ex;
-        bypass_me_result_rs2_me <= bypass_me_result_rs2_ex;
+        if(!cpu_stall) begin
+            alu_imm_select_ex <= alu_imm_select_id;
+            alu_pc_select_ex <= alu_pc_select_id;
+            rf_w_select_ex <= rf_w_select_id;
+            alu_cu_input_sel <= alu_cu_input_sel_id;
+            alu_subunit_res_sel <= alu_subunit_res_sel_id;
+            alu_subunit_op_sel <= alu_subunit_op_sel_id;
+            w_en_rf_ex <= w_en_rf_id;
+            branch_ex <= branch_id;
+            jump_ex <= jump_id;
+            ecall_ex <= ecall_id;
+            ebreak_ex <= ebreak_id;
+            mret_ex <= mret_id;
+            ldst_mask_ex <= ldst_mask_id;
+            ldst_is_unsigned_ex <= ldst_is_unsigned_id;
+            st_en_ex <= st_en_id;
+            rd_addr_ex <= rd_addr_id;
+            bypass_ex_result_rs1_ex <= bypass_ex_result_rs1_id;
+            bypass_ex_result_rs2_ex <= bypass_ex_result_rs2_id;
+            bypass_me_result_rs1_ex <= bypass_me_result_rs1_id;
+            bypass_me_result_rs2_ex <= bypass_me_result_rs2_id;
+            bypass_me_result_rs1_me <= bypass_me_result_rs1_ex;
+            bypass_me_result_rs2_me <= bypass_me_result_rs2_ex;
+        end
     end
 
 
@@ -314,15 +325,22 @@ module cpu
 
     always @(posedge sysclk)
     begin
+        if(!cpu_stall) begin
+            rs1_addr_ex <= rs1_addr_id;
+            rs2_addr_ex <= rs2_addr_id;
 
-        rs1_addr_ex <= rs1_addr_id;
-        rs2_addr_ex <= rs2_addr_id;
+            alu_result_bypass_buffer_ex <= alu_result;
+            csr_result_bypass_buffer_ex <= csr_unit_out;
+        end
+    end
 
+    always @(posedge sysclk)
+    begin
         bypass_alu_ready <= 1'b0;
         bypass_csr_ready <= 1'b0;
         bypass_ld_ready <= 1'b0;
         
-        if(w_en_rf_ex && !is_misaligned && !make_nop_ex)
+        if(w_en_rf_ex && !is_misaligned && !make_nop_ex && !cpu_stall)
         begin
             if(rf_w_select_ex == 2'b00)
                 bypass_alu_ready <= 1'b1;
@@ -331,9 +349,6 @@ module cpu
             else if(rf_w_select_ex == 2'b11)
                 bypass_csr_ready <= 1'b1;
         end
-
-        alu_result_bypass_buffer_ex <= alu_result;
-        csr_result_bypass_buffer_ex <= csr_unit_out;
     end
 
     assign alu_opd1 = (bypass_ex_result_rs1_ex && bypass_alu_ready) ? alu_result_bypass_buffer_ex
@@ -381,25 +396,25 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .r_en(csr_unit_r_en && !make_nop_ex),
-            .w_en(csr_unit_w_en && !make_nop_ex),
-            .ecall(ecall_ex && !make_nop_ex),
-            .ebreak(ebreak_ex && !make_nop_ex),
-            .mret(mret_ex && !make_nop_ex),
+            .r_en(csr_unit_r_en && !make_nop_ex && !cpu_stall),
+            .w_en(csr_unit_w_en && !make_nop_ex && !cpu_stall),
+            .ecall(ecall_ex && !make_nop_ex && !cpu_stall),
+            .ebreak(ebreak_ex && !make_nop_ex && !cpu_stall),
+            .mret(mret_ex && !make_nop_ex && !cpu_stall),
             .pc(pc_ex),
             .op(csr_unit_op),
             .in(csr_in),
             .csr_addr(csr_unit_addr),
             .out(csr_unit_out),
-            .is_misaligned(is_misaligned && !make_nop_ex),
+            .is_misaligned(is_misaligned && !make_nop_ex && !cpu_stall),
             .is_misalignment_store(is_misalignment_store),
             .misaligned_store_value(alu_opd2),
             .mem_addr(alu_result[14:0]),
             .rd_addr(rd_addr_ex)
         );
 
-    assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex;
-    assign is_misalignment_store = is_misaligned && st_en_ex && !make_nop_ex;
+    assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
+    assign is_misalignment_store = is_misaligned && st_en_ex && !make_nop_ex && !cpu_stall;
     
     // 
     // STAGE 4: Memory Access (ME)
@@ -409,29 +424,34 @@ module cpu
 
     always @(posedge sysclk)
     begin
-        pc_plus4_me <= pc_plus4_ex;
-        rf_w_select_me <= rf_w_select_ex;
-        rd_addr_me <= rd_addr_ex;
-        ldst_mask_me <= ldst_mask_ex;
-        ldst_is_unsigned_me <= ldst_is_unsigned_ex;
-        st_en_me <= st_en_ex;
-        alu_result_me <= alu_result;
-        alu_opd1_me <= alu_opd1;
-        alu_opd2_me <= alu_opd2;
-        csr_unit_out_me <= csr_unit_out;
-        w_en_rf_me <= w_en_rf_ex;
-        instr_me <= instr_ex;
-        pc_me <= pc_ex;
+        if(!cpu_stall) begin
+            make_nop_me <= make_nop_ex;
+            pc_plus4_me <= pc_plus4_ex;
+            rf_w_select_me <= rf_w_select_ex;
+            rd_addr_me <= rd_addr_ex;
+            ldst_mask_me <= ldst_mask_ex;
+            ldst_is_unsigned_me <= ldst_is_unsigned_ex;
+            st_en_me <= st_en_ex;
+            alu_result_me <= alu_result;
+            alu_opd1_me <= alu_opd1;
+            alu_opd2_me <= alu_opd2;
+            csr_unit_out_me <= csr_unit_out;
+            w_en_rf_me <= w_en_rf_ex;
+            instr_me <= instr_ex;
+            pc_me <= pc_ex;
+        end
     end
 
     memory_access_unit #(.BYTE_WIDTH(8))
         memory_access_unit_cpu
         (
+            .clk(sysclk),
+            .rst(rst),
             .addr_in(alu_result_me),
             .addr_out(mem_addrb_o),
             .ldst_mask(ldst_mask_me),
             .ldst_is_unsigned(ldst_is_unsigned_me),
-            .st_en(st_en_me && !make_nop_me),
+            .st_en(st_en_me && !make_nop_me && is_first_me_cycle),
             .in(mem_acc_in),
             .out(mem_acc_out),
             .wr_mode(mem_wr_mode_o),
@@ -441,12 +461,23 @@ module cpu
             .is_mem_wdata_valid_i(mem_wdata_valid_i),
             .is_load_ongoing_o(is_load_ongoing),
             .is_store_ongoing_o(is_store_ongoing),
-            .mem_enb_o(mem_enb_o)
+            .is_first_me_cycle_i(is_first_me_cycle),
+            .mem_enb_o(mem_enb_buf)
         );
+
+    always @(posedge sysclk) begin
+        is_first_me_cycle <= !cpu_stall;
+
+        if(rst)
+            is_first_me_cycle <= 1'b1; 
+    end
+
+    assign mem_enb_o = mem_enb_buf && is_first_me_cycle;
+    assign cpu_stall = filled_me && ((mem_enb_buf && is_first_me_cycle) || ((is_load_ongoing && !mem_rdata_valid_i) || (is_store_ongoing && !mem_wdata_valid_i)));
 
     always @(posedge sysclk)
     begin
-        if(w_en_rf_me && !make_nop_me)
+        if(w_en_rf_me && !make_nop_me && !cpu_stall)
             bypass_mem_ready <= 1'b1;
         else
             bypass_mem_ready <= 1'b0;
@@ -458,14 +489,16 @@ module cpu
 
     always @(posedge sysclk)
     begin
-        alu_result_wb <= alu_result_me;
-        mem_acc_out_wb <= mem_acc_out;
-        pc_plus4_wb <= pc_plus4_me;
-        csr_unit_out_wb <= csr_unit_out_me;
-        rf_w_select_wb <= rf_w_select_me;
-        w_en_rf_wb <= w_en_rf_me;
-        make_nop_wb <= make_nop_me;
-        rd_addr_wb <= rd_addr_me;
+        if(!cpu_stall) begin
+            alu_result_wb <= alu_result_me;
+            mem_acc_out_wb <= mem_acc_out;
+            pc_plus4_wb <= pc_plus4_me;
+            csr_unit_out_wb <= csr_unit_out_me;
+            rf_w_select_wb <= rf_w_select_me;
+            w_en_rf_wb <= w_en_rf_me;
+            make_nop_wb <= make_nop_me;
+            rd_addr_wb <= rd_addr_me;
+        end
     end
 
     four_input_mux #(.INPUT_LENGTH(OP_LENGTH)) 
@@ -484,7 +517,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf_wb && !make_nop_wb),
+            .w_en(w_en_rf_wb && !make_nop_wb && !cpu_stall),
             .rs1_addr(rs1_addr_ex),
             .rs2_addr(rs2_addr_ex),
             .rd_addr(rd_addr_wb),
@@ -492,6 +525,30 @@ module cpu
             .rs2_data(rs2_data_ex),
             .rd_write_data(rd_write_data)
         );
+
+    always @(posedge sysclk) begin
+        filled_if <= 1'b1;
+        filled_id <= filled_if;
+        filled_ex <= filled_id;
+        filled_me <= filled_ex;
+        filled_wb <= filled_me;
+
+        if(cpu_stall) begin
+            filled_if <= 1'b1;
+            filled_id <= 1'b1;
+            filled_ex <= 1'b1;
+            filled_me <= 1'b1;
+            filled_wb <= filled_wb;
+        end
+
+        if(rst) begin
+            filled_if <= 1'b0;
+            filled_id <= 1'b0;
+            filled_ex <= 1'b0;
+            filled_me <= 1'b0;
+            filled_wb <= 1'b0;
+        end
+    end
 
     //
     // Output Logic

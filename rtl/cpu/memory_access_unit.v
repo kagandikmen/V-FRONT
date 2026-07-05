@@ -7,7 +7,7 @@ module memory_access_unit
     #(
         parameter BYTE_WIDTH = 8
     )(
-        input sysclk,
+        input clk,
         input rst,
         input [31:0] addr_in,
         output [12:0] addr_out,
@@ -28,12 +28,13 @@ module memory_access_unit
         output is_load_ongoing_o,
         output is_store_ongoing_o,
 
+        input is_first_me_cycle_i,
         output mem_enb_o
     );
 
     genvar i;
 
-    wire [4*BYTE_WIDTH-1:0] out_temp_load, out_temp_store, temp_load, temp_store;
+    wire [4*BYTE_WIDTH-1:0] out_temp_load, out_temp_store, temp_load;
     wire [3:0] wr_mode_temp;
     wire access_misaligned;
     wire [1:0] offset;
@@ -41,14 +42,14 @@ module memory_access_unit
     reg is_store_ongoing_reg;
     reg is_load_ongoing_reg;
 
-    always @(posedge sysclk) begin
+    always @(posedge clk) begin
         is_store_ongoing_reg <= 1'b0;
         is_load_ongoing_reg <= 1'b0;
 
-        if(|ldst_mask || (is_load_ongoing_reg && !is_mem_rdata_valid_i))
+        if((!st_en && |ldst_mask && is_first_me_cycle_i) || (is_load_ongoing_reg && !is_mem_rdata_valid_i))
             is_load_ongoing_reg <= 1'b1;
 
-        if(st_en || (is_store_ongoing_reg && !is_mem_wdata_valid_i))
+        if((st_en && is_first_me_cycle_i) || (is_store_ongoing_reg && !is_mem_wdata_valid_i))
             is_store_ongoing_reg <= 1'b1;
         
         if(rst) begin
