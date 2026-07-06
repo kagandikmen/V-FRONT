@@ -148,6 +148,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
+            .stall(cpu_stall),
             .fetch_instr(mem_if_en_o),
             .instr(mem_instr_i),
             .is_misaligned(is_misaligned),
@@ -355,11 +356,13 @@ module cpu
     assign alu_opd1 = (bypass_ex_result_rs1_ex && bypass_alu_ready) ? alu_result_bypass_buffer_ex
                     : (bypass_ex_result_rs1_ex && bypass_csr_ready) ? csr_result_bypass_buffer_ex
                     : (bypass_ex_result_rs1_ex && bypass_ld_ready)  ? mem_acc_out
+                    : (bypass_ex_result_rs1_ex && is_load_ongoing && mem_rdata_valid_i) ? mem_acc_out
                     : (bypass_me_result_rs1_ex && bypass_mem_ready) ? rd_write_data // mem_result_bypass_buffer_me
                     : rs1_data_ex;
     assign alu_opd2 = (bypass_ex_result_rs2_ex && bypass_alu_ready) ? alu_result_bypass_buffer_ex
                     : (bypass_ex_result_rs2_ex && bypass_csr_ready) ? csr_result_bypass_buffer_ex
                     : (bypass_ex_result_rs2_ex && bypass_ld_ready)  ? mem_acc_out
+                    : (bypass_ex_result_rs2_ex && is_load_ongoing && mem_rdata_valid_i) ? mem_acc_out
                     : (bypass_me_result_rs2_ex && bypass_mem_ready) ? rd_write_data // mem_result_bypass_buffer_me
                     : rs2_data_ex;
     

@@ -1,12 +1,13 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-07-05
+// Modified:    2025-07-06
 // Author:      Kagan Dikmen
 
 module control_unit
     (
     input clk,
     input rst,
+    input stall,
     output fetch_instr,
 
     input [31:0] instr,
@@ -78,32 +79,34 @@ module control_unit
 
     always @(posedge clk)
     begin
-        branch_id <= branch;
-        jump_id <= jump;
-        ecall_id <= ecall;
-        ebreak_id <= ebreak;
-        mret_id <= mret;
+        if(!stall) begin
+            branch_id <= branch;
+            jump_id <= jump;
+            ecall_id <= ecall;
+            ebreak_id <= ebreak;
+            mret_id <= mret;
 
-        branch_ex <= branch_id;
-        jump_ex <= jump_id;
-        ecall_ex <= ecall_id;
-        ebreak_ex <= ebreak_id;
-        mret_ex <= mret_id;
+            branch_ex <= branch_id;
+            jump_ex <= jump_id;
+            ecall_ex <= ecall_id;
+            ebreak_ex <= ebreak_id;
+            mret_ex <= mret_id;
 
-        make_nop_id <= make_nop_if_buffer;
-        make_nop_ex <= make_nop_if_buffer || make_nop_id;
+            make_nop_id <= make_nop_if_buffer;
+            make_nop_ex <= make_nop_if_buffer || make_nop_id;
 
-        csr_r_en_id <= csr_r_en_if;
-        csr_w_en_id <= csr_w_en_if;
-        csr_op_id <= csr_op_if;
-        csr_addr_id <= csr_addr_if;
-        csr_imm_select_id <= csr_imm_select_if;
+            csr_r_en_id <= csr_r_en_if;
+            csr_w_en_id <= csr_w_en_if;
+            csr_op_id <= csr_op_if;
+            csr_addr_id <= csr_addr_if;
+            csr_imm_select_id <= csr_imm_select_if;
 
-        csr_r_en_ex <= csr_r_en_id;
-        csr_w_en_ex <= csr_w_en_id;
-        csr_op_ex <= csr_op_id;
-        csr_addr_ex <= csr_addr_id;
-        csr_imm_select_ex <= csr_imm_select_id;
+            csr_r_en_ex <= csr_r_en_id;
+            csr_w_en_ex <= csr_w_en_id;
+            csr_op_ex <= csr_op_id;
+            csr_addr_ex <= csr_addr_id;
+            csr_imm_select_ex <= csr_imm_select_id;
+        end
 
         if(rst)
         begin
