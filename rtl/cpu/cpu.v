@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-06
+// Modified:    2026-07-07
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -484,7 +484,7 @@ module cpu
     end
 
     assign mem_enb_o = mem_enb_buf && is_first_me_cycle;
-    assign cpu_stall = filled_me && ((mem_enb_buf && is_first_me_cycle) || ((is_load_ongoing && !mem_rdata_valid_i) || (is_store_ongoing && !mem_wdata_valid_i)));
+    assign cpu_stall = filled_me && !(mem_rdata_valid_i || mem_wdata_valid_i) && ((mem_enb_buf && is_first_me_cycle) || ((is_load_ongoing && !mem_rdata_valid_i) || (is_store_ongoing && !mem_wdata_valid_i)));
 
     always @(posedge sysclk)
     begin
