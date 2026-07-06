@@ -46,7 +46,8 @@ module control_unit
     output [1:0] csr_imm_select,
 
     input branch_true,
-    output make_nop
+    output make_nop,
+    output reg invalid_instr
     );
 
     `include "common_library.vh"
@@ -161,6 +162,7 @@ module control_unit
         ldst_is_unsigned = 1'b0;
         ldst_mask = 4'b0000;
         w_en_rf_if = 1'b0;
+        invalid_instr = 1'b0;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
@@ -633,6 +635,7 @@ module control_unit
                         alu_subunit_op_sel = 4'b0000;
                         w_en_rf_if = 1'b0;
                         rf_w_select = 2'b00;
+                        invalid_instr = 1'b1;
                     end
                 endcase
             end

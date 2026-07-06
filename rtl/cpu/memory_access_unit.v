@@ -1,6 +1,6 @@
 // Memory access unit of the CPU
 // Created:     2025-05-28
-// Modified:    2026-07-05
+// Modified:    2026-07-06
 // Author:      Kagan Dikmen
 
 module memory_access_unit
@@ -9,6 +9,7 @@ module memory_access_unit
     )(
         input clk,
         input rst,
+        input make_nop_i,
         input [31:0] addr_in,
         output [12:0] addr_out,
         input [3:0] ldst_mask,
@@ -43,10 +44,10 @@ module memory_access_unit
         is_store_ongoing_reg <= 1'b0;
         is_load_ongoing_reg <= 1'b0;
 
-        if((!st_en && |ldst_mask && is_first_me_cycle_i) || (is_load_ongoing_reg && !is_mem_rdata_valid_i))
+        if(((!st_en && |ldst_mask && is_first_me_cycle_i) || (is_load_ongoing_reg && !is_mem_rdata_valid_i)) && !access_misaligned && !make_nop_i)
             is_load_ongoing_reg <= 1'b1;
 
-        if((st_en && is_first_me_cycle_i) || (is_store_ongoing_reg && !is_mem_wdata_valid_i))
+        if(((st_en && is_first_me_cycle_i) || (is_store_ongoing_reg && !is_mem_wdata_valid_i)) && !access_misaligned && !make_nop_i)
             is_store_ongoing_reg <= 1'b1;
         
         if(rst) begin
@@ -102,6 +103,6 @@ module memory_access_unit
                : st_en ? out_temp_store
                : out_temp_load;
 
-    assign mem_enb_o = (|ldst_mask || st_en) && !access_misaligned;
+    assign mem_enb_o = (|ldst_mask || st_en) && !access_misaligned && !make_nop_i;
 
 endmodule

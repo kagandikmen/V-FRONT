@@ -118,6 +118,10 @@ module cpu
     reg [4:0] rd_addr_wb;
     reg filled_wb;
 
+    // invalid instruction pipeline
+    wire invalid_instr_if;
+    reg invalid_instr_id, invalid_instr_ex, invalid_instr_me, invalid_instr_wb;
+
     //
     // STAGE 1: Instruction Fetch (IF) + Control Logic
     //
@@ -173,13 +177,14 @@ module cpu
             .csr_addr(csr_unit_addr),
             .csr_imm_select(csr_imm_select),
             .branch_true(comp_result[0]),
-            .make_nop(make_nop_ex)
+            .make_nop(make_nop_ex),
+            .invalid_instr(invalid_instr_if)
         );
 
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
-            instr_id <= mem_instr_i;
+            instr_id <= invalid_instr_if ? 32'h00000013 : mem_instr_i;
             alu_imm_select_id <= ctrl_alu_imm_select_out;
             alu_pc_select_id <= ctrl_alu_pc_select_out;
             rf_w_select_id <= ctrl_rf_w_select_out;
@@ -195,6 +200,7 @@ module cpu
             ldst_mask_id <= ctrl_ldst_mask_out;
             ldst_is_unsigned_id <= ctrl_ldst_is_unsigned_out;
             st_en_id <= ctrl_st_en_if_out;
+            invalid_instr_id <= invalid_instr_if;
         end
     end
 
@@ -294,6 +300,7 @@ module cpu
             ldst_is_unsigned_ex <= ldst_is_unsigned_id;
             st_en_ex <= st_en_id;
             rd_addr_ex <= rd_addr_id;
+            invalid_instr_ex <= invalid_instr_id;
             bypass_ex_result_rs1_ex <= bypass_ex_result_rs1_id;
             bypass_ex_result_rs2_ex <= bypass_ex_result_rs2_id;
             bypass_me_result_rs1_ex <= bypass_me_result_rs1_id;
@@ -443,6 +450,7 @@ module cpu
             w_en_rf_me <= w_en_rf_ex;
             instr_me <= instr_ex;
             pc_me <= pc_ex;
+            invalid_instr_me <= invalid_instr_ex;
         end
     end
 
@@ -451,6 +459,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
+            .make_nop_i(make_nop_me),
             .addr_in(alu_result_me),
             .addr_out(mem_addrb_o),
             .ldst_mask(ldst_mask_me),
@@ -500,6 +509,7 @@ module cpu
             w_en_rf_wb <= w_en_rf_me;
             make_nop_wb <= make_nop_me;
             rd_addr_wb <= rd_addr_me;
+            invalid_instr_wb <= invalid_instr_me;
         end
     end
 
@@ -519,7 +529,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf_wb && !make_nop_wb && (!cpu_stall || (cpu_stall && is_first_me_cycle))),
+            .w_en(w_en_rf_wb && !make_nop_wb && (!cpu_stall || (cpu_stall && is_first_me_cycle)) && !invalid_instr_wb),
             .rs1_addr(rs1_addr_ex),
             .rs2_addr(rs2_addr_ex),
             .rd_addr(rd_addr_wb),
