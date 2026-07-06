@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-05
+// Modified:    2026-07-06
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -244,6 +244,7 @@ module cpu
             .clk(sysclk),
             .rst(rst),
             .instr(instr_id),
+            .stall(cpu_stall),
             .rs1_addr(rs1_addr_id),
             .rs2_addr(rs2_addr_id),
             .rd_addr(rd_addr_id),
@@ -475,7 +476,7 @@ module cpu
 
     always @(posedge sysclk)
     begin
-        if(w_en_rf_me && !make_nop_me && !cpu_stall)
+        if(w_en_rf_me && !make_nop_me)
             bypass_mem_ready <= 1'b1;
         else
             bypass_mem_ready <= 1'b0;
