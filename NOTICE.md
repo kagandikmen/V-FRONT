@@ -7,7 +7,7 @@ The file
 
 - `ut/v-front/csr_hazard.S`
 
-includes software developed by Kristian Klomsten Skordal, and are licensed under the following license:
+includes software developed by Kristian Klomsten Skordal, and is licensed under the following license:
 
 ```
 Copyright (c) Kristian Klomsten Skordal

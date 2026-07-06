@@ -99,7 +99,7 @@ The unit tests all pass as of 2026-07-07. The design is fully synthesizable.
 ### Known Issues
 
 - The five-stage pipeline is fully implemented and tested, but not optimized yet for performance. As a result, the current implementation runs at relatively low clock frequencies (below 20 MHz on Zynq 7020).
-- The control logic shoulder instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
+- The control logic shoulders instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
 - There are parametrization issues. Some parameters (like `PC_WIDTH`) do little to nothing.
 - There is only one type of exception (misaligned memory access) implemented. More should follow.
 - Documentation is limited to this README document.
