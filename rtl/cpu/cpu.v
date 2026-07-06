@@ -86,7 +86,6 @@ module cpu
     wire [2:0] csr_unit_op;
 
     // ME
-    wire [DMEM_DATA_WIDTH-1:0] r_data_masked;
     wire [31:0] rd_write_data;
     wire [OP_LENGTH-1:0] mem_acc_in, mem_acc_out;
     wire is_misaligned, is_misalignment_store;
@@ -141,12 +140,6 @@ module cpu
     wire [3:0] ctrl_ldst_mask_out;
     wire ctrl_ldst_is_unsigned_out;
     wire ctrl_st_en_if_out;
-    wire ctrl_csr_r_en_out;
-    wire ctrl_csr_w_en_out;
-    wire [2:0] ctrl_csr_op_out;
-    wire [11:0] ctrl_csr_addr_out;
-    wire [1:0] ctrl_csr_imm_select_out;
-    wire ctrl_make_nop_out;
 
     control_unit control_unit_cpu
         (
@@ -238,11 +231,9 @@ module cpu
     // STAGE 2: Instruction Decode (ID)
     //
 
-    wire [31:0] opd1_id, opd2_id;
     wire [31:0] imm_id;
 
     reg [31:0] instr_ex;
-    reg [31:0] opd1_ex, opd2_ex;
     reg [31:0] imm_ex;
 
     instruction_decoder #(.OPD_LENGTH(OP_LENGTH), .REG_WIDTH(32)) 
@@ -275,8 +266,6 @@ module cpu
     begin
         if(!cpu_stall) begin
             instr_ex <= instr_id;
-            opd1_ex <= opd1_id;
-            opd2_ex <= opd2_id;
             imm_ex <= imm_id;
         end
     end
@@ -330,7 +319,6 @@ module cpu
         );
 
     reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
-    reg [1:0] alu_opd1_mux_sel, alu_opd2_mux_sel;
 
     always @(posedge sysclk)
     begin
