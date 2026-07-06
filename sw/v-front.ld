@@ -1,6 +1,6 @@
 /* Generic linker script for V-FRONT */
 /* Created:     2025-05-24 */
-/* Modified:    2025-06-02 */
+/* Modified:    2026-07-06 */
 /* Author:      Kagan Dikmen */
 
 ENTRY(_start)
@@ -43,7 +43,7 @@ SECTIONS
         __bss_end = .;
     } > dmem
 
-    __stack_top = 0x3FFC;
+    __stack_top = 0x7FFC;
 
     /DISCARD/ :
     {
