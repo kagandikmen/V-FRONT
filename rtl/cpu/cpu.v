@@ -37,12 +37,12 @@ module cpu
     output wire [OP_LENGTH-1:0] mem_dinb_o
     );
 
-    wire cpu_stall;
 
     // IF
-    wire [OP_LENGTH-1:0] next_pc;
-    wire [OP_LENGTH-1:0] pc_if;
+    wire [OP_LENGTH-1:0] pc_if, pc_plus4_if, next_pc;
     reg filled_if;
+    wire invalid_instr_if;
+
 
     // ID
     reg alu_imm_select_id, alu_cu_input_sel_id, w_en_rf_id, branch_id, jump_id;
@@ -54,10 +54,13 @@ module cpu
     reg [3:0] alu_subunit_op_sel_id;
     wire [4:0] rs1_addr_id, rs2_addr_id, rd_addr_id;
     reg [31:0] instr_id;
-    reg [OP_LENGTH-1:0] pc_id;
+    reg [OP_LENGTH-1:0] pc_id, pc_plus4_id;
     wire bypass_ex_result_rs1_id, bypass_ex_result_rs2_id;
     wire bypass_me_result_rs1_id, bypass_me_result_rs2_id;
+    wire [31:0] imm_id;
     reg filled_id;
+    reg invalid_instr_id;
+
 
     // EX
     reg alu_imm_select_ex, alu_cu_input_sel, w_en_rf_ex, branch_ex, jump_ex;
@@ -71,19 +74,25 @@ module cpu
     reg [4:0] rd_addr_ex;
     wire [OP_LENGTH-1:0] alu_opd1, alu_opd2, alu_mux1_out, alu_mux2_out;
     wire [OP_LENGTH-1:0] alu_result, comp_result;
-    reg [OP_LENGTH-1:0] pc_ex;
+    reg [OP_LENGTH-1:0] pc_ex, pc_plus4_ex;
+    wire [31:0] rs1_data_ex, rs2_data_ex;
+    reg [4:0] rs1_addr_ex, rs2_addr_ex;
+    reg [31:0] instr_ex;
+    reg [31:0] imm_ex;
+    reg filled_ex;
+    reg invalid_instr_ex;
+
+    reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
     reg bypass_ex_result_rs1_ex, bypass_ex_result_rs2_ex;
     reg bypass_me_result_rs1_ex, bypass_me_result_rs2_ex;
     reg [OP_LENGTH-1:0] alu_result_bypass_buffer_ex, csr_result_bypass_buffer_ex;
-    wire [31:0] rs1_data_ex, rs2_data_ex;
-    reg [4:0] rs1_addr_ex, rs2_addr_ex;
-    reg filled_ex;
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
     wire csr_unit_r_en, csr_unit_w_en;
     wire [1:0] csr_imm_select;
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
+
 
     // ME
     wire [31:0] rd_write_data;
@@ -100,12 +109,15 @@ module cpu
     reg [OP_LENGTH-1:0] alu_opd1_me, alu_opd2_me;
     reg [OP_LENGTH-1:0] csr_unit_out_me;
     reg w_en_rf_me;
-    reg [OP_LENGTH-1:0] pc_me;
+    reg [OP_LENGTH-1:0] pc_me, pc_plus4_me;
     reg [31:0] instr_me;
     wire is_load_ongoing, is_store_ongoing;
     wire mem_enb_buf;
+    reg ready_for_mem_acc;
+    wire cpu_stall;
     reg filled_me;
-    reg is_first_me_cycle;
+    reg invalid_instr_me;
+    
 
     // WB
     reg [OP_LENGTH-1:0] alu_result_wb;
@@ -115,11 +127,10 @@ module cpu
     reg w_en_rf_wb;
     reg make_nop_wb;
     reg [4:0] rd_addr_wb;
+    reg [OP_LENGTH-1:0] pc_plus4_wb;
     reg filled_wb;
-
-    // invalid instruction pipeline
-    wire invalid_instr_if;
-    reg invalid_instr_id, invalid_instr_ex, invalid_instr_me, invalid_instr_wb;
+    reg invalid_instr_wb;
+    
 
     //
     // STAGE 1: Instruction Fetch (IF) + Control Logic
@@ -197,9 +208,6 @@ module cpu
         end
     end
 
-    wire [OP_LENGTH-1:0] pc_plus4_if;
-    reg [OP_LENGTH-1:0] pc_plus4_id, pc_plus4_ex, pc_plus4_me, pc_plus4_wb;
-
     pc_counter #(.OPD_WIDTH(OP_LENGTH), .PC_WIDTH(PC_WIDTH), .RESET_ADDR(RESET_ADDR)) 
         pc_counter_cpu
         (
@@ -216,6 +224,8 @@ module cpu
             .pc_plus4(pc_plus4_if),
             .next_pc(next_pc)
         );
+
+    assign mem_addra_o = next_pc[14:2];
     
     always @(posedge sysclk)
     begin
@@ -230,11 +240,6 @@ module cpu
     // 
     // STAGE 2: Instruction Decode (ID)
     //
-
-    wire [31:0] imm_id;
-
-    reg [31:0] instr_ex;
-    reg [31:0] imm_ex;
 
     instruction_decoder #(.OPD_LENGTH(OP_LENGTH), .REG_WIDTH(32)) 
         instruction_decoder_cpu
@@ -317,8 +322,6 @@ module cpu
             .alu_result(alu_result),
             .comp_result(comp_result)
         );
-
-    reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
 
     always @(posedge sysclk)
     begin
@@ -419,8 +422,6 @@ module cpu
     // STAGE 4: Memory Access (ME)
     //
 
-    assign mem_acc_in = (st_en_me == 1'b1) ? alu_opd2_me : mem_rdata_i;
-
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
@@ -452,7 +453,7 @@ module cpu
             .addr_out(mem_addrb_o),
             .ldst_mask(ldst_mask_me),
             .ldst_is_unsigned(ldst_is_unsigned_me),
-            .st_en(st_en_me && !make_nop_me && is_first_me_cycle),
+            .st_en(st_en_me && !make_nop_me && ready_for_mem_acc),
             .in(mem_acc_in),
             .out(mem_acc_out),
             .wr_mode(mem_wr_mode_o),
@@ -460,26 +461,29 @@ module cpu
             .is_mem_wdata_valid_i(mem_wdata_valid_i),
             .is_load_ongoing_o(is_load_ongoing),
             .is_store_ongoing_o(is_store_ongoing),
-            .is_first_me_cycle_i(is_first_me_cycle),
+            .ready_for_mem_acc_i(ready_for_mem_acc),
             .mem_enb_o(mem_enb_buf)
         );
 
+    assign mem_acc_in = (st_en_me == 1'b1) ? alu_opd2_me : mem_rdata_i;
+
+    assign mem_dinb_o = mem_acc_out;
+    assign mem_enb_o = mem_enb_buf && ready_for_mem_acc;
+
+    assign cpu_stall = filled_me && !(mem_rdata_valid_i || mem_wdata_valid_i) && ((mem_enb_buf && ready_for_mem_acc) || ((is_load_ongoing && !mem_rdata_valid_i) || (is_store_ongoing && !mem_wdata_valid_i)));
+
     always @(posedge sysclk) begin
-        is_first_me_cycle <= !cpu_stall;
+        ready_for_mem_acc <= !cpu_stall;
 
-        if(rst)
-            is_first_me_cycle <= 1'b1; 
-    end
-
-    assign mem_enb_o = mem_enb_buf && is_first_me_cycle;
-    assign cpu_stall = filled_me && !(mem_rdata_valid_i || mem_wdata_valid_i) && ((mem_enb_buf && is_first_me_cycle) || ((is_load_ongoing && !mem_rdata_valid_i) || (is_store_ongoing && !mem_wdata_valid_i)));
-
-    always @(posedge sysclk)
-    begin
         if(w_en_rf_me && !make_nop_me)
             bypass_mem_ready <= 1'b1;
         else
             bypass_mem_ready <= 1'b0;
+
+        if(rst) begin
+            ready_for_mem_acc <= 1'b1;
+            bypass_mem_ready <= 1'b0;
+        end
     end
 
     //
@@ -517,7 +521,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf_wb && !make_nop_wb && (!cpu_stall || (cpu_stall && is_first_me_cycle)) && !invalid_instr_wb),
+            .w_en(w_en_rf_wb && !make_nop_wb && (!cpu_stall || (cpu_stall && ready_for_mem_acc)) && !invalid_instr_wb),
             .rs1_addr(rs1_addr_ex),
             .rs2_addr(rs2_addr_ex),
             .rd_addr(rd_addr_wb),
@@ -549,12 +553,5 @@ module cpu
             filled_wb <= 1'b0;
         end
     end
-
-    //
-    // Output Logic
-    //
-
-    assign mem_addra_o = next_pc[14:2];
-    assign mem_dinb_o = mem_acc_out;
 
 endmodule

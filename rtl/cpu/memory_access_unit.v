@@ -26,7 +26,7 @@ module memory_access_unit
         output is_load_ongoing_o,
         output is_store_ongoing_o,
 
-        input is_first_me_cycle_i,
+        input ready_for_mem_acc_i,
         output mem_enb_o
     );
 
@@ -44,10 +44,10 @@ module memory_access_unit
         is_store_ongoing_reg <= 1'b0;
         is_load_ongoing_reg <= 1'b0;
 
-        if(((!st_en && |ldst_mask && is_first_me_cycle_i) || (is_load_ongoing_reg && !is_mem_rdata_valid_i)) && !access_misaligned && !make_nop_i && !is_mem_rdata_valid_i)
+        if(((!st_en && |ldst_mask && ready_for_mem_acc_i) || (is_load_ongoing_reg && !is_mem_rdata_valid_i)) && !access_misaligned && !make_nop_i && !is_mem_rdata_valid_i)
             is_load_ongoing_reg <= 1'b1;
 
-        if(((st_en && is_first_me_cycle_i) || (is_store_ongoing_reg && !is_mem_wdata_valid_i)) && !access_misaligned && !make_nop_i && !is_mem_wdata_valid_i)
+        if(((st_en && ready_for_mem_acc_i) || (is_store_ongoing_reg && !is_mem_wdata_valid_i)) && !access_misaligned && !make_nop_i && !is_mem_wdata_valid_i)
             is_store_ongoing_reg <= 1'b1;
         
         if(rst) begin
