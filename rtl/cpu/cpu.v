@@ -519,7 +519,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf_wb && !make_nop_wb && !cpu_stall),
+            .w_en(w_en_rf_wb && !make_nop_wb && (!cpu_stall || (cpu_stall && is_first_me_cycle))),
             .rs1_addr(rs1_addr_ex),
             .rs2_addr(rs2_addr_ex),
             .rd_addr(rd_addr_wb),
