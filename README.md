@@ -21,12 +21,11 @@
 [![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT)](LICENSE)
 [![Zenodo DOI Badge/Link](https://img.shields.io/badge/DOI-10.5281/zenodo.20783633-blue)](https://doi.org/10.5281/zenodo.20783633)
 
-- RV32I (v2.1) compliant, with Zicsr and Zifencei extensions
+- RV32I v2.1 with Zicsr and Zifencei extensions
 - Five-stage von Neumann architecture
 - 32 KB unified dual-port dual-clock BRAM-based memory (16 KB program, 16 KB data)
 - CSR unit with 4096 CSR registers
 - Handles misaligned memory accesses via trap vector `mtvec_handler`
-- Fully tested with riscv-tests as of 2026-06-22
 
 ## Prerequisites
 
@@ -74,6 +73,8 @@ Find an example of how a generic C file can be compiled to run on V-FRONT by nav
 ├── docs             # Project documentation and images           
 ├── lib              # Verilog libraries for constants and functions
 ├── rtl              # Verilog source code
+│   └── cpu          # V-FRONT CPU and its submodules
+│   └── soc          # Coherence SoC environment
 ├── sim              # Verilog testbenches
 ├── sw               # Software helpers (e.g. trap vectors and linker scripts)
 │   └── test         # Demo software
@@ -85,23 +86,27 @@ Find an example of how a generic C file can be compiled to run on V-FRONT by nav
 
 V-FRONT implements a five-stage pipelined von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for programs and the second 16 KB for data. Misaligned accesses to this unified BRAM memory are allowed, where the CPU then raises an exception and jumps to a trap vector to handle the misaligned access.
 
-V-FRONT implements 4096 CSR registers in its CSR unit. As of 2025-06-03, the only exception the hardware itself can raise is when a misaligned memory access is attempted. But software can raise any exception through `ecall` and `ebreak` instructions, where the program then jumps to the address stored in the CSR register `mtvec`.
+V-FRONT implements 4096 CSR registers in its CSR unit. As of 2026-07-07, the only exception the hardware itself can raise is when a misaligned memory access is attempted. But software can raise any exception through `ecall` and `ebreak` instructions, where the program then jumps to the address stored in the CSR register `mtvec`.
 
 V-FRONT implements `fence` and `fence_i` instructions as pure `NOP`s, as these instructions do not serve any meaningful purpose in a single-core setting.
 
-V-FRONT has been tested for full RV32I compliance using the unit tests in the [ut](ut/) folder, which are sourced from [riscv-tests](https://github.com/riscv-software-src/riscv-tests), the official test suite provided by RISC-V International.
+V-FRONT is tested using the unit tests in the [ut](ut/) folder, which are sourced from [riscv-tests](https://github.com/riscv-software-src/riscv-tests). There are additional tests under [ut/v-front](ut/v-front/) as well.
 
 ## Status
 
-The unit tests all pass as of 2026-06-22. The design is fully synthesizable.
+The unit tests all pass as of 2026-07-07. The design is fully synthesizable.
 
 ### Known Issues
 
 - The five-stage pipeline is fully implemented and tested, but not optimized yet for performance. As a result, the current implementation runs at relatively low clock frequencies (below 20 MHz on Zynq 7020).
+- The control logic shoulders instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
+- There are parametrization issues. Some parameters (like `PC_WIDTH`) do little to nothing.
+- There is only one type of exception (misaligned memory access) implemented. More should follow.
+- Documentation is limited to this README document.
 
 ## Contributing
 
-Pull requests, suggestions, and bug reports are all welcome.
+Pull requests, suggestions, and bug reports are all welcome. Please refrain from opening pull requests that only include cosmetic changes. AI-generated code is also strongly discouraged.
 
 ## Citing
 

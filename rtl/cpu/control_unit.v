@@ -1,12 +1,13 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-07-05
+// Modified:    2025-07-06
 // Author:      Kagan Dikmen
 
 module control_unit
     (
     input clk,
     input rst,
+    input stall,
     output fetch_instr,
 
     input [31:0] instr,
@@ -45,7 +46,8 @@ module control_unit
     output [1:0] csr_imm_select,
 
     input branch_true,
-    output make_nop
+    output make_nop,
+    output reg invalid_instr
     );
 
     `include "common_library.vh"
@@ -78,32 +80,34 @@ module control_unit
 
     always @(posedge clk)
     begin
-        branch_id <= branch;
-        jump_id <= jump;
-        ecall_id <= ecall;
-        ebreak_id <= ebreak;
-        mret_id <= mret;
+        if(!stall) begin
+            branch_id <= branch;
+            jump_id <= jump;
+            ecall_id <= ecall;
+            ebreak_id <= ebreak;
+            mret_id <= mret;
 
-        branch_ex <= branch_id;
-        jump_ex <= jump_id;
-        ecall_ex <= ecall_id;
-        ebreak_ex <= ebreak_id;
-        mret_ex <= mret_id;
+            branch_ex <= branch_id;
+            jump_ex <= jump_id;
+            ecall_ex <= ecall_id;
+            ebreak_ex <= ebreak_id;
+            mret_ex <= mret_id;
 
-        make_nop_id <= make_nop_if_buffer;
-        make_nop_ex <= make_nop_if_buffer || make_nop_id;
+            make_nop_id <= make_nop_if_buffer;
+            make_nop_ex <= make_nop_if_buffer || make_nop_id;
 
-        csr_r_en_id <= csr_r_en_if;
-        csr_w_en_id <= csr_w_en_if;
-        csr_op_id <= csr_op_if;
-        csr_addr_id <= csr_addr_if;
-        csr_imm_select_id <= csr_imm_select_if;
+            csr_r_en_id <= csr_r_en_if;
+            csr_w_en_id <= csr_w_en_if;
+            csr_op_id <= csr_op_if;
+            csr_addr_id <= csr_addr_if;
+            csr_imm_select_id <= csr_imm_select_if;
 
-        csr_r_en_ex <= csr_r_en_id;
-        csr_w_en_ex <= csr_w_en_id;
-        csr_op_ex <= csr_op_id;
-        csr_addr_ex <= csr_addr_id;
-        csr_imm_select_ex <= csr_imm_select_id;
+            csr_r_en_ex <= csr_r_en_id;
+            csr_w_en_ex <= csr_w_en_id;
+            csr_op_ex <= csr_op_id;
+            csr_addr_ex <= csr_addr_id;
+            csr_imm_select_ex <= csr_imm_select_id;
+        end
 
         if(rst)
         begin
@@ -158,6 +162,7 @@ module control_unit
         ldst_is_unsigned = 1'b0;
         ldst_mask = 4'b0000;
         w_en_rf_if = 1'b0;
+        invalid_instr = 1'b0;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
@@ -630,6 +635,7 @@ module control_unit
                         alu_subunit_op_sel = 4'b0000;
                         w_en_rf_if = 1'b0;
                         rf_w_select = 2'b00;
+                        invalid_instr = 1'b1;
                     end
                 endcase
             end
