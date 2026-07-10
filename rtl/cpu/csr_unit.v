@@ -41,6 +41,7 @@ module csr_unit
     reg [31:0] spec_csr_registers [11:0];
 
     reg not_csr;
+    reg write_to_ro_csr;
 
     localparam SPEC_CSR_JVT_INDEX       = 0;
     localparam SPEC_CSR_MSTATUS_INDEX   = 1;
@@ -111,7 +112,6 @@ module csr_unit
                 CSR_MCAUSE_ADDR:       spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]    <= write_value;
                 CSR_CUSTOM1_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]   <= write_value;
                 CSR_CUSTOM2_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]   <= write_value;
-                CSR_MHARTID_ADDR:      spec_csr_registers[SPEC_CSR_MHARTID_INDEX]   <= write_value;
             endcase
         end
     end
@@ -121,6 +121,7 @@ module csr_unit
         spec_reg_r_en = 1'b0;
         spec_reg_w_en = 1'b0;
         not_csr = 1'b0;
+        write_to_ro_csr = 1'b0;
         
         if(csr_addr == CSR_JVT_ADDR 
             || csr_addr == CSR_MSTATUS_ADDR
@@ -132,11 +133,15 @@ module csr_unit
             || csr_addr == CSR_MEPC_ADDR
             || csr_addr == CSR_MCAUSE_ADDR
             || csr_addr == CSR_CUSTOM1_ADDR
-            || csr_addr == CSR_CUSTOM2_ADDR
-            || csr_addr == CSR_MHARTID_ADDR)
+            || csr_addr == CSR_CUSTOM2_ADDR)
         begin
             spec_reg_r_en = r_en;
             spec_reg_w_en = w_en;
+        end
+        else if(csr_addr == CSR_MHARTID_ADDR)
+        begin
+            spec_reg_r_en = r_en;
+            write_to_ro_csr = w_en;
         end
         else
         begin
@@ -187,6 +192,6 @@ module csr_unit
         endcase
     end
 
-    assign illegal_csr = not_csr && (r_en || w_en);
+    assign illegal_csr = ((r_en || w_en) && not_csr) || write_to_ro_csr;
 
 endmodule

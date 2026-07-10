@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-07-06
+# Modified:		2026-07-10
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -12,7 +12,9 @@ TESTS := $(rv32ui_sc_tests) $(v-front_tests)
 
 FAILING_TESTS := 
 
-PASSING_TESTS := $(filter-out $(FAILING_TESTS), $(TESTS))
+EXCLUDE_TESTS := csr_permissions		# csr_permissions tests are conducted by inspecting simulations
+
+PASSING_TESTS := $(filter-out $(FAILING_TESTS) $(EXCLUDE_TESTS), $(TESTS))
 
 DESIGN_SOURCES := \
 	rtl/soc/soc.v \
