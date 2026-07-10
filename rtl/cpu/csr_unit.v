@@ -31,6 +31,7 @@ module csr_unit
     input [14:0] mem_addr,
     input [4:0] rd_addr,
 
+    input illegal_instr,
     output illegal_csr
     );
 
@@ -93,7 +94,7 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]  <= {17'b0, mem_addr};
             spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]  <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
         end
-        else if (illegal_csr)
+        else if (illegal_instr || illegal_csr)
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd2;
@@ -172,7 +173,7 @@ module csr_unit
             endcase
         end
 
-        if(illegal_csr) begin
+        if(illegal_instr || illegal_csr) begin
             out <= spec_csr_registers[SPEC_CSR_MTVEC_INDEX];
         end
     end

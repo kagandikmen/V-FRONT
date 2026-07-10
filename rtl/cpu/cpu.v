@@ -41,7 +41,7 @@ module cpu
     // IF
     wire [OP_LENGTH-1:0] pc_if, pc_plus4_if, next_pc;
     reg filled_if;
-    wire invalid_instr_if;
+    wire illegal_instr_if;
 
 
     // ID
@@ -59,7 +59,7 @@ module cpu
     wire bypass_me_result_rs1_id, bypass_me_result_rs2_id;
     wire [31:0] imm_id;
     reg filled_id;
-    reg invalid_instr_id;
+    reg illegal_instr_id;
 
 
     // EX
@@ -80,7 +80,7 @@ module cpu
     reg [31:0] instr_ex;
     reg [31:0] imm_ex;
     reg filled_ex;
-    reg invalid_instr_ex;
+    reg illegal_instr_ex;
     wire illegal_csr_ex;
 
     reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
@@ -117,7 +117,7 @@ module cpu
     reg ready_for_mem_acc;
     wire cpu_stall;
     reg filled_me;
-    reg invalid_instr_me;
+    reg illegal_instr_me;
     
 
     // WB
@@ -130,7 +130,7 @@ module cpu
     reg [4:0] rd_addr_wb;
     reg [OP_LENGTH-1:0] pc_plus4_wb;
     reg filled_wb;
-    reg invalid_instr_wb;
+    reg illegal_instr_wb;
     
 
     //
@@ -183,13 +183,14 @@ module cpu
             .csr_imm_select(csr_imm_select),
             .branch_true(comp_result[0]),
             .make_nop(make_nop_ex),
-            .invalid_instr(invalid_instr_if)
+            .illegal_instr(illegal_instr_if),
+            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex)
         );
 
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
-            instr_id <= invalid_instr_if ? 32'h00000013 : mem_instr_i;
+            instr_id <= illegal_instr_if ? 32'h00000013 : mem_instr_i;
             alu_imm_select_id <= ctrl_alu_imm_select_out;
             alu_pc_select_id <= ctrl_alu_pc_select_out;
             rf_w_select_id <= ctrl_rf_w_select_out;
@@ -205,7 +206,7 @@ module cpu
             ldst_mask_id <= ctrl_ldst_mask_out;
             ldst_is_unsigned_id <= ctrl_ldst_is_unsigned_out;
             st_en_id <= ctrl_st_en_if_out;
-            invalid_instr_id <= invalid_instr_if;
+            illegal_instr_id <= illegal_instr_if;
         end
     end
 
@@ -217,7 +218,7 @@ module cpu
             .stall(cpu_stall),
             .branch(branch_ex && !make_nop_ex),
             .jump(jump_ex && !make_nop_ex),
-            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex) && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
@@ -295,7 +296,7 @@ module cpu
             ldst_is_unsigned_ex <= ldst_is_unsigned_id;
             st_en_ex <= st_en_id;
             rd_addr_ex <= rd_addr_id;
-            invalid_instr_ex <= invalid_instr_id;
+            illegal_instr_ex <= illegal_instr_id;
             bypass_ex_result_rs1_ex <= bypass_ex_result_rs1_id;
             bypass_ex_result_rs2_ex <= bypass_ex_result_rs2_id;
             bypass_me_result_rs1_ex <= bypass_me_result_rs1_id;
@@ -341,7 +342,7 @@ module cpu
         bypass_csr_ready <= 1'b0;
         bypass_ld_ready <= 1'b0;
         
-        if(w_en_rf_ex && !is_misaligned && !illegal_instr_ex && !make_nop_ex && !cpu_stall)
+        if(w_en_rf_ex && !is_misaligned && !illegal_instr_ex && !illegal_csr_ex && !make_nop_ex && !cpu_stall)
         begin
             if(rf_w_select_ex == 2'b00)
                 bypass_alu_ready <= 1'b1;
@@ -414,12 +415,12 @@ module cpu
             .misaligned_store_value(alu_opd2),
             .mem_addr(alu_result[14:0]),
             .rd_addr(rd_addr_ex),
+            .illegal_instr(illegal_instr_ex),
             .illegal_csr(illegal_csr_ex)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
     assign is_misalignment_store = is_misaligned && st_en_ex && !make_nop_ex && !cpu_stall;
-    assign illegal_instr_ex = illegal_csr_ex || invalid_instr_ex;
     
     // 
     // STAGE 4: Memory Access (ME)
@@ -442,7 +443,7 @@ module cpu
             w_en_rf_me <= w_en_rf_ex;
             instr_me <= instr_ex;
             pc_me <= pc_ex;
-            invalid_instr_me <= invalid_instr_ex;
+            illegal_instr_me <= illegal_instr_ex;
         end
     end
 
@@ -504,7 +505,7 @@ module cpu
             w_en_rf_wb <= w_en_rf_me;
             make_nop_wb <= make_nop_me;
             rd_addr_wb <= rd_addr_me;
-            invalid_instr_wb <= invalid_instr_me;
+            illegal_instr_wb <= illegal_instr_me;
         end
     end
 
@@ -524,7 +525,7 @@ module cpu
         (
             .clk(sysclk),
             .rst(rst),
-            .w_en(w_en_rf_wb && !make_nop_wb && (!cpu_stall || (cpu_stall && ready_for_mem_acc)) && !invalid_instr_wb),
+            .w_en(w_en_rf_wb && !make_nop_wb && (!cpu_stall || (cpu_stall && ready_for_mem_acc)) && !illegal_instr_wb),
             .rs1_addr(rs1_addr_ex),
             .rs2_addr(rs2_addr_ex),
             .rd_addr(rd_addr_wb),

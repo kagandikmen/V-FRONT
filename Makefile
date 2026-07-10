@@ -12,7 +12,7 @@ TESTS := $(rv32ui_sc_tests) $(v-front_tests)
 
 FAILING_TESTS := 
 
-EXCLUDE_TESTS := csr_permissions		# csr_permissions tests are conducted by inspecting simulations
+EXCLUDE_TESTS := csr_permissions illegal_instr		# These tests are conducted by inspecting simulations
 
 PASSING_TESTS := $(filter-out $(FAILING_TESTS) $(EXCLUDE_TESTS), $(TESTS))
 

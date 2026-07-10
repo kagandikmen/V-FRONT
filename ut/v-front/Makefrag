@@ -6,4 +6,5 @@
 v-front_tests = \
     bypass \
     csr_hazard \
-    csr_permissions
+    csr_permissions \
+    illegal_instr
