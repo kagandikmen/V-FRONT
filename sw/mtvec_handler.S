@@ -1,6 +1,6 @@
 # Trap vector mtvec_handler to manage misaligned loads and stores
 # Created:      2025-05-28
-# Modified:     2025-06-02
+# Modified:     2026-07-10
 # Author:       Kagan Dikmen
 
 .section .text.mtvec
@@ -15,12 +15,22 @@
 mtvec_handler:
     jal ra, gpr_save
     csrr t5, mcause
+    li t6, 0x3
+    beq t5, t6, handle_ebreak
+    li t6, 0xB
+    beq t5, t6, handle_ecall
     li t6, 0x6
     beq t5, t6, load_misaligned
     csrr t5, mcause
     li t6, 0x4
     beq t5, t6, store_misaligned
     j finalize
+
+handle_ebreak:
+1:  j 1b
+
+handle_ecall:
+1:  j 1b
 
 load_misaligned:
     csrr t5, mscratch

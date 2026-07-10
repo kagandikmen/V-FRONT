@@ -92,6 +92,11 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]  <= {17'b0, mem_addr};
             spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]  <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
         end
+        else if (illegal_csr)
+        begin
+            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd3;   // illegal instruction causes ebreak
+        end
         else if (spec_reg_w_en)
         begin
             case(csr_addr)
@@ -141,7 +146,9 @@ module csr_unit
 
     always @(negedge clk)
     begin
-        if(r_en)
+        out <= 'b0;
+
+        if(spec_reg_r_en)
         begin
             case(csr_addr)
                 CSR_JVT_ADDR:          out <= spec_csr_registers[SPEC_CSR_JVT_INDEX];
@@ -156,7 +163,12 @@ module csr_unit
                 CSR_CUSTOM1_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX];
                 CSR_CUSTOM2_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX];
                 CSR_MHARTID_ADDR:      out <= spec_csr_registers[SPEC_CSR_MHARTID_INDEX];
+                default:               out <= 'b0;
             endcase
+        end
+
+        if(illegal_csr) begin
+            out <= spec_csr_registers[SPEC_CSR_MTVEC_INDEX];
         end
     end
 

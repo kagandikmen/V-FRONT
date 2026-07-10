@@ -81,6 +81,7 @@ module cpu
     reg [31:0] imm_ex;
     reg filled_ex;
     reg invalid_instr_ex;
+    wire illegal_csr_ex;
 
     reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
     reg bypass_ex_result_rs1_ex, bypass_ex_result_rs2_ex;
@@ -216,7 +217,7 @@ module cpu
             .stall(cpu_stall),
             .branch(branch_ex && !make_nop_ex),
             .jump(jump_ex && !make_nop_ex),
-            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned) && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
@@ -340,7 +341,7 @@ module cpu
         bypass_csr_ready <= 1'b0;
         bypass_ld_ready <= 1'b0;
         
-        if(w_en_rf_ex && !is_misaligned && !make_nop_ex && !cpu_stall)
+        if(w_en_rf_ex && !is_misaligned && !illegal_instr_ex && !make_nop_ex && !cpu_stall)
         begin
             if(rf_w_select_ex == 2'b00)
                 bypass_alu_ready <= 1'b1;
@@ -413,11 +414,12 @@ module cpu
             .misaligned_store_value(alu_opd2),
             .mem_addr(alu_result[14:0]),
             .rd_addr(rd_addr_ex),
-            .illegal_csr()
+            .illegal_csr(illegal_csr_ex)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
     assign is_misalignment_store = is_misaligned && st_en_ex && !make_nop_ex && !cpu_stall;
+    assign illegal_instr_ex = illegal_csr_ex || invalid_instr_ex;
     
     // 
     // STAGE 4: Memory Access (ME)
