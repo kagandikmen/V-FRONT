@@ -15,16 +15,20 @@
 mtvec_handler:
     jal ra, gpr_save
     csrr t5, mcause
+    li t6, 0x2
+    beq t5, t6, illegal_instr
     li t6, 0x3
     beq t5, t6, handle_ebreak
-    li t6, 0xB
-    beq t5, t6, handle_ecall
-    li t6, 0x6
-    beq t5, t6, load_misaligned
-    csrr t5, mcause
     li t6, 0x4
+    beq t5, t6, load_misaligned
+    li t6, 0x6
     beq t5, t6, store_misaligned
+    li t6, 0x8
+    beq t5, t6, handle_ecall
     j finalize
+
+illegal_instr:
+1:  j 1b
 
 handle_ebreak:
 1:  j 1b

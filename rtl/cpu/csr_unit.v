@@ -83,12 +83,12 @@ module csr_unit
         else if (ecall || ebreak)
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd11 : 32'd3;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd8 : 32'd3;
         end
         else if (is_misaligned)
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (is_misalignment_store) ? 32'd4 : 32'd6;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
             spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX] <= in;     // saves the instruction word
             spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]  <= {17'b0, mem_addr};
             spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]  <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
@@ -96,7 +96,7 @@ module csr_unit
         else if (illegal_csr)
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd3;   // illegal instruction causes ebreak
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd2;
         end
         else if (spec_reg_w_en)
         begin
