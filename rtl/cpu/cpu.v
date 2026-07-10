@@ -342,7 +342,7 @@ module cpu
         bypass_csr_ready <= 1'b0;
         bypass_ld_ready <= 1'b0;
         
-        if(w_en_rf_ex && !is_misaligned && !illegal_instr_ex && !illegal_csr_ex && !make_nop_ex && !cpu_stall)
+        if(w_en_rf_ex && !make_nop_ex && !cpu_stall)
         begin
             if(rf_w_select_ex == 2'b00)
                 bypass_alu_ready <= 1'b1;
