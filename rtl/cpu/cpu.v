@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-07
+// Modified:    2026-07-10
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -394,7 +394,7 @@ module cpu
             .z(csr_in)
         );
     
-    csr_unit #(.CSR_REG_COUNT(4096)) csr_unit_cpu
+    csr_unit #(.CSR_ADDR_WIDTH(12)) csr_unit_cpu
         (
             .clk(sysclk),
             .rst(rst),
@@ -412,7 +412,8 @@ module cpu
             .is_misalignment_store(is_misalignment_store),
             .misaligned_store_value(alu_opd2),
             .mem_addr(alu_result[14:0]),
-            .rd_addr(rd_addr_ex)
+            .rd_addr(rd_addr_ex),
+            .illegal_csr()
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
