@@ -81,7 +81,7 @@ module cpu
     reg [31:0] imm_ex;
     reg filled_ex;
     reg illegal_instr_ex;
-    wire illegal_csr_ex;
+    wire illegal_csr_prel_ex, illegal_csr_ex;
     wire instr_access_misaligned;
 
     reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
@@ -418,14 +418,15 @@ module cpu
             .misaligned_store_value(alu_opd2),
             .mem_addr(alu_result[14:0]),
             .rd_addr(rd_addr_ex),
-            .illegal_instr(illegal_instr_ex),
-            .illegal_csr(illegal_csr_ex),
-            .instr_access_misaligned(instr_access_misaligned)
+            .illegal_instr(illegal_instr_ex && !make_nop_ex),
+            .illegal_csr(illegal_csr_prel_ex),
+            .instr_access_misaligned(instr_access_misaligned && !make_nop_ex)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
     assign is_misalignment_store = is_misaligned && st_en_ex && !make_nop_ex && !cpu_stall;
-    
+    assign illegal_csr_ex = illegal_csr_prel_ex && !make_nop_ex;
+
     // 
     // STAGE 4: Memory Access (ME)
     //
