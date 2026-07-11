@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2026-07-10
+// Modified:    2026-07-11
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -12,6 +12,7 @@ module control_unit
 
     input [31:0] instr,
     input is_misaligned,
+    input instr_access_misaligned,
 
     // multiplexer select signals
     output reg alu_imm_select,
@@ -642,7 +643,7 @@ module control_unit
             end
         endcase
 
-        if(((branch_ex && branch_true) || jump_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex) && !make_nop_ex)
+        if(((branch_ex && branch_true) || jump_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned) && !make_nop_ex)
         begin
             make_nop_if_buffer = 1'b1;
         end

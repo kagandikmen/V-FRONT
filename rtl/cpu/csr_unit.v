@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-07-10
+// Modified:    2026-07-11
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -32,7 +32,9 @@ module csr_unit
     input [4:0] rd_addr,
 
     input illegal_instr,
-    output illegal_csr
+    output illegal_csr,
+
+    input instr_access_misaligned
     );
 
     `include "common_library.vh"
@@ -84,7 +86,7 @@ module csr_unit
         else if (ecall || ebreak)
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd8 : 32'd3;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd11 : 32'd3;
         end
         else if (is_misaligned)
         begin
@@ -98,6 +100,11 @@ module csr_unit
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd2;
+        end
+        else if (instr_access_misaligned)
+        begin
+            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd0;
         end
         else if (spec_reg_w_en)
         begin
@@ -173,7 +180,7 @@ module csr_unit
             endcase
         end
 
-        if(illegal_instr || illegal_csr) begin
+        if(illegal_instr || illegal_csr || instr_access_misaligned) begin
             out <= spec_csr_registers[SPEC_CSR_MTVEC_INDEX];
         end
     end

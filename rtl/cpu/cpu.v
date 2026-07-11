@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-10
+// Modified:    2026-07-11
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -82,6 +82,7 @@ module cpu
     reg filled_ex;
     reg illegal_instr_ex;
     wire illegal_csr_ex;
+    wire instr_access_misaligned;
 
     reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
     reg bypass_ex_result_rs1_ex, bypass_ex_result_rs2_ex;
@@ -161,6 +162,7 @@ module cpu
             .fetch_instr(mem_if_en_o),
             .instr(mem_instr_i),
             .is_misaligned(is_misaligned),
+            .instr_access_misaligned(instr_access_misaligned),
             .alu_imm_select(ctrl_alu_imm_select_out),
             .alu_pc_select(ctrl_alu_pc_select_out),
             .rf_w_select(ctrl_rf_w_select_out),
@@ -218,7 +220,7 @@ module cpu
             .stall(cpu_stall),
             .branch(branch_ex && !make_nop_ex),
             .jump(jump_ex && !make_nop_ex),
-            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex) && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || instr_access_misaligned) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
@@ -228,6 +230,7 @@ module cpu
         );
 
     assign mem_addra_o = next_pc[14:2];
+    assign instr_access_misaligned = !make_nop_ex && ((branch_ex && comp_result) || jump_ex) && (alu_result[1] || alu_result[0]);
     
     always @(posedge sysclk)
     begin
@@ -416,7 +419,8 @@ module cpu
             .mem_addr(alu_result[14:0]),
             .rd_addr(rd_addr_ex),
             .illegal_instr(illegal_instr_ex),
-            .illegal_csr(illegal_csr_ex)
+            .illegal_csr(illegal_csr_ex),
+            .instr_access_misaligned(instr_access_misaligned)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
