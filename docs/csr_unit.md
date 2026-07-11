@@ -1,5 +1,7 @@
 # Documentation - CSR Unit
 
+Below is a list of control and status registers V-FRONT implements in its CSR unit.
+
 CSR             | Address        | Reset Value    | Permissions
 ----------------|----------------|----------------|----------------
 jvt             | 0x17           | 0x0000_0000    | RW
@@ -18,3 +20,5 @@ mhartid         | 0xF14          | 0x0000_0000    | RO
 
 `RW` = read & write
 `RO` = read-only
+
+Currently, V-FRONT only implements machine mode (M-mode) as privilege mode. Therefore, the CSR `jvt`, although actually being a user-level CSR, is handled like a machine-level one. V-FRONT also does not implement WARL masking yet, therefore all fields of a CSR are read-write as long as the CSR itself is read-write. Accesses to non-existent CSRs raise an illegal instruction exception (mcause = 2) in the hardware.
