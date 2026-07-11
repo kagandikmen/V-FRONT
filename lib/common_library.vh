@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2026-07-10
+// Modified:    2026-07-11
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -131,7 +131,7 @@ localparam CSR_CUSTOM2_ADDR = 12'h7f1;
 localparam CSR_MHARTID_ADDR = 12'hf14;
 
 localparam CSR_JVT_RST      = 32'h0000_0000;
-localparam CSR_MSTATUS_RST  = 32'h0000_1800;
+localparam CSR_MSTATUS_RST  = 32'h0000_0000;
 localparam CSR_MISA_RST     = 32'h4000_0000;    // RV32I with no extensions
 localparam CSR_MIE_RST      = 32'h0000_0000;
 localparam CSR_MTVEC_RST    = 32'h0000_0000;
