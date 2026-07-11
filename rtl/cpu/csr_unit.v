@@ -34,14 +34,15 @@ module csr_unit
     input illegal_instr,
     output illegal_csr,
 
-    input instr_access_misaligned
+    input instr_access_misaligned,
+    input [31:0] instr_addr
     );
 
     `include "common_library.vh"
 
     reg spec_reg_r_en, spec_reg_w_en;
     reg [31:0] write_value;
-    reg [31:0] spec_csr_registers [11:0];
+    reg [31:0] spec_csr_registers [12:0];
 
     reg [1:0] current_priv;
 
@@ -57,9 +58,10 @@ module csr_unit
     localparam SPEC_CSR_MSCRATCH_INDEX  = 6;
     localparam SPEC_CSR_MEPC_INDEX      = 7;
     localparam SPEC_CSR_MCAUSE_INDEX    = 8;
-    localparam SPEC_CSR_CUSTOM1_INDEX   = 9;
-    localparam SPEC_CSR_CUSTOM2_INDEX   = 10;
-    localparam SPEC_CSR_MHARTID_INDEX   = 11;
+    localparam SPEC_CSR_MTVAL_INDEX     = 9;
+    localparam SPEC_CSR_CUSTOM1_INDEX   = 10;
+    localparam SPEC_CSR_CUSTOM2_INDEX   = 11;
+    localparam SPEC_CSR_MHARTID_INDEX   = 12;
 
     // write
     always @(posedge clk)
@@ -77,6 +79,7 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX]     <= CSR_MSCRATCH_RST;
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]         <= CSR_MEPC_RST;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]       <= CSR_MCAUSE_RST;
+            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]        <= CSR_MTVAL_RST;
             spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]      <= CSR_CUSTOM1_RST;
             spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]      <= CSR_CUSTOM2_RST;
             spec_csr_registers[SPEC_CSR_MHARTID_INDEX]      <= CSR_MHARTID_RST;
@@ -92,6 +95,7 @@ module csr_unit
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd11 : 32'd3;
+            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= 'b0;
 
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
@@ -103,8 +107,8 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
             spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX] <= in;     // saves the instruction word
-            spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]  <= {17'b0, mem_addr};
-            spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]  <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
+            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= {17'b0, mem_addr};
+            spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]  <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
 
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
@@ -125,6 +129,7 @@ module csr_unit
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd0;
+            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= instr_addr;
 
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
@@ -143,6 +148,7 @@ module csr_unit
                 CSR_MSCRATCH_ADDR:     spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX]  <= write_value;
                 CSR_MEPC_ADDR:         spec_csr_registers[SPEC_CSR_MEPC_INDEX]      <= write_value;
                 CSR_MCAUSE_ADDR:       spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]    <= write_value;
+                CSR_MTVAL_ADDR:        spec_csr_registers[SPEC_CSR_MTVAL_INDEX]     <= write_value;
                 CSR_CUSTOM1_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]   <= write_value;
                 CSR_CUSTOM2_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]   <= write_value;
             endcase
@@ -165,6 +171,7 @@ module csr_unit
             || csr_addr == CSR_MSCRATCH_ADDR
             || csr_addr == CSR_MEPC_ADDR
             || csr_addr == CSR_MCAUSE_ADDR
+            || csr_addr == CSR_MTVAL_ADDR
             || csr_addr == CSR_CUSTOM1_ADDR
             || csr_addr == CSR_CUSTOM2_ADDR)
         begin
@@ -198,6 +205,7 @@ module csr_unit
                 CSR_MSCRATCH_ADDR:     out <= spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX];
                 CSR_MEPC_ADDR:         out <= spec_csr_registers[SPEC_CSR_MEPC_INDEX];
                 CSR_MCAUSE_ADDR:       out <= spec_csr_registers[SPEC_CSR_MCAUSE_INDEX];
+                CSR_MTVAL_ADDR:        out <= spec_csr_registers[SPEC_CSR_MTVAL_INDEX];
                 CSR_CUSTOM1_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX];
                 CSR_CUSTOM2_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX];
                 CSR_MHARTID_ADDR:      out <= spec_csr_registers[SPEC_CSR_MHARTID_INDEX];

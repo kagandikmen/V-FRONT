@@ -420,7 +420,8 @@ module cpu
             .rd_addr(rd_addr_ex),
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
             .illegal_csr(illegal_csr_prel_ex),
-            .instr_access_misaligned(instr_access_misaligned && !make_nop_ex)
+            .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
+            .instr_addr(alu_result)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
