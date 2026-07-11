@@ -1,8 +1,11 @@
 # Makefrag for V-FRONT specific tests
 # Created:      2025-05-31
-# Modified:     2025-06-03
+# Modified:     2026-07-11
 # Author:       Kagan Dikmen
 
 v-front_tests = \
     bypass \
-    csr_hazard
+    csr_hazard \
+    csr_permissions \
+    illegal_instr \
+    illegal_instr_addr

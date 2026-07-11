@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2025-07-06
+// Modified:    2026-07-11
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -12,6 +12,7 @@ module control_unit
 
     input [31:0] instr,
     input is_misaligned,
+    input instr_access_misaligned,
 
     // multiplexer select signals
     output reg alu_imm_select,
@@ -47,7 +48,8 @@ module control_unit
 
     input branch_true,
     output make_nop,
-    output reg invalid_instr
+    output reg illegal_instr,
+    input illegal_instr_csr_ex
     );
 
     `include "common_library.vh"
@@ -162,7 +164,7 @@ module control_unit
         ldst_is_unsigned = 1'b0;
         ldst_mask = 4'b0000;
         w_en_rf_if = 1'b0;
-        invalid_instr = 1'b0;
+        illegal_instr = 1'b0;
         
         case (instr_compressed)
             {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
@@ -635,13 +637,13 @@ module control_unit
                         alu_subunit_op_sel = 4'b0000;
                         w_en_rf_if = 1'b0;
                         rf_w_select = 2'b00;
-                        invalid_instr = 1'b1;
+                        illegal_instr = 1'b1;
                     end
                 endcase
             end
         endcase
 
-        if(((branch_ex && branch_true) || jump_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned) && !make_nop_ex)
+        if(((branch_ex && branch_true) || jump_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned) && !make_nop_ex)
         begin
             make_nop_if_buffer = 1'b1;
         end

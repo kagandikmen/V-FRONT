@@ -1,26 +1,45 @@
 # Trap vector mtvec_handler to manage misaligned loads and stores
 # Created:      2025-05-28
-# Modified:     2025-06-02
+# Modified:     2026-07-11
 # Author:       Kagan Dikmen
 
 .section .text.mtvec
 
-# in the hardware:
+# In case of misaligned data memory access:
 # mscratch stores the instruction
-# csr 0x7f0 stores the addr
-# csr 0x7f1 stores for loads: target register
+# csr mtval stores the addr
+# csr 0x7f0 stores for loads: target register
 #                  for stores: data to be written
 
 .global mtvec_handler
 mtvec_handler:
     jal ra, gpr_save
     csrr t5, mcause
-    li t6, 0x6
+    li t6, 0
+    beq t5, t6, instr_addr_misaligned
+    li t6, 2
+    beq t5, t6, illegal_instr
+    li t6, 3
+    beq t5, t6, handle_ebreak
+    li t6, 4
     beq t5, t6, load_misaligned
-    csrr t5, mcause
-    li t6, 0x4
+    li t6, 6
     beq t5, t6, store_misaligned
+    li t6, 11
+    beq t5, t6, handle_ecall
     j finalize
+
+instr_addr_misaligned:
+1:  j 1b
+
+illegal_instr:
+1:  j 1b
+
+handle_ebreak:
+1:  j 1b
+
+handle_ecall:
+1:  j 1b
 
 load_misaligned:
     csrr t5, mscratch
@@ -36,7 +55,7 @@ load_misaligned:
 
 lw_misalignment:
     csrr t5, mscratch
-    csrr t3, 0x7f0              # stores addr
+    csrr t3, mtval              # stores addr
     andi t4, t3, 0x00000003     # stores offset
     slli t4, t4, 0x3            # stores offset in bits
     andi t3, t3, 0xfffffffc     # stores proper address of lower word
@@ -48,7 +67,7 @@ lw_misalignment:
     srl t0, t3, t4              # shifts lower word right by offset
     sll t1, t6, t2              # shifts upper word left by 32-offset
     add t0, t0, t1              # final result
-    csrr t1, 0x7f1
+    csrr t1, 0x7f0
     sll t1, t1, 0x2
     add t1, t1, sp
     sw t0, 0(t1)
@@ -56,7 +75,7 @@ lw_misalignment:
 
 lh_misalignment:
     csrr t5, mscratch
-    csrr t3, 0x7f0              # stores addr
+    csrr t3, mtval              # stores addr
     andi t4, t3, 0x00000003     # stores offset
     li t2, 0x1
     beq t4, t2, lh_offset1
@@ -87,7 +106,7 @@ lh_offset3:
     srai t3, t3, 16
     j lh_misalignment_epilogue
 lh_misalignment_epilogue:
-    csrr t1, 0x7f1
+    csrr t1, 0x7f0
     sll t1, t1, 0x2
     add t1, t1, sp
     sw t3, 0(t1)
@@ -95,7 +114,7 @@ lh_misalignment_epilogue:
 
 lhu_misalignment:
     csrr t5, mscratch
-    csrr t3, 0x7f0              # stores addr
+    csrr t3, mtval              # stores addr
     andi t4, t3, 0x00000003     # stores offset
     li t2, 0x1
     beq t4, t2, lhu_offset1
@@ -126,7 +145,7 @@ lhu_offset3:
     srli t3, t3, 16
     j lh_misalignment_epilogue
 lhu_misalignment_epilogue:
-    csrr t1, 0x7f1
+    csrr t1, 0x7f0
     sll t1, t1, 0x2
     add t1, t1, sp
     sw t3, 0(t1)
@@ -144,7 +163,7 @@ store_misaligned:
 
 sh_misalignment:
     csrr t5, mscratch
-    csrr t3, 0x7f0              # stores addr
+    csrr t3, mtval              # stores addr
     andi t4, t3, 0x00000003     # stores offset
     li t2, 0x1
     beq t4, t2, sh_offset1
@@ -152,7 +171,7 @@ sh_misalignment:
     beq t4, t2, sh_offset3
 sh_offset1:
     andi t3, t3, 0xfffffffc     # address of the word
-    csrr t4, 0x7f1              # halfword to be written
+    csrr t4, 0x7f0              # halfword to be written
     slli t4, t4, 8
     lw t5, 0(t3)
     li t6, 0xff0000ff
@@ -164,7 +183,7 @@ sh_offset1:
     j finalize
 sh_offset3:
     andi t3, t3, 0xfffffffc     # address of the lower word
-    csrr t4, 0x7f1              # halfword to be written
+    csrr t4, 0x7f0              # halfword to be written
     andi t5, t4, 0x0ff          # lower byte -> t5
     srli t6, t4, 8
     andi t6, t6, 0x0ff          # upper byte -> t6
@@ -173,8 +192,8 @@ sh_offset3:
     j finalize
 
 sw_misalignment:
-    csrr t3, 0x7f0          # addr -> t3
-    csrr t6, 0x7f1          # word -> t6
+    csrr t3, mtval          # addr -> t3
+    csrr t6, 0x7f0          # word -> t6
     li t2, 0x0ff
     and t2, t2, t6         # byte 0 -> t2
     sb t2, 0(t3)
