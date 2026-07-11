@@ -84,7 +84,7 @@ Find an example of how a generic C file can be compiled to run on V-FRONT by nav
 
 ## Architectural Details
 
-V-FRONT implements a five-stage pipelined von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for program memory and the second 16 KB for data memory. Misaligned accesses to the data memory are allowed, where the CPU then raises an exception and jumps to a trap vector to handle the misaligned access.
+V-FRONT implements a five-stage pipelined von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for program memory and the second 16 KB for data memory. Misaligned accesses to the data memory are detected by the CPU, which then raises an exception and jumps to a trap vector to handle the misaligned access.
 
 V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md). As of 2026-07-11, the hardware can raise exceptions in case of:
 
