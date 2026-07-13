@@ -70,7 +70,7 @@ make build/vivado
 ```
 If you want to create the QuestaSim project instead (or alongside), use:
 ```bash
-make build/questa   # GUI=0/1 MEMFILE=init.mem
+make build/questa   # GUI=0/1 MEMFILE=your_program.mem
 ```
 To get rid of all the files generated during the tests, run:
 ```bash
