@@ -56,13 +56,13 @@ LDFLAGS += -march=rv32i_zicsr_zifencei -nostartfiles \
 #
 
 v-front.f: Makefile
-	rm $@
+	test -f $@ && rm $@
 	for source in $(DESIGN_SOURCES); do \
 		echo "$$source" >> $@; \
 	done
 
 v-front.prj: Makefile
-	rm $@
+	test -f $@ && rm $@
 	for source in $(DESIGN_SOURCES) $(SIMULATION_SOURCES); do \
 		echo "verilog work $$source" >> $@; \
 	done
