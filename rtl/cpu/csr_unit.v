@@ -43,7 +43,7 @@ module csr_unit
 
     reg spec_reg_r_en, spec_reg_w_en;
     reg [31:0] write_value;
-    reg [31:0] spec_csr_registers [24:0];
+    reg [31:0] spec_csr_registers [22:0];
 
     reg [1:0] current_priv;
 
@@ -68,13 +68,11 @@ module csr_unit
     localparam SPEC_CSR_MIP_INDEX           = 15;
     localparam SPEC_CSR_MTINST_INDEX        = 16;
     localparam SPEC_CSR_MTVAL2_INDEX        = 17;
-    localparam SPEC_CSR_CUSTOM1_INDEX       = 18;
-    localparam SPEC_CSR_CUSTOM2_INDEX       = 19;
-    localparam SPEC_CSR_MVENDORID_INDEX     = 20;
-    localparam SPEC_CSR_MARCHID_INDEX       = 21;
-    localparam SPEC_CSR_MIMPID_INDEX        = 22;
-    localparam SPEC_CSR_MHARTID_INDEX       = 23;
-    localparam SPEC_CSR_MCONFIGPTR_INDEX    = 24;
+    localparam SPEC_CSR_MVENDORID_INDEX     = 18;
+    localparam SPEC_CSR_MARCHID_INDEX       = 19;
+    localparam SPEC_CSR_MIMPID_INDEX        = 20;
+    localparam SPEC_CSR_MHARTID_INDEX       = 21;
+    localparam SPEC_CSR_MCONFIGPTR_INDEX    = 22;
 
     // write
     always @(posedge clk)
@@ -101,8 +99,6 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MIP_INDEX]          <= CSR_MIP_RST;
             spec_csr_registers[SPEC_CSR_MTINST_INDEX]       <= CSR_MTINST_RST;
             spec_csr_registers[SPEC_CSR_MTVAL2_INDEX]       <= CSR_MTVAL2_RST;
-            spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]      <= CSR_CUSTOM1_RST;
-            spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]      <= CSR_CUSTOM2_RST;
             spec_csr_registers[SPEC_CSR_MVENDORID_INDEX]    <= CSR_MVENDORID_RST;
             spec_csr_registers[SPEC_CSR_MARCHID_INDEX]      <= CSR_MARCHID_RST;
             spec_csr_registers[SPEC_CSR_MIMPID_INDEX]       <= CSR_MIMPID_RST;
@@ -133,7 +129,7 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
             spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX] <= in;     // saves the instruction word
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= {17'b0, mem_addr};
-            spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]  <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
+            spec_csr_registers[SPEC_CSR_MTVAL2_INDEX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
 
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
@@ -183,8 +179,6 @@ module csr_unit
                 CSR_MIP_ADDR:          spec_csr_registers[SPEC_CSR_MIP_INDEX]           <= write_value;
                 CSR_MTINST_ADDR:       spec_csr_registers[SPEC_CSR_MTINST_INDEX]        <= write_value;
                 CSR_MTVAL2_ADDR:       spec_csr_registers[SPEC_CSR_MTVAL2_INDEX]        <= write_value;
-                CSR_CUSTOM1_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]       <= write_value;
-                CSR_CUSTOM2_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]       <= write_value;
             endcase
         end
     end
@@ -213,9 +207,7 @@ module csr_unit
             || csr_addr == CSR_MTVAL_ADDR
             || csr_addr == CSR_MIP_ADDR
             || csr_addr == CSR_MTINST_ADDR
-            || csr_addr == CSR_MTVAL2_ADDR
-            || csr_addr == CSR_CUSTOM1_ADDR
-            || csr_addr == CSR_CUSTOM2_ADDR)
+            || csr_addr == CSR_MTVAL2_ADDR)
         begin
             spec_reg_r_en = r_en;
             spec_reg_w_en = w_en;
@@ -260,8 +252,6 @@ module csr_unit
                 CSR_MIP_ADDR:          out <= spec_csr_registers[SPEC_CSR_MIP_INDEX];
                 CSR_MTINST_ADDR:       out <= spec_csr_registers[SPEC_CSR_MTINST_INDEX];
                 CSR_MTVAL2_ADDR:       out <= spec_csr_registers[SPEC_CSR_MTVAL2_INDEX];
-                CSR_CUSTOM1_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX];
-                CSR_CUSTOM2_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX];
                 CSR_MVENDORID_ADDR:    out <= spec_csr_registers[SPEC_CSR_MVENDORID_INDEX];
                 CSR_MARCHID_ADDR:      out <= spec_csr_registers[SPEC_CSR_MARCHID_INDEX];
                 CSR_MIMPID_ADDR:       out <= spec_csr_registers[SPEC_CSR_MIMPID_INDEX];
