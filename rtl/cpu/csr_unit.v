@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-07-11
+// Modified:    2026-07-13
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -31,6 +31,7 @@ module csr_unit
     input [14:0] mem_addr,
     input [4:0] rd_addr,
 
+    input [31:0] instr,
     input illegal_instr,
     output illegal_csr,
 
@@ -119,6 +120,7 @@ module csr_unit
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd2;
+            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= instr;
 
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;

@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-11
+// Modified:    2026-07-13
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -192,7 +192,7 @@ module cpu
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
-            instr_id <= illegal_instr_if ? 32'h00000013 : mem_instr_i;
+            instr_id <= mem_instr_i;
             alu_imm_select_id <= ctrl_alu_imm_select_out;
             alu_pc_select_id <= ctrl_alu_pc_select_out;
             rf_w_select_id <= ctrl_rf_w_select_out;
@@ -418,6 +418,7 @@ module cpu
             .misaligned_store_value(alu_opd2),
             .mem_addr(alu_result[14:0]),
             .rd_addr(rd_addr_ex),
+            .instr(instr_ex),
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
             .illegal_csr(illegal_csr_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
@@ -435,7 +436,7 @@ module cpu
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
-            make_nop_me <= make_nop_ex;
+            make_nop_me <= make_nop_ex || is_misaligned || illegal_csr_ex;
             pc_plus4_me <= pc_plus4_ex;
             rf_w_select_me <= rf_w_select_ex;
             rd_addr_me <= rd_addr_ex;
