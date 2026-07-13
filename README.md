@@ -26,6 +26,7 @@
 - 32 KB unified dual-port dual-clock BRAM-based memory (16 KB program, 16 KB data)
 - Handles exceptions via trap vector `mtvec_handler`
 - Unit tests for functional correctness and ISA compliance
+- Flow scripts enabling an easy jump-in for Vivado or QuestaSim users
 
 ## Prerequisites
 
@@ -33,13 +34,15 @@
 ```bash
 ./configure --prefix=/opt/riscv --with-abi=ilp32 --with-arch=rv32i
 ```
-while installing RISC-V GNU Toolchain, as this is the configuration required by V-FRONT. To run the unit tests, Icarus Verilog needs to be installed on the host machine. If you are using Ubuntu, you can install Icarus Verilog via:
-```bash
-sudo apt install iverilog
-```
-The tests can be run using Vivado, as well. To download Vivado, please see AMD's [Downloads](https://www.xilinx.com/support/download.html) portal for Vivado Design Suite. You may need to agree to certain terms and conditions.
+while installing RISC-V GNU Toolchain, as this is the configuration required by V-FRONT. 
 
-To run the unit tests using Vivado, packages `libncurses5` and `libtinfo5` may also be required.
+Unit tests can be run with Icarus Verilog or Vivado. If you are using Ubuntu, install Icarus Verilog via:
+```bash
+sudo apt install verilog
+```
+To download Vivado, please see AMD's [Downloads](https://www.xilinx.com/support/download.html) portal for Vivado Design Suite. You may need to agree to certain terms and conditions. To use Vivado, packages `libncurses5` and `libtinfo5` may also be required.
+
+V-FRONT comes with simulation flow scripts for Vivado and QuestaSim. To download QuestaSim, please see Altera's [Downloads](https://www.altera.com/downloads/) portal. You may need to agree to certain terms and conditions.
 
 ## Getting Started
 
@@ -55,31 +58,43 @@ from inside the V-FRONT directory. To run the unit tests with Icarus Verilog, us
 ```bash
 make
 ```
-after navigating into the V-FRONT directory. To run the tests using Vivado, run:
+from V-FRONT project root. To run the unit tests using Vivado, run:
 ```bash
-make run_vivado
+make SIM_TOOL=vivado
 ```
-In correct setup, the tests should all pass; there is no test failing as of 2026-06-22. To get rid of all the files generated during the tests, run:
+In correct setup, the tests should all pass; there is no test failing as of 2026-07-13.
+
+V-FRONT comes with simulation flow scripts for Vivado and QuestaSim. To create the "ideal" Vivado project for V-FRONT, use:
+```bash
+make build/vivado
+```
+If you want to create the QuestaSim project instead (or alongside), use:
+```bash
+make build/questa   # GUI=0/1 MEMFILE=your_program.mem
+```
+To get rid of all the files generated during the tests, run:
 ```bash
 make clean_all
 ```
-Find an example of how a generic C file can be compiled to run on V-FRONT by navigating to [sw/test/](sw/test/). A Tcl script automatizing Vivado project generation is also offered with V-FRONT; for this, please refer to [vivado-setup/README.md](vivado-setup/README.md).
+Find an example of how a generic C program can be compiled to run on V-FRONT by navigating to [sw/test/](sw/test/).
 
 ## Project Structure
 
 ```
 .
-├── .github          # GitHub Actions setup
-├── docs             # Project documentation and images           
-├── lib              # Verilog libraries for constants and functions
-├── rtl              # Verilog source code
-│   └── cpu          # V-FRONT CPU and its submodules
-│   └── soc          # Coherence SoC environment
-├── sim              # Verilog testbenches
-├── sw               # Software helpers (e.g. trap vectors and linker scripts)
-│   └── test         # Demo software
-├── ut               # Unit tests (riscv-tests + V-FRONT's own)
-└── vivado-setup     # Help for an easy Vivado setup
+├── .github           # GitHub Actions setup
+├── docs              # Project documentation and images           
+├── lib               # Verilog libraries for constants and functions
+├── rtl               # Verilog source code
+│   └── cpu               # V-FRONT CPU and its submodules
+│   └── soc               # Coherence SoC environment
+├── sim               # Verilog testbenches
+├── sw                # Software helpers (e.g. trap vectors and linker scripts)
+│   └── test              # Demo software
+├── target            # Simulation flows for an easy onboarding
+│   └── questa            # QuestaSim flow
+│   └── vivado            # Vivado flow
+└── ut                # Unit tests (riscv-tests + V-FRONT's own)
 ```
 
 ## Architectural Details
