@@ -37,7 +37,7 @@ TESTDIRS := ut/riscv-tests/isa/rv32ui ut/riscv-tests/isa/rv32mi ut/v-front
 
 TESTS := $(rv32ui_sc_tests) $(rv32mi_sc_tests) $(v-front_tests)
 
-FAILING_TESTS := mcsr illegal ma_fetch sbreak shamt
+FAILING_TESTS := mcsr illegal ma_fetch shamt
 
 # Exclude the tests that have to be conducted by inspecting simulations
 EXCLUDE_TESTS := csr_permissions illegal_instr illegal_instr_addr

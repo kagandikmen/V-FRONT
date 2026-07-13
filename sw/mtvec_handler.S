@@ -1,6 +1,6 @@
 # Trap vector mtvec_handler to manage misaligned loads and stores
 # Created:      2025-05-28
-# Modified:     2026-07-11
+# Modified:     2026-07-13
 # Author:       Kagan Dikmen
 
 .section .text.mtvec
@@ -11,7 +11,7 @@
 # csr 0x7f0 stores for loads: target register
 #                  for stores: data to be written
 
-.global mtvec_handler
+.weak mtvec_handler
 mtvec_handler:
     jal ra, gpr_save
     csrr t5, mcause
