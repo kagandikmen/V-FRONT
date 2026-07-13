@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2026-07-11
+// Modified:    2026-07-13
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -318,6 +318,7 @@ module control_unit
                 alu_subunit_op_sel = 4'b0011;
                 w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
+                illegal_instr = (instr[31:25] != 7'b000_0000);
             end
             {FUNCT3_SRLI, I_OPCODE}: // SRLI / SRAI
             begin
@@ -328,6 +329,7 @@ module control_unit
                     alu_subunit_op_sel = 4'b0001;
                     w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
+                    illegal_instr = (instr[31:25] != 7'b000_0000);
                 end
                 else                        // SRAI
                 begin
@@ -336,6 +338,7 @@ module control_unit
                     alu_subunit_op_sel = 4'b0111;
                     w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
+                    illegal_instr = (instr[31:25] != 7'b010_0000);
                 end
             end
             {FUNCT3_LB, LOAD_OPCODE}: // LB
