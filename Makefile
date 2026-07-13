@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-07-11
+# Modified:		2026-07-13
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -114,7 +114,7 @@ run_iverilog: compile_tests
 	done
 
 clean:
-	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid* *.jou vivado*.log
+	rm -rf tests-build/ webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid* *.jou vivado*.log vivado*.str xvlog.pb
 
 clean_all: clean
-	rm -rf v-front.prj sw/mtvec_handler.o tests/
+	rm -rf v-front.prj sw/mtvec_handler.o tests/ build/
