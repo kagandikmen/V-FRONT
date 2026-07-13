@@ -18,3 +18,4 @@ xsim.dir/
 *.wdb
 *.zip
 *.mem
+build
