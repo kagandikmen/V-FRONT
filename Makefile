@@ -21,7 +21,8 @@ SIM_TOOL ?= iverilog
 SIM_MODE ?=
 RISCV_PREFIX ?= riscv32-unknown-elf
 
-GUI ?= 0
+QUESTA_GUI ?= 0
+QUESTA_MEMFILE ?= sim/init.mem
 
 DESIGN_SOURCES := \
 	rtl/soc/soc.v \
@@ -90,6 +91,7 @@ test: compile_tests
 			iverilog -o $(BUILD_TEST_DIR)/$$test.out \
 				-Irtl/cpu/ -Irtl/cpu/luftALU/rtl/ -Irtl/cpu/luftALU/rtl/subunits/ -Ilib/ \
 				-f v-front.f \
+				-D UT \
 				-Psoc_tb.MEM_INIT_FILE=\"$(BUILD_TEST_DIR)/$$test.mem\" \
 				-Psoc_tb.TOHOST_ADDR=$$TOHOST_ADDR \
 				-Psoc_tb.RESET_ADDR=32\'h$$RESET_ADDR \
@@ -98,6 +100,7 @@ test: compile_tests
 		else \
 			xelab soc_tb -relax -debug all \
 				-i ./rtl/cpu -i ./rtl/cpu/luftALU/rtl/ -i ./rtl/cpu/luftALU/rtl/subunits/  -i ./lib/ \
+				-d UT \
 				-generic_top MEM_INIT_FILE=\"$(BUILD_TEST_DIR)/$$test.mem\" \
 				-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 				-generic_top RESET_ADDR=32\'h$$RESET_ADDR \
@@ -118,7 +121,7 @@ $(BUILD_DIR)/vivado:
 	vivado -source target/vivado/create_project.tcl -mode batch
 
 $(BUILD_DIR)/questa: compile_tests
-	make -f target/questa/Makefile run GUI=$(GUI)
+	make -f target/questa/Makefile run GUI=$(QUESTA_GUI) MEMFILE=$(QUESTA_MEMFILE)
 
 clean:
 	rm -rf webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid* *.jou vivado*.log vivado*.str xvlog.pb

@@ -16,19 +16,8 @@ RISCV_PREFIX ?= riscv32-unknown-elf
 
 GUI ?= 0
 
-ifdef TEST
-
-MEMFILE		?= build/tests/$(TEST).mem
-TOHOST_ADDR	?= $(shell $(RISCV_PREFIX)-nm -n build/tests/$(TEST).elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }')
-RESET_ADDR	?= $(shell $(RISCV_PREFIX)-nm -n build/tests/$(TEST).elf | gawk '$$3=="_start" { printf "%d\n", strtonum("0x"$$1) }')
-
-else
-
 MEMFILE		?= sim/init.mem
-TOHOST_ADDR	?= 16384
 RESET_ADDR	?= 0
-
-endif
 
 INCLUDE := $(addprefix +incdir+,$(INC_DIR))
 
@@ -37,7 +26,6 @@ SET_VARS := set FLIST 		{$(FLIST)};	\
 			set TOP 		{$(TOP)}; \
 			set INCLUDE 	{$(INCLUDE)}; \
 			set MEMFILE 	{$(MEMFILE)}; \
-			set TOHOST_ADDR {$(TOHOST_ADDR)}; \
 			set RESET_ADDR	{$(RESET_ADDR)}; \
 			set BUILD_DIR	{$(BUILD_DIR)}
 

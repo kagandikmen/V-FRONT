@@ -17,7 +17,6 @@ vlog {*}$INCLUDE -f $FLIST {*}$TBLIST
 vsim -voptargs=+acc \
     -wlf $BUILD_DIR/vsim.wlf \
     -g MEM_INIT_FILE=\"$MEMFILE\" \
-    -g TOHOST_ADDR=$TOHOST_ADDR \
     -g RESET_ADDR=$RESET_ADDR \
     work.$TOP
 
