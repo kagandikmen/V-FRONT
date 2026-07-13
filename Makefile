@@ -21,6 +21,8 @@ SIM_TOOL ?= iverilog
 SIM_MODE ?=
 RISCV_PREFIX ?= riscv32-unknown-elf
 
+GUI ?= 0
+
 DESIGN_SOURCES := \
 	rtl/soc/soc.v \
 	rtl/soc/bram_dual.v \
@@ -70,7 +72,7 @@ $(BUILD_TEST_DIR):
 		done \
 	done
 
-compile_tests: $(BUILD_TEST_DIR)
+compile_tests: $(BUILD_TEST_DIR) v-front.f v-front.prj
 	$(RISCV_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
 	for testfile in $(wildcard $</*.S) ; do \
 		test=$${testfile##*/}; test=$${test%.*}; \
@@ -79,7 +81,7 @@ compile_tests: $(BUILD_TEST_DIR)
 		$(RISCV_PREFIX)-objcopy -j .text -j .data -j .rodata -O verilog --verilog-data-width=4 $</$$test.elf $</$$test.mem; \
 	done
 
-test: compile_tests v-front.f v-front.prj
+test: compile_tests
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-15s\t" "$$test:"; \
 		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n $(BUILD_TEST_DIR)/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
@@ -111,6 +113,12 @@ test: compile_tests v-front.f v-front.prj
 			fi; \
 		fi; \
 	done
+
+$(BUILD_DIR)/vivado:
+	vivado -source target/vivado/create_project.tcl -mode batch
+
+$(BUILD_DIR)/questa: compile_tests
+	make -f target/questa/Makefile run GUI=$(GUI)
 
 clean:
 	rm -rf webtalk* xelab* xsim* .Xil/ *.wdb vivado_pid* *.jou vivado*.log vivado*.str xvlog.pb
