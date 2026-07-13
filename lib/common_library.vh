@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2026-07-13
+// Modified:    2026-07-14
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -119,13 +119,21 @@ localparam RF_ADDR_LENGTH   = 5;        // log2(RF_DEPTH) = 5
 localparam CSR_JVT_ADDR         = 12'h017;
 localparam CSR_MSTATUS_ADDR     = 12'h300;
 localparam CSR_MISA_ADDR        = 12'h301;
+localparam CSR_MEDELEG_ADDR     = 12'h302;
+localparam CSR_MIDELEG_ADDR     = 12'h303;
 localparam CSR_MIE_ADDR         = 12'h304;
 localparam CSR_MTVEC_ADDR       = 12'h305;
+localparam CSR_MCOUNTEREN_ADDR  = 12'h306;
+localparam CSR_MSTATUSH_ADDR    = 12'h310;
+localparam CSR_MEDELEGH_ADDR    = 12'h312;
 localparam CSR_MTVT_ADDR        = 12'h307;
 localparam CSR_MSCRATCH_ADDR    = 12'h340;
 localparam CSR_MEPC_ADDR        = 12'h341;
 localparam CSR_MCAUSE_ADDR      = 12'h342;
 localparam CSR_MTVAL_ADDR       = 12'h343;
+localparam CSR_MIP_ADDR         = 12'h344;
+localparam CSR_MTINST_ADDR      = 12'h34a;
+localparam CSR_MTVAL2_ADDR      = 12'h34b;
 localparam CSR_CUSTOM1_ADDR     = 12'h7f0;
 localparam CSR_CUSTOM2_ADDR     = 12'h7f1;
 localparam CSR_MVENDORID_ADDR   = 12'hf11;
@@ -137,13 +145,21 @@ localparam CSR_MCONFIGPTR_ADDR  = 12'hf15;
 localparam CSR_JVT_RST          = 32'h0000_0000;
 localparam CSR_MSTATUS_RST      = 32'h0000_0000;
 localparam CSR_MISA_RST         = 32'h4000_0000;    // RV32I with no extensions
+localparam CSR_MEDELEG_RST      = 32'h0000_0000;
+localparam CSR_MIDELEG_RST      = 32'h0000_0000;
 localparam CSR_MIE_RST          = 32'h0000_0000;
 localparam CSR_MTVEC_RST        = 32'h0000_0000;
+localparam CSR_MCOUNTEREN_RST   = 32'h0000_0000;
+localparam CSR_MSTATUSH_RST     = 32'h0000_0000;
+localparam CSR_MEDELEGH_RST     = 32'h0000_0000;
 localparam CSR_MTVT_RST         = 32'h0000_0000;
 localparam CSR_MSCRATCH_RST     = 32'h0000_0000;
 localparam CSR_MEPC_RST         = 32'h0000_0000;
 localparam CSR_MCAUSE_RST       = 32'h0000_0000;
 localparam CSR_MTVAL_RST        = 32'h0000_0000;
+localparam CSR_MIP_RST          = 32'h0000_0000;
+localparam CSR_MTINST_RST       = 32'h0000_0000;
+localparam CSR_MTVAL2_RST       = 32'h0000_0000;
 localparam CSR_CUSTOM1_RST      = 32'h0000_0000;
 localparam CSR_CUSTOM2_RST      = 32'h0000_0000;
 localparam CSR_MVENDORID_RST    = 32'h0000_0000;
