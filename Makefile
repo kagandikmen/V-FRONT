@@ -56,13 +56,13 @@ LDFLAGS += -march=rv32i_zicsr_zifencei -nostartfiles \
 #
 
 v-front.f: Makefile
-	test -f $@ && rm $@
+	rm -f $@
 	for source in $(DESIGN_SOURCES); do \
 		echo "$$source" >> $@; \
 	done
 
 v-front.prj: Makefile
-	test -f $@ && rm $@
+	rm -f $@
 	for source in $(DESIGN_SOURCES) $(SIMULATION_SOURCES); do \
 		echo "verilog work $$source" >> $@; \
 	done
@@ -75,7 +75,7 @@ $(BUILD_TEST_DIR):
 		done \
 	done
 
-compile_tests: $(BUILD_TEST_DIR) v-front.f v-front.prj
+compile_tests: $(BUILD_TEST_DIR) v-front.f v-front.prj 
 	$(RISCV_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
 	for testfile in $(wildcard $</*.S) ; do \
 		test=$${testfile##*/}; test=$${test%.*}; \
