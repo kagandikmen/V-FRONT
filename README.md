@@ -24,6 +24,7 @@
 - RV32I v2.1 with Zicsr and Zifencei extensions
 - Five-stage von Neumann architecture
 - 32 KB unified dual-port dual-clock BRAM-based memory (16 KB program, 16 KB data)
+- User (U) and machine (M) privilege modes implemented
 - Handles exceptions via trap vector `mtvec_handler`
 - Unit tests for functional correctness and ISA compliance
 - Flow scripts enabling an easy jump-in for Vivado or QuestaSim users
@@ -101,7 +102,7 @@ Find an example of how a generic C program can be compiled to run on V-FRONT by 
 
 V-FRONT implements a five-stage pipelined von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for program memory and the second 16 KB for data memory. Misaligned accesses to the data memory are detected by the CPU, which then raises an exception and jumps to a trap vector to handle the misaligned access.
 
-V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md). As of 2026-07-11, the hardware can raise exceptions in case of:
+V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md). As of 2026-07-14, the hardware can raise exceptions in case of:
 
 - a misaligned data memory access,
 - an illegal instruction,
@@ -109,7 +110,7 @@ V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md)
 
 Software exceptions are raised through `ecall` and `ebreak` instructions. Any exception is resolved through jumping to the trap vector you can find [here](sw/mtvec_handler.S). 
 
-Currently, V-FRONT only supports machine mode (M-mode) as privilege mode.
+V-FRONT supports user mode (U-mode) and machine mode (M-mode) as its privilege modes.
 
 V-FRONT implements `fence` and `fence_i` instructions as pure `NOP`s, as these instructions do not serve any meaningful purpose in a single-core setting.
 
@@ -117,14 +118,15 @@ V-FRONT is tested for functional correctness and ISA compliance using the unit t
 
 ## Status
 
-The unit tests all pass as of 2026-07-11. The design is fully synthesizable.
+The unit tests all pass as of 2026-07-14. The design is fully synthesizable.
 
 ### Known Issues
 
 - The five-stage pipeline is fully implemented and tested, but not optimized yet for performance. As a result, the current implementation runs at relatively low clock frequencies (below 20 MHz on Zynq 7020).
 - The control logic shoulders instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
 - There are parametrization issues. Some parameters (like `PC_WIDTH`) do little to nothing.
-- The CSR module does not implement WARL masking yet. CSR write operations can write to any field of a register as long as the register is read-write.
+- The CSR module does not implement read/write masking yet. CSR write operations can write to any field of a register as long as the register is read-write.
+- Interrupts are only halfway implemented.
 - Documentation is very limited; needs to be extended.
 
 ## Contributing
