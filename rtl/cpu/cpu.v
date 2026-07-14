@@ -441,7 +441,8 @@ module cpu
             .instr_addr(alu_result),
             .msi(msi_ex),
             .mti(mti_ex),
-            .mei(mei_ex)
+            .mei(mei_ex),
+            .instret_en(filled_wb && !make_nop_wb && !cpu_stall)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;

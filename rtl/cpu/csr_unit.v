@@ -43,7 +43,9 @@ module csr_unit
 
     output msi,
     output mti,
-    output mei
+    output mei,
+
+    input instret_en
     );
 
     `include "common_library.vh"
@@ -66,15 +68,19 @@ module csr_unit
     localparam CSR_RF_MIP_IDX           = 15;
     localparam CSR_RF_MTINST_IDX        = 16;
     localparam CSR_RF_MTVAL2_IDX        = 17;
-    localparam CSR_RF_MVENDORID_IDX     = 18;
-    localparam CSR_RF_MARCHID_IDX       = 19;
-    localparam CSR_RF_MIMPID_IDX        = 20;
-    localparam CSR_RF_MHARTID_IDX       = 21;
-    localparam CSR_RF_MCONFIGPTR_IDX    = 22;
+    localparam CSR_RF_MCYCLE_IDX        = 18;
+    localparam CSR_RF_MINSTRET_IDX      = 19;
+    localparam CSR_RF_MCYCLEH_IDX       = 20;
+    localparam CSR_RF_MINSTRETH_IDX     = 21;
+    localparam CSR_RF_MVENDORID_IDX     = 22;
+    localparam CSR_RF_MARCHID_IDX       = 23;
+    localparam CSR_RF_MIMPID_IDX        = 24;
+    localparam CSR_RF_MHARTID_IDX       = 25;
+    localparam CSR_RF_MCONFIGPTR_IDX    = 26;
 
     reg spec_reg_r_en, spec_reg_w_en;
     reg [31:0] write_value;
-    reg [31:0] csr_rf [22:0];
+    reg [31:0] csr_rf [26:0];
 
     reg [1:0] current_priv;
 
@@ -115,6 +121,9 @@ module csr_unit
     // write
     always @(posedge clk)
     begin
+        {csr_rf[CSR_RF_MCYCLEH_IDX], csr_rf[CSR_RF_MCYCLE_IDX]}     <= {csr_rf[CSR_RF_MCYCLEH_IDX], csr_rf[CSR_RF_MCYCLE_IDX]}      + 64'd1;
+        {csr_rf[CSR_RF_MINSTRETH_IDX], csr_rf[CSR_RF_MINSTRET_IDX]} <= {csr_rf[CSR_RF_MINSTRETH_IDX], csr_rf[CSR_RF_MINSTRET_IDX]}  + {63'd0, instret_en};
+
         if (rst == 1'b1)
         begin
             current_priv <= 2'b11;  // boot the chip in M mode
@@ -137,6 +146,10 @@ module csr_unit
             csr_rf[CSR_RF_MIP_IDX]          <= CSR_MIP_RST;
             csr_rf[CSR_RF_MTINST_IDX]       <= CSR_MTINST_RST;
             csr_rf[CSR_RF_MTVAL2_IDX]       <= CSR_MTVAL2_RST;
+            csr_rf[CSR_RF_MCYCLE_IDX]       <= CSR_MCYCLE_RST;
+            csr_rf[CSR_RF_MINSTRET_IDX]     <= CSR_MINSTRET_RST;
+            csr_rf[CSR_RF_MCYCLEH_IDX]      <= CSR_MCYCLEH_RST;
+            csr_rf[CSR_RF_MINSTRETH_IDX]    <= CSR_MINSTRETH_RST;
             csr_rf[CSR_RF_MVENDORID_IDX]    <= CSR_MVENDORID_RST;
             csr_rf[CSR_RF_MARCHID_IDX]      <= CSR_MARCHID_RST;
             csr_rf[CSR_RF_MIMPID_IDX]       <= CSR_MIMPID_RST;
@@ -226,6 +239,10 @@ module csr_unit
                 CSR_MIP_ADDR:          csr_rf[CSR_RF_MIP_IDX]           <= write_value;
                 CSR_MTINST_ADDR:       csr_rf[CSR_RF_MTINST_IDX]        <= write_value;
                 CSR_MTVAL2_ADDR:       csr_rf[CSR_RF_MTVAL2_IDX]        <= write_value;
+                CSR_MCYCLE_ADDR:       csr_rf[CSR_RF_MCYCLE_IDX]        <= write_value;
+                CSR_MINSTRET_ADDR:     csr_rf[CSR_RF_MINSTRET_IDX]      <= write_value;
+                CSR_MCYCLEH_ADDR:      csr_rf[CSR_RF_MCYCLEH_IDX]       <= write_value;
+                CSR_MINSTRETH_ADDR:    csr_rf[CSR_RF_MINSTRETH_IDX]     <= write_value;
             endcase
 
             if(csr_addr == CSR_MSTATUS_ADDR) begin
@@ -266,7 +283,11 @@ module csr_unit
             || csr_addr == CSR_MTVAL_ADDR
             || csr_addr == CSR_MIP_ADDR
             || csr_addr == CSR_MTINST_ADDR
-            || csr_addr == CSR_MTVAL2_ADDR)
+            || csr_addr == CSR_MTVAL2_ADDR
+            || csr_addr == CSR_MCYCLE_ADDR
+            || csr_addr == CSR_MINSTRET_ADDR
+            || csr_addr == CSR_MCYCLEH_ADDR
+            || csr_addr == CSR_MINSTRETH_ADDR)
         begin
             spec_reg_r_en = r_en;
             spec_reg_w_en = w_en;
@@ -311,6 +332,10 @@ module csr_unit
                 CSR_MIP_ADDR:          out <= csr_rf[CSR_RF_MIP_IDX];
                 CSR_MTINST_ADDR:       out <= csr_rf[CSR_RF_MTINST_IDX];
                 CSR_MTVAL2_ADDR:       out <= csr_rf[CSR_RF_MTVAL2_IDX];
+                CSR_MCYCLE_ADDR:       out <= csr_rf[CSR_RF_MCYCLE_IDX];
+                CSR_MINSTRET_ADDR:     out <= csr_rf[CSR_RF_MINSTRET_IDX];
+                CSR_MCYCLEH_ADDR:      out <= csr_rf[CSR_RF_MCYCLEH_IDX];
+                CSR_MINSTRETH_ADDR:    out <= csr_rf[CSR_RF_MINSTRETH_IDX];
                 CSR_MVENDORID_ADDR:    out <= csr_rf[CSR_RF_MVENDORID_IDX];
                 CSR_MARCHID_ADDR:      out <= csr_rf[CSR_RF_MARCHID_IDX];
                 CSR_MIMPID_ADDR:       out <= csr_rf[CSR_RF_MIMPID_IDX];
