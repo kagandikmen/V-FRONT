@@ -47,7 +47,7 @@ module cpu
     // ID
     reg alu_imm_select_id, alu_cu_input_sel_id, w_en_rf_id, branch_id, jal_id, jalr_id;
     reg [1:0] alu_pc_select_id, alu_subunit_res_sel_id, rf_w_select_id;
-    reg ecall_id, ebreak_id, mret_id;
+    reg ecall_id, ebreak_id, mret_id, wfi_id;
     reg [3:0] ldst_mask_id;
     reg ldst_is_unsigned_id;
     reg st_en_id;
@@ -65,7 +65,7 @@ module cpu
     // EX
     reg alu_imm_select_ex, alu_cu_input_sel, w_en_rf_ex, branch_ex, jal_ex, jalr_ex;
     reg [1:0] alu_pc_select_ex, alu_subunit_res_sel, rf_w_select_ex;
-    reg ecall_ex, ebreak_ex, mret_ex;
+    reg ecall_ex, ebreak_ex, mret_ex, wfi_ex;
     reg [3:0] ldst_mask_ex;
     reg ldst_is_unsigned_ex;
     reg st_en_ex;
@@ -82,6 +82,7 @@ module cpu
     reg filled_ex;
     reg illegal_instr_ex;
     wire illegal_csr_prel_ex, illegal_csr_ex;
+    wire illegal_wfi_prel_ex, illegal_wfi_ex;
     wire instr_access_misaligned;
 
     reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
@@ -153,6 +154,7 @@ module cpu
     wire ctrl_ecall_out;
     wire ctrl_ebreak_out;
     wire ctrl_mret_out;
+    wire ctrl_wfi_out;
     wire [3:0] ctrl_ldst_mask_out;
     wire ctrl_ldst_is_unsigned_out;
     wire ctrl_st_en_if_out;
@@ -179,6 +181,7 @@ module cpu
             .ecall(ctrl_ecall_out),
             .ebreak(ctrl_ebreak_out),
             .mret(ctrl_mret_out),
+            .wfi(ctrl_wfi_out),
             .ldst_mask(ctrl_ldst_mask_out),
             .ldst_is_unsigned(ctrl_ldst_is_unsigned_out),
             .st_en_if(ctrl_st_en_if_out),
@@ -190,7 +193,7 @@ module cpu
             .branch_true(comp_result[0]),
             .make_nop(make_nop_ex),
             .illegal_instr(illegal_instr_if),
-            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex),
+            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex || illegal_wfi_ex),
             .msi_i(msi_ex),
             .mti_i(mti_ex),
             .mei_i(mei_ex)
@@ -213,6 +216,7 @@ module cpu
             ecall_id <= ctrl_ecall_out;
             ebreak_id <= ctrl_ebreak_out;
             mret_id <= ctrl_mret_out;
+            wfi_id <= ctrl_wfi_out;
             ldst_mask_id <= ctrl_ldst_mask_out;
             ldst_is_unsigned_id <= ctrl_ldst_is_unsigned_out;
             st_en_id <= ctrl_st_en_if_out;
@@ -229,7 +233,7 @@ module cpu
             .branch(branch_ex && !make_nop_ex),
             .jal(jal_ex && !make_nop_ex),
             .jalr(jalr_ex && !make_nop_ex),
-            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || instr_access_misaligned) && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_wfi_ex || instr_access_misaligned) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
@@ -305,6 +309,7 @@ module cpu
             ecall_ex <= ecall_id;
             ebreak_ex <= ebreak_id;
             mret_ex <= mret_id;
+            wfi_ex <= wfi_id;
             ldst_mask_ex <= ldst_mask_id;
             ldst_is_unsigned_ex <= ldst_is_unsigned_id;
             st_en_ex <= st_en_id;
@@ -417,6 +422,7 @@ module cpu
             .ebreak(ebreak_ex && !make_nop_ex && !cpu_stall),
             .mret(mret_ex && !make_nop_ex && !cpu_stall),
             .jalr(jalr_ex),
+            .wfi(wfi_ex),
             .pc(pc_ex),
             .op(csr_unit_op),
             .in(csr_in),
@@ -430,6 +436,7 @@ module cpu
             .instr(instr_ex),
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
             .illegal_csr_o(illegal_csr_prel_ex),
+            .illegal_wfi_o(illegal_wfi_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
             .instr_addr(alu_result),
             .msi(msi_ex),
@@ -440,6 +447,7 @@ module cpu
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
     assign is_misalignment_store = is_misaligned && st_en_ex && !make_nop_ex && !cpu_stall;
     assign illegal_csr_ex = illegal_csr_prel_ex && !make_nop_ex;
+    assign illegal_wfi_ex = illegal_wfi_prel_ex && !make_nop_ex;
 
     // 
     // STAGE 4: Memory Access (ME)

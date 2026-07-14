@@ -35,6 +35,7 @@ module control_unit
     output reg ecall,
     output reg ebreak,
     output reg mret,
+    output reg wfi,
 
     output reg [3:0] ldst_mask,
     output reg ldst_is_unsigned,
@@ -169,6 +170,7 @@ module control_unit
         csr_imm_select_if = 2'b0;
         csr_op_if = 3'b000;
         mret = 1'b0;
+        wfi = 1'b0;
         ecall = 1'b0;
         ebreak = 1'b0;
         ldst_is_unsigned = 1'b0;
@@ -517,6 +519,7 @@ module control_unit
                     12'h000: ecall = 1'b1;
                     12'h001: ebreak = 1'b1;
                     12'h302: mret = 1'b1;
+                    12'h105: wfi = 1'b1;
                 endcase
             end
             {FUNCT3_CSRRW, SYSTEM_OPCODE}:

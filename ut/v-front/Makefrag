@@ -1,6 +1,6 @@
 # Makefrag for V-FRONT specific tests
 # Created:      2025-05-31
-# Modified:     2026-07-11
+# Modified:     2026-07-14
 # Author:       Kagan Dikmen
 
 v-front_tests = \
@@ -8,4 +8,5 @@ v-front_tests = \
     csr_hazard \
     csr_permissions \
     illegal_instr \
-    illegal_instr_addr
+    illegal_instr_addr \
+    wfi
