@@ -134,7 +134,7 @@ module csr_unit
         begin
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= 1'b1;
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= 2'b11;     // set back to least-privileged mode supported (M)
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= 2'b00;     // set back to least-privileged mode supported (U)
             current_priv <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11];
         end
         else if (ecall || ebreak)
@@ -213,7 +213,7 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
             current_priv <= 2'b11;
         end
-        else if (spec_reg_w_en)
+        else if (spec_reg_w_en && !(current_priv < csr_addr[9:8]))
         begin
             case(csr_addr)
                 CSR_JVT_ADDR:          spec_csr_registers[SPEC_CSR_JVT_INDEX]           <= write_value;
@@ -238,9 +238,9 @@ module csr_unit
 
             if(csr_addr == CSR_MSTATUS_ADDR) begin
                 case(write_value[12:11])
-                    2'b00:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b00;    // U
-                    2'b11:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b11;    // M
-                    default:    spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b00;    // collapse to U
+                    2'b00:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= 2'b00;    // U
+                    2'b11:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= 2'b11;    // M
+                    default:    spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= 2'b00;    // collapse to U
                 endcase
             end
 
@@ -348,6 +348,6 @@ module csr_unit
         endcase
     end
 
-    assign illegal_csr = ((r_en || w_en) && not_csr) || write_to_ro_csr;
+    assign illegal_csr = ((r_en || w_en) && not_csr) || write_to_ro_csr || ((r_en || w_en) && (current_priv < csr_addr[9:8]));
 
 endmodule
