@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-13
+// Modified:    2026-07-14
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -95,6 +95,8 @@ module cpu
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
 
+    wire msi_ex, mti_ex, mei_ex;
+
 
     // ME
     wire [31:0] rd_write_data;
@@ -186,7 +188,10 @@ module cpu
             .branch_true(comp_result[0]),
             .make_nop(make_nop_ex),
             .illegal_instr(illegal_instr_if),
-            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex)
+            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex),
+            .msi_i(msi_ex),
+            .mti_i(mti_ex),
+            .mei_i(mei_ex)
         );
 
     always @(posedge sysclk)
@@ -422,7 +427,10 @@ module cpu
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
             .illegal_csr(illegal_csr_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
-            .instr_addr(alu_result)
+            .instr_addr(alu_result),
+            .msi(msi_ex),
+            .mti(mti_ex),
+            .mei(mei_ex)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;

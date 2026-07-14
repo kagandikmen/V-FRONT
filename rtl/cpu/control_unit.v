@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2026-07-13
+// Modified:    2026-07-14
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -49,7 +49,11 @@ module control_unit
     input branch_true,
     output make_nop,
     output reg illegal_instr,
-    input illegal_instr_csr_ex
+    input illegal_instr_csr_ex,
+
+    input msi_i,
+    input mti_i,
+    input mei_i
     );
 
     `include "common_library.vh"
@@ -68,11 +72,11 @@ module control_unit
     reg [11:0] csr_addr_if, csr_addr_id, csr_addr_ex;
     reg [1:0] csr_imm_select_if, csr_imm_select_id, csr_imm_select_ex;
 
-    assign csr_r_en = (is_misaligned && !make_nop_ex) ? 1'b1 : csr_r_en_ex;
-    assign csr_w_en = (is_misaligned && !make_nop_ex) ? 1'b0 : csr_w_en_ex;
-    assign csr_op = (is_misaligned && !make_nop_ex) ? 3'b000 :csr_op_ex;
-    assign csr_addr = (is_misaligned && !make_nop_ex) ? CSR_MTVEC_ADDR : csr_addr_ex;
-    assign csr_imm_select = (is_misaligned && !make_nop_ex) ? 2'b10 : csr_imm_select_ex;
+    assign csr_r_en = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 1'b1 : csr_r_en_ex;
+    assign csr_w_en = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 1'b0 : csr_w_en_ex;
+    assign csr_op = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 3'b000 :csr_op_ex;
+    assign csr_addr = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? CSR_MTVEC_ADDR : csr_addr_ex;
+    assign csr_imm_select = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 2'b10 : csr_imm_select_ex;
 
     assign make_nop = make_nop_ex;
 

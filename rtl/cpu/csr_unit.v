@@ -36,19 +36,14 @@ module csr_unit
     output illegal_csr,
 
     input instr_access_misaligned,
-    input [31:0] instr_addr
+    input [31:0] instr_addr,
+
+    output msi,
+    output mti,
+    output mei
     );
 
     `include "common_library.vh"
-
-    reg spec_reg_r_en, spec_reg_w_en;
-    reg [31:0] write_value;
-    reg [31:0] spec_csr_registers [22:0];
-
-    reg [1:0] current_priv;
-
-    reg not_csr;
-    reg write_to_ro_csr;
 
     localparam SPEC_CSR_JVT_INDEX           = 0;
     localparam SPEC_CSR_MSTATUS_INDEX       = 1;
@@ -73,6 +68,35 @@ module csr_unit
     localparam SPEC_CSR_MIMPID_INDEX        = 20;
     localparam SPEC_CSR_MHARTID_INDEX       = 21;
     localparam SPEC_CSR_MCONFIGPTR_INDEX    = 22;
+
+    reg spec_reg_r_en, spec_reg_w_en;
+    reg [31:0] write_value;
+    reg [31:0] spec_csr_registers [22:0];
+
+    reg [1:0] current_priv;
+
+    reg not_csr;
+    reg write_to_ro_csr;
+
+    wire msi_en, mti_en, mei_en;
+    wire msip, mtip, meip;
+    wire msie, mtie, meie;
+
+    assign msip = spec_csr_registers[SPEC_CSR_MIP_INDEX][3];
+    assign mtip = spec_csr_registers[SPEC_CSR_MIP_INDEX][7];
+    assign meip = spec_csr_registers[SPEC_CSR_MIP_INDEX][11];
+
+    assign msie = spec_csr_registers[SPEC_CSR_MIE_INDEX][3];
+    assign mtie = spec_csr_registers[SPEC_CSR_MIE_INDEX][7];
+    assign meie = spec_csr_registers[SPEC_CSR_MIE_INDEX][11];
+
+    assign msi_en = msip && msie && spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+    assign mti_en = mtip && mtie && spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+    assign mei_en = meip && meie && spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+
+    assign msi = msi_en;
+    assign mti = mti_en;
+    assign mei = mei_en;
 
     // write
     always @(posedge clk)
@@ -107,7 +131,7 @@ module csr_unit
         end
         else if (mret == 1'b1)
         begin
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= 1'b1;
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= 2'b11;     // set back to least-privileged mode supported (M)
             current_priv <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11];
@@ -118,8 +142,8 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd11 : 32'd3;
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= 'b0;
 
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
             current_priv <= 2'b11;
         end
@@ -131,8 +155,8 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= {17'b0, mem_addr};
             spec_csr_registers[SPEC_CSR_MTVAL2_INDEX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
 
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
             current_priv <= 2'b11;
         end
@@ -142,8 +166,8 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd2;
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= instr;
 
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
             current_priv <= 2'b11;
         end
@@ -153,8 +177,38 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd0;
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= instr_addr;
 
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
+            current_priv <= 2'b11;
+        end
+        else if (msi_en)
+        begin
+            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= {1'b1, 31'd3};
+
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
+            current_priv <= 2'b11;
+        end
+        else if (mti_en)
+        begin
+            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= {1'b1, 31'd7};
+
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
+            current_priv <= 2'b11;
+        end
+        else if (mei_en)
+        begin
+            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= {1'b1, 31'd11};
+
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
+            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
             current_priv <= 2'b11;
         end
