@@ -513,25 +513,10 @@ module control_unit
                 alu_imm_select = 1'b1;
                 w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
-                csr_r_en_if = 1'b1;
-                csr_w_en_if = 1'b0;
-                csr_op_if = 3'b000;
                 case (instr[31:20])
-                    12'h000:    // ECALL
-                    begin
-                        ecall = 1'b1;
-                        csr_addr_if = CSR_MTVEC_ADDR;
-                    end
-                    12'h001:    // EBREAK
-                    begin
-                        ebreak = 1'b1;
-                        csr_addr_if = CSR_MTVEC_ADDR;
-                    end
-                    12'h302:    // MRET
-                    begin
-                        mret = 1'b1;
-                        csr_addr_if = CSR_MEPC_ADDR;
-                    end
+                    12'h000: ecall = 1'b1;
+                    12'h001: ebreak = 1'b1;
+                    12'h302: mret = 1'b1;
                 endcase
             end
             {FUNCT3_CSRRW, SYSTEM_OPCODE}:

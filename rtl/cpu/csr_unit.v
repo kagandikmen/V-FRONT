@@ -100,7 +100,7 @@ module csr_unit
     assign mti = mti_en;
     assign mei = mei_en;
 
-    assign illegal_csr = ((r_en || w_en) && not_csr) || write_to_ro_csr || ((r_en || w_en) && (current_priv < csr_addr[9:8]));
+    assign illegal_csr = ((r_en || w_en) && (not_csr || (current_priv < csr_addr[9:8]))) || write_to_ro_csr || (mret && (current_priv != 2'b11));
     assign illegal_csr_o = illegal_csr;
 
     // write
@@ -134,12 +134,26 @@ module csr_unit
             csr_rf[CSR_RF_MHARTID_IDX]      <= CSR_MHARTID_RST;
             csr_rf[CSR_RF_MCONFIGPTR_IDX]   <= CSR_MCONFIGPTR_RST;
         end
-        else if (mret == 1'b1)
+        else if (mret)
         begin
             csr_rf[CSR_RF_MSTATUS_IDX][3]       <= csr_rf[CSR_RF_MSTATUS_IDX][7];
             csr_rf[CSR_RF_MSTATUS_IDX][7]       <= 1'b1;
             csr_rf[CSR_RF_MSTATUS_IDX][12:11]   <= 2'b00;     // set back to least-privileged mode supported (U)
             current_priv                        <= csr_rf[CSR_RF_MSTATUS_IDX][12:11];
+        end
+        else if (illegal_instr || illegal_csr)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd2;
+            csr_rf[CSR_RF_MTVAL_IDX]    <= instr;
+            trap_to_M();
+        end
+        else if (instr_access_misaligned)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd0;
+            csr_rf[CSR_RF_MTVAL_IDX]    <= jalr ? {instr_addr[31:1], 1'b0} : instr_addr;
+            trap_to_M();
         end
         else if (ecall)
         begin
@@ -162,20 +176,6 @@ module csr_unit
             csr_rf[CSR_RF_MSCRATCH_IDX] <= instr;
             csr_rf[CSR_RF_MTVAL_IDX]    <= {17'b0, mem_addr};
             csr_rf[CSR_RF_MTVAL2_IDX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
-            trap_to_M();
-        end
-        else if (illegal_instr || illegal_csr)
-        begin
-            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
-            csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd2;
-            csr_rf[CSR_RF_MTVAL_IDX]    <= instr;
-            trap_to_M();
-        end
-        else if (instr_access_misaligned)
-        begin
-            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
-            csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd0;
-            csr_rf[CSR_RF_MTVAL_IDX]    <= jalr ? {instr_addr[31:1], 1'b0} : instr_addr;
             trap_to_M();
         end
         else if (msi_en)
@@ -311,8 +311,10 @@ module csr_unit
             endcase
         end
 
-        if(illegal_instr || illegal_csr || instr_access_misaligned || is_misaligned || msi_en || mti_en || mei_en) begin
+        if(illegal_instr || illegal_csr || instr_access_misaligned || is_misaligned || msi_en || mti_en || mei_en || ecall || ebreak) begin
             out <= csr_rf[CSR_RF_MTVEC_IDX];
+        end else if(mret) begin
+            out <= csr_rf[CSR_RF_MEPC_IDX];
         end
     end
 
