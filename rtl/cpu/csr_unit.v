@@ -34,7 +34,7 @@ module csr_unit
 
     input [31:0] instr,
     input illegal_instr,
-    output illegal_csr,
+    output illegal_csr_o,
 
     input instr_access_misaligned,
     input [31:0] instr_addr,
@@ -78,6 +78,7 @@ module csr_unit
 
     reg not_csr;
     reg write_to_ro_csr;
+    wire illegal_csr;
 
     wire msi_en, mti_en, mei_en;
     wire msip, mtip, meip;
@@ -152,7 +153,7 @@ module csr_unit
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
-            spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX] <= in;     // saves the instruction word
+            spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX] <= instr;
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= {17'b0, mem_addr};
             spec_csr_registers[SPEC_CSR_MTVAL2_INDEX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
 
@@ -166,7 +167,7 @@ module csr_unit
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd2;
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= instr;
-
+        
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
@@ -328,7 +329,7 @@ module csr_unit
             endcase
         end
 
-        if(illegal_instr || illegal_csr || instr_access_misaligned) begin
+        if(illegal_instr || illegal_csr || instr_access_misaligned || is_misaligned || msi_en || mti_en || mei_en) begin
             out <= spec_csr_registers[SPEC_CSR_MTVEC_INDEX];
         end
     end
@@ -349,5 +350,6 @@ module csr_unit
     end
 
     assign illegal_csr = ((r_en || w_en) && not_csr) || write_to_ro_csr || ((r_en || w_en) && (current_priv < csr_addr[9:8]));
+    assign illegal_csr_o = illegal_csr;
 
 endmodule

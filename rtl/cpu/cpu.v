@@ -91,7 +91,7 @@ module cpu
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
     wire csr_unit_r_en, csr_unit_w_en;
-    wire [1:0] csr_imm_select;
+    wire csr_imm_select;
     wire [11:0] csr_unit_addr;
     wire [2:0] csr_unit_op;
 
@@ -399,12 +399,10 @@ module cpu
             .z(alu_mux2_out)
         );
 
-    four_input_mux #(.INPUT_LENGTH(32)) csr_unit_mux
+    two_input_mux #(.INPUT_LENGTH(32)) csr_unit_mux
         (
             .a(alu_opd1),
             .b(imm_ex),
-            .c(instr_ex),
-            .d(),
             .sel(csr_imm_select),
             .z(csr_in)
         );
@@ -431,7 +429,7 @@ module cpu
             .rd_addr(rd_addr_ex),
             .instr(instr_ex),
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
-            .illegal_csr(illegal_csr_prel_ex),
+            .illegal_csr_o(illegal_csr_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
             .instr_addr(alu_result),
             .msi(msi_ex),

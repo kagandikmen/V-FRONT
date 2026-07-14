@@ -45,7 +45,7 @@ module control_unit
     output csr_w_en,
     output [2:0] csr_op,
     output [11:0] csr_addr,
-    output [1:0] csr_imm_select,
+    output csr_imm_select,
 
     input branch_true,
     output make_nop,
@@ -71,13 +71,13 @@ module control_unit
     reg csr_w_en_if, csr_w_en_id, csr_w_en_ex;
     reg [2:0] csr_op_if, csr_op_id, csr_op_ex;
     reg [11:0] csr_addr_if, csr_addr_id, csr_addr_ex;
-    reg [1:0] csr_imm_select_if, csr_imm_select_id, csr_imm_select_ex;
+    reg csr_imm_select_if, csr_imm_select_id, csr_imm_select_ex;
 
-    assign csr_r_en = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 1'b1 : csr_r_en_ex;
-    assign csr_w_en = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 1'b0 : csr_w_en_ex;
-    assign csr_op = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 3'b000 :csr_op_ex;
-    assign csr_addr = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? CSR_MTVEC_ADDR : csr_addr_ex;
-    assign csr_imm_select = ((is_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex) ? 2'b10 : csr_imm_select_ex;
+    assign csr_r_en = csr_r_en_ex;
+    assign csr_w_en = csr_w_en_ex;
+    assign csr_op = csr_op_ex;
+    assign csr_addr = csr_addr_ex;
+    assign csr_imm_select = csr_imm_select_ex;
 
     assign make_nop = make_nop_ex;
 
@@ -580,7 +580,7 @@ module control_unit
                 csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
                 csr_w_en_if = 1'b1;
                 csr_addr_if = instr[31:20];
-                csr_imm_select_if = 2'b01;
+                csr_imm_select_if = 1'b1;
                 csr_op_if = 3'b101;
             end
             {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
@@ -590,7 +590,7 @@ module control_unit
                 csr_r_en_if = 1'b1;
                 csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr_if = instr[31:20];
-                csr_imm_select_if = 2'b01;
+                csr_imm_select_if = 1'b1;
                 csr_op_if = 3'b110;
             end
             {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
@@ -600,7 +600,7 @@ module control_unit
                 csr_r_en_if = 1'b1;
                 csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr_if = instr[31:20];
-                csr_imm_select_if = 2'b01;
+                csr_imm_select_if = 1'b1;
                 csr_op_if = 3'b111;
             end
             default:    // JAL / JALR / LUI / AUIPC
