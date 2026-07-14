@@ -234,6 +234,14 @@ module csr_unit
                 CSR_MTINST_ADDR:       spec_csr_registers[SPEC_CSR_MTINST_INDEX]        <= write_value;
                 CSR_MTVAL2_ADDR:       spec_csr_registers[SPEC_CSR_MTVAL2_INDEX]        <= write_value;
             endcase
+
+            if(csr_addr == CSR_MSTATUS_ADDR) begin
+                case(write_value[12:11])
+                    2'b00:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b00;    // U
+                    2'b11:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b11;    // M
+                    default:    spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b00;    // collapse to U
+                endcase
+            end
         end
     end
 

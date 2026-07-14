@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-07-13
+# Modified:		2026-07-14
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -37,7 +37,7 @@ TESTDIRS := ut/riscv-tests/isa/rv32ui ut/riscv-tests/isa/rv32mi ut/v-front
 
 TESTS := $(rv32ui_sc_tests) $(rv32mi_sc_tests) $(v-front_tests)
 
-FAILING_TESTS := illegal ma_fetch
+FAILING_TESTS := ma_fetch
 
 # Exclude the tests that have to be conducted by inspecting simulations
 EXCLUDE_TESTS := csr_permissions illegal_instr illegal_instr_addr
