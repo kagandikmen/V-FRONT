@@ -140,7 +140,7 @@ module csr_unit
         else if (ecall || ebreak)
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd11 : 32'd3;
+            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? ((current_priv == 2'b00 )? 32'd8 : 32'd11) : 32'd3;
             spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= 'b0;
 
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
