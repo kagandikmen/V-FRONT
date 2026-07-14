@@ -142,7 +142,7 @@ localparam CSR_MCONFIGPTR_ADDR  = 12'hf15;
 
 localparam CSR_JVT_RST          = 32'h0000_0000;
 localparam CSR_MSTATUS_RST      = 32'h0000_0000;
-localparam CSR_MISA_RST         = 32'h4000_0000;    // RV32I with no extensions
+localparam CSR_MISA_RST         = 32'h4010_0100;    // RV32I with user mode
 localparam CSR_MEDELEG_RST      = 32'h0000_0000;
 localparam CSR_MIDELEG_RST      = 32'h0000_0000;
 localparam CSR_MIE_RST          = 32'h0000_0000;

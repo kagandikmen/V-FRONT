@@ -29,7 +29,8 @@ module control_unit
 
     // to PC counter
     output reg branch,
-    output reg jump,
+    output reg jal,
+    output reg jalr,
 
     output reg ecall,
     output reg ebreak,
@@ -60,8 +61,8 @@ module control_unit
 
     wire [16:0] instr_compressed;
 
-    reg branch_id, jump_id, ecall_id, ebreak_id, mret_id;
-    reg branch_ex, jump_ex, ecall_ex, ebreak_ex, mret_ex;
+    reg branch_id, jal_id, jalr_id, ecall_id, ebreak_id, mret_id;
+    reg branch_ex, jal_ex, jalr_ex, ecall_ex, ebreak_ex, mret_ex;
 
     reg make_nop_id, make_nop_ex;
     reg make_nop_if_buffer;
@@ -88,13 +89,15 @@ module control_unit
     begin
         if(!stall) begin
             branch_id <= branch;
-            jump_id <= jump;
+            jal_id <= jal;
+            jalr_id <= jalr;
             ecall_id <= ecall;
             ebreak_id <= ebreak;
             mret_id <= mret;
 
             branch_ex <= branch_id;
-            jump_ex <= jump_id;
+            jal_ex <= jal_id;
+            jalr_ex <= jalr_id;
             ecall_ex <= ecall_id;
             ebreak_ex <= ebreak_id;
             mret_ex <= mret_id;
@@ -118,13 +121,15 @@ module control_unit
         if(rst)
         begin
             branch_id <= 1'b0;
-            jump_id <= 1'b0;
+            jal_id <= 1'b0;
+            jalr_id <= 1'b0;
             ecall_id <= 1'b0;
             ebreak_id <= 1'b0;
             mret_id <= 1'b0;
 
             branch_ex <= 1'b0;
-            jump_ex <= 1'b0;
+            jal_ex <= 1'b0;
+            jalr_ex <= 1'b0;
             ecall_ex <= 1'b0;
             ebreak_ex <= 1'b0;
             mret_ex <= 1'b0;
@@ -155,7 +160,8 @@ module control_unit
         alu_imm_select = 1'b1;      // choose the immediate
         alu_pc_select = 2'b00;      // don't select PC at ALU
         branch = 1'b0;
-        jump = 1'b0;
+        jal = 1'b0;
+        jalr = 1'b0;
         st_en_if = 1'b0;
         csr_r_en_if = 1'b0;
         csr_w_en_if = 1'b0;
@@ -606,7 +612,7 @@ module control_unit
                         alu_cu_input_sel = 1'b0;
                         alu_subunit_res_sel = 2'b00;
                         alu_subunit_op_sel = 4'b0000; 
-                        jump = 1'b1;
+                        jal = 1'b1;
                         w_en_rf_if = 1'b1;
                         rf_w_select = 2'b10;
                     end
@@ -615,7 +621,7 @@ module control_unit
                         alu_cu_input_sel = 1'b0;
                         alu_subunit_res_sel = 2'b00;
                         alu_subunit_op_sel = 4'b0000;
-                        jump = 1'b1;
+                        jalr = 1'b1;
                         w_en_rf_if = 1'b1;
                         rf_w_select = 2'b10;
                     end
@@ -650,7 +656,7 @@ module control_unit
             end
         endcase
 
-        if(((branch_ex && branch_true) || jump_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned) && !make_nop_ex)
+        if(((branch_ex && branch_true) || jal_ex || jalr_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned) && !make_nop_ex)
         begin
             make_nop_if_buffer = 1'b1;
         end

@@ -18,6 +18,7 @@ module csr_unit
     input [31:0] pc,
 
     input mret,
+    input jalr,
 
     input [2:0] op,
     input [31:0] in,
@@ -175,7 +176,7 @@ module csr_unit
         begin
             spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
             spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd0;
-            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= instr_addr;
+            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= jalr ? {instr_addr[31:1], 1'b0} : instr_addr;
 
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3];
             spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][3] <= 1'b0;
@@ -241,6 +242,10 @@ module csr_unit
                     2'b11:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b11;    // M
                     default:    spec_csr_registers[SPEC_CSR_MSTATUS_INDEX] <= 2'b00;    // collapse to U
                 endcase
+            end
+
+            if(csr_addr == CSR_MISA_ADDR) begin
+                spec_csr_registers[SPEC_CSR_MISA_INDEX] <= spec_csr_registers[SPEC_CSR_MISA_INDEX];
             end
         end
     end

@@ -45,7 +45,7 @@ module cpu
 
 
     // ID
-    reg alu_imm_select_id, alu_cu_input_sel_id, w_en_rf_id, branch_id, jump_id;
+    reg alu_imm_select_id, alu_cu_input_sel_id, w_en_rf_id, branch_id, jal_id, jalr_id;
     reg [1:0] alu_pc_select_id, alu_subunit_res_sel_id, rf_w_select_id;
     reg ecall_id, ebreak_id, mret_id;
     reg [3:0] ldst_mask_id;
@@ -63,7 +63,7 @@ module cpu
 
 
     // EX
-    reg alu_imm_select_ex, alu_cu_input_sel, w_en_rf_ex, branch_ex, jump_ex;
+    reg alu_imm_select_ex, alu_cu_input_sel, w_en_rf_ex, branch_ex, jal_ex, jalr_ex;
     reg [1:0] alu_pc_select_ex, alu_subunit_res_sel, rf_w_select_ex;
     reg ecall_ex, ebreak_ex, mret_ex;
     reg [3:0] ldst_mask_ex;
@@ -148,7 +148,8 @@ module cpu
     wire [3:0] ctrl_alu_subunit_op_sel_out;
     wire ctrl_w_en_rf_if_out;
     wire ctrl_branch_out;
-    wire ctrl_jump_out;
+    wire ctrl_jal_out;
+    wire ctrl_jalr_out;
     wire ctrl_ecall_out;
     wire ctrl_ebreak_out;
     wire ctrl_mret_out;
@@ -173,7 +174,8 @@ module cpu
             .alu_subunit_op_sel(ctrl_alu_subunit_op_sel_out),
             .w_en_rf_if(ctrl_w_en_rf_if_out),
             .branch(ctrl_branch_out),
-            .jump(ctrl_jump_out),
+            .jal(ctrl_jal_out),
+            .jalr(ctrl_jalr_out),
             .ecall(ctrl_ecall_out),
             .ebreak(ctrl_ebreak_out),
             .mret(ctrl_mret_out),
@@ -206,7 +208,8 @@ module cpu
             alu_subunit_op_sel_id <= ctrl_alu_subunit_op_sel_out;
             w_en_rf_id <= ctrl_w_en_rf_if_out;
             branch_id <= ctrl_branch_out;
-            jump_id <= ctrl_jump_out;
+            jal_id <= ctrl_jal_out;
+            jalr_id <= ctrl_jalr_out;
             ecall_id <= ctrl_ecall_out;
             ebreak_id <= ctrl_ebreak_out;
             mret_id <= ctrl_mret_out;
@@ -224,7 +227,8 @@ module cpu
             .rst(rst),
             .stall(cpu_stall),
             .branch(branch_ex && !make_nop_ex),
-            .jump(jump_ex && !make_nop_ex),
+            .jal(jal_ex && !make_nop_ex),
+            .jalr(jalr_ex && !make_nop_ex),
             .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || instr_access_misaligned) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
@@ -235,7 +239,7 @@ module cpu
         );
 
     assign mem_addra_o = next_pc[14:2];
-    assign instr_access_misaligned = !make_nop_ex && ((branch_ex && comp_result) || jump_ex) && (alu_result[1] || alu_result[0]);
+    assign instr_access_misaligned = !make_nop_ex && ((((branch_ex && comp_result) || jal_ex) && (alu_result[1] || alu_result[0])) || (jalr_ex && alu_result[1]));
     
     always @(posedge sysclk)
     begin
@@ -296,7 +300,8 @@ module cpu
             alu_subunit_op_sel <= alu_subunit_op_sel_id;
             w_en_rf_ex <= w_en_rf_id;
             branch_ex <= branch_id;
-            jump_ex <= jump_id;
+            jal_ex <= jal_id;
+            jalr_ex <= jalr_id;
             ecall_ex <= ecall_id;
             ebreak_ex <= ebreak_id;
             mret_ex <= mret_id;
@@ -413,6 +418,7 @@ module cpu
             .ecall(ecall_ex && !make_nop_ex && !cpu_stall),
             .ebreak(ebreak_ex && !make_nop_ex && !cpu_stall),
             .mret(mret_ex && !make_nop_ex && !cpu_stall),
+            .jalr(jalr_ex),
             .pc(pc_ex),
             .op(csr_unit_op),
             .in(csr_in),
@@ -444,7 +450,7 @@ module cpu
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
-            make_nop_me <= make_nop_ex || is_misaligned || illegal_csr_ex;
+            make_nop_me <= make_nop_ex || is_misaligned || illegal_csr_ex || instr_access_misaligned;
             pc_plus4_me <= pc_plus4_ex;
             rf_w_select_me <= rf_w_select_ex;
             rd_addr_me <= rd_addr_ex;
