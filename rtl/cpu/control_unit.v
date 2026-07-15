@@ -645,7 +645,7 @@ module control_unit
             end
         endcase
 
-        if(((branch_ex && branch_true) || jal_ex || jalr_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned) && !make_nop_ex)
+        if(((branch_ex && branch_true) || jal_ex || jalr_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex)
         begin
             make_nop_if_buffer = 1'b1;
         end

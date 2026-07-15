@@ -234,7 +234,7 @@ module cpu
             .branch(branch_ex && !make_nop_ex),
             .jal(jal_ex && !make_nop_ex),
             .jalr(jalr_ex && !make_nop_ex),
-            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || instr_access_misaligned) && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || instr_access_misaligned || msi_ex || mti_ex || mei_ex) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),

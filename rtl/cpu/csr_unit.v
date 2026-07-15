@@ -99,9 +99,9 @@ module csr_unit
     assign mtie = csr_rf[CSR_RF_MIE_IDX][7];
     assign meie = csr_rf[CSR_RF_MIE_IDX][11];
 
-    assign msi_en = msip && msie && csr_rf[CSR_RF_MSTATUS_IDX][3];
-    assign mti_en = mtip && mtie && csr_rf[CSR_RF_MSTATUS_IDX][3];
-    assign mei_en = meip && meie && csr_rf[CSR_RF_MSTATUS_IDX][3];
+    assign msi_en = msip && msie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+    assign mti_en = mtip && mtie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+    assign mei_en = meip && meie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
 
     assign msi = msi_en;
     assign mti = mti_en;
@@ -196,6 +196,12 @@ module csr_unit
             csr_rf[CSR_RF_MTVAL2_IDX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
             trap_to_M();
         end
+        else if (mei_en)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd11};
+            trap_to_M();
+        end
         else if (msi_en)
         begin
             csr_rf[CSR_RF_MEPC_IDX]     <= pc;
@@ -206,12 +212,6 @@ module csr_unit
         begin
             csr_rf[CSR_RF_MEPC_IDX]     <= pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd7};
-            trap_to_M();
-        end
-        else if (mei_en)
-        begin
-            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
-            csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd11};
             trap_to_M();
         end
         else if (spec_reg_w_en && !(current_priv < csr_addr[9:8]))
@@ -329,10 +329,12 @@ module csr_unit
             endcase
         end
 
-        if(illegal_instr || illegal_csr || illegal_mret || illegal_wfi || instr_access_misaligned || is_misaligned || msi_en || mti_en || mei_en || ecall || ebreak) begin
+        if(illegal_instr || illegal_csr || illegal_mret || illegal_wfi || instr_access_misaligned) begin
             out <= csr_rf[CSR_RF_MTVEC_IDX];
         end else if(mret) begin
             out <= csr_rf[CSR_RF_MEPC_IDX];
+        end else if(is_misaligned || msi_en || mti_en || mei_en || ecall || ebreak) begin
+            out <= csr_rf[CSR_RF_MTVEC_IDX];
         end
     end
 
