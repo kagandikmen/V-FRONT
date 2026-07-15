@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2026-07-14
+// Modified:    2026-07-15
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -126,7 +126,6 @@ localparam CSR_MTVEC_ADDR       = 12'h305;
 localparam CSR_MCOUNTEREN_ADDR  = 12'h306;
 localparam CSR_MSTATUSH_ADDR    = 12'h310;
 localparam CSR_MEDELEGH_ADDR    = 12'h312;
-localparam CSR_MTVT_ADDR        = 12'h307;
 localparam CSR_MSCRATCH_ADDR    = 12'h340;
 localparam CSR_MEPC_ADDR        = 12'h341;
 localparam CSR_MCAUSE_ADDR      = 12'h342;
@@ -154,7 +153,6 @@ localparam CSR_MTVEC_RST        = 32'h0000_0000;
 localparam CSR_MCOUNTEREN_RST   = 32'h0000_0000;
 localparam CSR_MSTATUSH_RST     = 32'h0000_0000;
 localparam CSR_MEDELEGH_RST     = 32'h0000_0000;
-localparam CSR_MTVT_RST         = 32'h0000_0000;
 localparam CSR_MSCRATCH_RST     = 32'h0000_0000;
 localparam CSR_MEPC_RST         = 32'h0000_0000;
 localparam CSR_MCAUSE_RST       = 32'h0000_0000;

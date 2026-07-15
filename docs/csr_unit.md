@@ -6,15 +6,14 @@ CSR             | Address        | Reset Value    | Permissions
 ----------------|----------------|----------------|----------------
 jvt             | 0x17           | 0x0000_0000    | URW
 mstatus         | 0x300          | 0x0000_0000    | MRW
-misa            | 0x301          | 0x4000_0000    | MRW
+misa            | 0x301          | 0x4010_0100    | MRW
 medeleg         | 0x302          | 0x0000_0000    | MRW
 mideleg         | 0x303          | 0x0000_0000    | MRW
 mie             | 0x304          | 0x0000_0000    | MRW
 mtvec           | 0x305          | 0x0000_0000    | MRW
 mcounteren      | 0x306          | 0x0000_0000    | MRW
-mstatush        | 0x307          | 0x0000_0000    | MRW
-medelegh        | 0x308          | 0x0000_0000    | MRW
-mtvt            | 0x307          | 0x0000_0000    | MRW
+mstatush        | 0x310          | 0x0000_0000    | MRW
+medelegh        | 0x312          | 0x0000_0000    | MRW
 mscratch        | 0x340          | 0x0000_0000    | MRW
 mepc            | 0x341          | 0x0000_0000    | MRW
 mcause          | 0x342          | 0x0000_0000    | MRW

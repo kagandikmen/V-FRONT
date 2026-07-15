@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-07-14
+// Modified:    2026-07-15
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -60,27 +60,26 @@ module csr_unit
     localparam CSR_RF_MCOUNTEREN_IDX    = 7;
     localparam CSR_RF_MSTATUSH_IDX      = 8;
     localparam CSR_RF_MEDELEGH_IDX      = 9;
-    localparam CSR_RF_MTVT_IDX          = 10;
-    localparam CSR_RF_MSCRATCH_IDX      = 11;
-    localparam CSR_RF_MEPC_IDX          = 12;
-    localparam CSR_RF_MCAUSE_IDX        = 13;
-    localparam CSR_RF_MTVAL_IDX         = 14;
-    localparam CSR_RF_MIP_IDX           = 15;
-    localparam CSR_RF_MTINST_IDX        = 16;
-    localparam CSR_RF_MTVAL2_IDX        = 17;
-    localparam CSR_RF_MCYCLE_IDX        = 18;
-    localparam CSR_RF_MINSTRET_IDX      = 19;
-    localparam CSR_RF_MCYCLEH_IDX       = 20;
-    localparam CSR_RF_MINSTRETH_IDX     = 21;
-    localparam CSR_RF_MVENDORID_IDX     = 22;
-    localparam CSR_RF_MARCHID_IDX       = 23;
-    localparam CSR_RF_MIMPID_IDX        = 24;
-    localparam CSR_RF_MHARTID_IDX       = 25;
-    localparam CSR_RF_MCONFIGPTR_IDX    = 26;
+    localparam CSR_RF_MSCRATCH_IDX      = 10;
+    localparam CSR_RF_MEPC_IDX          = 11;
+    localparam CSR_RF_MCAUSE_IDX        = 12;
+    localparam CSR_RF_MTVAL_IDX         = 13;
+    localparam CSR_RF_MIP_IDX           = 14;
+    localparam CSR_RF_MTINST_IDX        = 15;
+    localparam CSR_RF_MTVAL2_IDX        = 16;
+    localparam CSR_RF_MCYCLE_IDX        = 17;
+    localparam CSR_RF_MINSTRET_IDX      = 18;
+    localparam CSR_RF_MCYCLEH_IDX       = 19;
+    localparam CSR_RF_MINSTRETH_IDX     = 20;
+    localparam CSR_RF_MVENDORID_IDX     = 21;
+    localparam CSR_RF_MARCHID_IDX       = 22;
+    localparam CSR_RF_MIMPID_IDX        = 23;
+    localparam CSR_RF_MHARTID_IDX       = 24;
+    localparam CSR_RF_MCONFIGPTR_IDX    = 25;
 
     reg spec_reg_r_en, spec_reg_w_en;
     reg [31:0] write_value;
-    reg [31:0] csr_rf [26:0];
+    reg [31:0] csr_rf [25:0];
 
     reg [1:0] current_priv;
 
@@ -138,7 +137,6 @@ module csr_unit
             csr_rf[CSR_RF_MCOUNTEREN_IDX]   <= CSR_MCOUNTEREN_RST;
             csr_rf[CSR_RF_MSTATUSH_IDX]     <= CSR_MSTATUSH_RST;
             csr_rf[CSR_RF_MEDELEGH_IDX]     <= CSR_MEDELEGH_RST;
-            csr_rf[CSR_RF_MTVT_IDX]         <= CSR_MTVT_RST;
             csr_rf[CSR_RF_MSCRATCH_IDX]     <= CSR_MSCRATCH_RST;
             csr_rf[CSR_RF_MEPC_IDX]         <= CSR_MEPC_RST;
             csr_rf[CSR_RF_MCAUSE_IDX]       <= CSR_MCAUSE_RST;
@@ -231,7 +229,6 @@ module csr_unit
                 CSR_MCOUNTEREN_ADDR:   csr_rf[CSR_RF_MCOUNTEREN_IDX]    <= write_value;
                 CSR_MSTATUSH_ADDR:     csr_rf[CSR_RF_MSTATUSH_IDX]      <= write_value;
                 CSR_MEDELEGH_ADDR:     csr_rf[CSR_RF_MEDELEGH_IDX]      <= write_value;
-                CSR_MTVT_ADDR:         csr_rf[CSR_RF_MTVT_IDX]          <= write_value;
                 CSR_MSCRATCH_ADDR:     csr_rf[CSR_RF_MSCRATCH_IDX]      <= write_value;
                 CSR_MEPC_ADDR:         csr_rf[CSR_RF_MEPC_IDX]          <= write_value;
                 CSR_MCAUSE_ADDR:       csr_rf[CSR_RF_MCAUSE_IDX]        <= write_value;
@@ -276,7 +273,6 @@ module csr_unit
             || csr_addr == CSR_MCOUNTEREN_ADDR
             || csr_addr == CSR_MSTATUSH_ADDR
             || csr_addr == CSR_MEDELEGH_ADDR
-            || csr_addr == CSR_MTVT_ADDR
             || csr_addr == CSR_MSCRATCH_ADDR
             || csr_addr == CSR_MEPC_ADDR
             || csr_addr == CSR_MCAUSE_ADDR
@@ -324,7 +320,6 @@ module csr_unit
                 CSR_MCOUNTEREN_ADDR:   out <= csr_rf[CSR_RF_MCOUNTEREN_IDX];
                 CSR_MSTATUSH_ADDR:     out <= csr_rf[CSR_RF_MSTATUSH_IDX];
                 CSR_MEDELEGH_ADDR:     out <= csr_rf[CSR_RF_MEDELEGH_IDX];
-                CSR_MTVT_ADDR:         out <= csr_rf[CSR_RF_MTVT_IDX];
                 CSR_MSCRATCH_ADDR:     out <= csr_rf[CSR_RF_MSCRATCH_IDX];
                 CSR_MEPC_ADDR:         out <= csr_rf[CSR_RF_MEPC_IDX];
                 CSR_MCAUSE_ADDR:       out <= csr_rf[CSR_RF_MCAUSE_IDX];
