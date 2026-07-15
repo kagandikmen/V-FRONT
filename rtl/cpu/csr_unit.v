@@ -42,6 +42,8 @@ module csr_unit
     input instr_access_misaligned,
     input [31:0] instr_addr,
 
+    input timer_irq_i,
+    input ext_irq_i,
     output msi,
     output mti,
     output mei,
@@ -92,8 +94,8 @@ module csr_unit
     wire mstatus_tw;
 
     assign msip = csr_rf[CSR_RF_MIP_IDX][3];
-    assign mtip = csr_rf[CSR_RF_MIP_IDX][7];
-    assign meip = csr_rf[CSR_RF_MIP_IDX][11];
+    assign mtip = timer_irq_i;
+    assign meip = ext_irq_i;
 
     assign msie = csr_rf[CSR_RF_MIE_IDX][3];
     assign mtie = csr_rf[CSR_RF_MIE_IDX][7];
@@ -313,7 +315,7 @@ module csr_unit
                 CSR_MEPC_ADDR:         out <= csr_rf[CSR_RF_MEPC_IDX];
                 CSR_MCAUSE_ADDR:       out <= csr_rf[CSR_RF_MCAUSE_IDX];
                 CSR_MTVAL_ADDR:        out <= csr_rf[CSR_RF_MTVAL_IDX];
-                CSR_MIP_ADDR:          out <= csr_rf[CSR_RF_MIP_IDX];
+                CSR_MIP_ADDR: begin    out <= csr_rf[CSR_RF_MIP_IDX]; out[11] <= ext_irq_i; out[7] <= timer_irq_i; end
                 CSR_MTINST_ADDR:       out <= csr_rf[CSR_RF_MTINST_IDX];
                 CSR_MTVAL2_ADDR:       out <= csr_rf[CSR_RF_MTVAL2_IDX];
                 CSR_MCYCLE_ADDR:       out <= csr_rf[CSR_RF_MCYCLE_IDX];

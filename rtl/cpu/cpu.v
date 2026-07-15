@@ -34,7 +34,11 @@ module cpu
     output wire [3:0] mem_wr_mode_o,
     output wire [12:0] mem_addra_o,
     output wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o,
-    output wire [OP_LENGTH-1:0] mem_dinb_o
+    output wire [OP_LENGTH-1:0] mem_dinb_o,
+
+    // Interrupt interface
+    input wire timer_irq_i,
+    input wire ext_irq_i
     );
 
 
@@ -442,6 +446,8 @@ module cpu
             .illegal_wfi_o(illegal_wfi_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
             .instr_addr(alu_result),
+            .timer_irq_i(timer_irq_i),
+            .ext_irq_i(ext_irq_i),
             .msi(msi_ex),
             .mti(mti_ex),
             .mei(mei_ex),
