@@ -123,8 +123,8 @@ module instruction_decoder
 
     always @(posedge clk)
     begin
-        if(!stall && !illegal_instr) begin
-            rd_buff[1] <= rd_addr;
+        if(!stall) begin
+            rd_buff[1] <= illegal_instr ? 5'b0 : rd_addr;
             rd_buff[0] <= rd_buff[1];
         end
         
