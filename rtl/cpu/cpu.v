@@ -82,6 +82,7 @@ module cpu
     reg filled_ex;
     reg illegal_instr_ex;
     wire illegal_csr_prel_ex, illegal_csr_ex;
+    wire illegal_mret_prel_ex, illegal_mret_ex;
     wire illegal_wfi_prel_ex, illegal_wfi_ex;
     wire instr_access_misaligned;
 
@@ -193,7 +194,7 @@ module cpu
             .branch_true(comp_result[0]),
             .make_nop(make_nop_ex),
             .illegal_instr(illegal_instr_if),
-            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex || illegal_wfi_ex),
+            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex),
             .msi_i(msi_ex),
             .mti_i(mti_ex),
             .mei_i(mei_ex)
@@ -233,7 +234,7 @@ module cpu
             .branch(branch_ex && !make_nop_ex),
             .jal(jal_ex && !make_nop_ex),
             .jalr(jalr_ex && !make_nop_ex),
-            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_wfi_ex || instr_access_misaligned) && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || instr_access_misaligned) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
@@ -436,6 +437,7 @@ module cpu
             .instr(instr_ex),
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
             .illegal_csr_o(illegal_csr_prel_ex),
+            .illegal_mret_o(illegal_mret_prel_ex),
             .illegal_wfi_o(illegal_wfi_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
             .instr_addr(alu_result),
@@ -448,6 +450,7 @@ module cpu
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
     assign is_misalignment_store = is_misaligned && st_en_ex && !make_nop_ex && !cpu_stall;
     assign illegal_csr_ex = illegal_csr_prel_ex && !make_nop_ex;
+    assign illegal_mret_ex = illegal_mret_prel_ex && !make_nop_ex;
     assign illegal_wfi_ex = illegal_wfi_prel_ex && !make_nop_ex;
 
     // 
@@ -457,7 +460,7 @@ module cpu
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
-            make_nop_me <= make_nop_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_wfi_ex || instr_access_misaligned;
+            make_nop_me <= make_nop_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || instr_access_misaligned;
             pc_plus4_me <= pc_plus4_ex;
             rf_w_select_me <= rf_w_select_ex;
             rd_addr_me <= rd_addr_ex;

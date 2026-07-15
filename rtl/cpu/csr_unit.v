@@ -36,6 +36,7 @@ module csr_unit
     input [31:0] instr,
     input illegal_instr,
     output illegal_csr_o,
+    output illegal_mret_o,
     output illegal_wfi_o,
 
     input instr_access_misaligned,
@@ -85,7 +86,7 @@ module csr_unit
 
     reg not_csr;
     reg write_to_ro_csr;
-    wire illegal_csr, illegal_wfi;
+    wire illegal_csr, illegal_wfi, illegal_mret;
 
     wire msi_en, mti_en, mei_en;
     wire msip, mtip, meip;
@@ -111,8 +112,11 @@ module csr_unit
 
     assign mstatus_tw = csr_rf[CSR_RF_MSTATUS_IDX][21];
 
-    assign illegal_csr = ((r_en || w_en) && (not_csr || (current_priv < csr_addr[9:8]))) || write_to_ro_csr || (mret && (current_priv != 2'b11));
+    assign illegal_csr = ((r_en || w_en) && (not_csr || (current_priv < csr_addr[9:8]))) || write_to_ro_csr;
     assign illegal_csr_o = illegal_csr;
+
+    assign illegal_mret = mret && (current_priv != 2'b11);
+    assign illegal_mret_o = illegal_mret;
 
     assign illegal_wfi = wfi && (current_priv == 2'b00) && (mstatus_tw == 1'b1);
     assign illegal_wfi_o = illegal_wfi;
@@ -154,14 +158,7 @@ module csr_unit
             csr_rf[CSR_RF_MHARTID_IDX]      <= CSR_MHARTID_RST;
             csr_rf[CSR_RF_MCONFIGPTR_IDX]   <= CSR_MCONFIGPTR_RST;
         end
-        else if (mret)
-        begin
-            csr_rf[CSR_RF_MSTATUS_IDX][3]       <= csr_rf[CSR_RF_MSTATUS_IDX][7];
-            csr_rf[CSR_RF_MSTATUS_IDX][7]       <= 1'b1;
-            csr_rf[CSR_RF_MSTATUS_IDX][12:11]   <= 2'b00;     // set back to least-privileged mode supported (U)
-            current_priv                        <= csr_rf[CSR_RF_MSTATUS_IDX][12:11];
-        end
-        else if (illegal_instr || illegal_csr || illegal_wfi)
+        else if (illegal_instr || illegal_csr || illegal_mret || illegal_wfi)
         begin
             csr_rf[CSR_RF_MEPC_IDX]     <= pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd2;
@@ -174,6 +171,13 @@ module csr_unit
             csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd0;
             csr_rf[CSR_RF_MTVAL_IDX]    <= jalr ? {instr_addr[31:1], 1'b0} : instr_addr;
             trap_to_M();
+        end
+        else if (mret)
+        begin
+            csr_rf[CSR_RF_MSTATUS_IDX][3]       <= csr_rf[CSR_RF_MSTATUS_IDX][7];
+            csr_rf[CSR_RF_MSTATUS_IDX][7]       <= 1'b1;
+            csr_rf[CSR_RF_MSTATUS_IDX][12:11]   <= 2'b00;     // set back to least-privileged mode supported (U)
+            current_priv                        <= csr_rf[CSR_RF_MSTATUS_IDX][12:11];
         end
         else if (ecall)
         begin
@@ -340,7 +344,7 @@ module csr_unit
             endcase
         end
 
-        if(illegal_instr || illegal_csr || illegal_wfi || instr_access_misaligned || is_misaligned || msi_en || mti_en || mei_en || ecall || ebreak) begin
+        if(illegal_instr || illegal_csr || illegal_mret || illegal_wfi || instr_access_misaligned || is_misaligned || msi_en || mti_en || mei_en || ecall || ebreak) begin
             out <= csr_rf[CSR_RF_MTVEC_IDX];
         end else if(mret) begin
             out <= csr_rf[CSR_RF_MEPC_IDX];
