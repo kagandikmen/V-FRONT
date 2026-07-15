@@ -266,6 +266,7 @@ module cpu
             .clk(sysclk),
             .rst(rst),
             .instr(instr_id),
+            .illegal_instr(illegal_instr_id),
             .stall(cpu_stall),
             .rs1_addr(rs1_addr_id),
             .rs2_addr(rs2_addr_id),
