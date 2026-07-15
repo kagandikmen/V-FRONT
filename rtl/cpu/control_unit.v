@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2026-07-11
+// Modified:    2026-07-15
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -29,11 +29,13 @@ module control_unit
 
     // to PC counter
     output reg branch,
-    output reg jump,
+    output reg jal,
+    output reg jalr,
 
     output reg ecall,
     output reg ebreak,
     output reg mret,
+    output reg wfi,
 
     output reg [3:0] ldst_mask,
     output reg ldst_is_unsigned,
@@ -44,20 +46,24 @@ module control_unit
     output csr_w_en,
     output [2:0] csr_op,
     output [11:0] csr_addr,
-    output [1:0] csr_imm_select,
+    output csr_imm_select,
 
     input branch_true,
     output make_nop,
     output reg illegal_instr,
-    input illegal_instr_csr_ex
+    input illegal_instr_csr_ex,
+
+    input msi_i,
+    input mti_i,
+    input mei_i
     );
 
     `include "common_library.vh"
 
     wire [16:0] instr_compressed;
 
-    reg branch_id, jump_id, ecall_id, ebreak_id, mret_id;
-    reg branch_ex, jump_ex, ecall_ex, ebreak_ex, mret_ex;
+    reg branch_id, jal_id, jalr_id, ecall_id, ebreak_id, mret_id;
+    reg branch_ex, jal_ex, jalr_ex, ecall_ex, ebreak_ex, mret_ex;
 
     reg make_nop_id, make_nop_ex;
     reg make_nop_if_buffer;
@@ -66,13 +72,13 @@ module control_unit
     reg csr_w_en_if, csr_w_en_id, csr_w_en_ex;
     reg [2:0] csr_op_if, csr_op_id, csr_op_ex;
     reg [11:0] csr_addr_if, csr_addr_id, csr_addr_ex;
-    reg [1:0] csr_imm_select_if, csr_imm_select_id, csr_imm_select_ex;
+    reg csr_imm_select_if, csr_imm_select_id, csr_imm_select_ex;
 
-    assign csr_r_en = (is_misaligned && !make_nop_ex) ? 1'b1 : csr_r_en_ex;
-    assign csr_w_en = (is_misaligned && !make_nop_ex) ? 1'b0 : csr_w_en_ex;
-    assign csr_op = (is_misaligned && !make_nop_ex) ? 3'b000 :csr_op_ex;
-    assign csr_addr = (is_misaligned && !make_nop_ex) ? CSR_MTVEC_ADDR : csr_addr_ex;
-    assign csr_imm_select = (is_misaligned && !make_nop_ex) ? 2'b10 : csr_imm_select_ex;
+    assign csr_r_en = csr_r_en_ex;
+    assign csr_w_en = csr_w_en_ex;
+    assign csr_op = csr_op_ex;
+    assign csr_addr = csr_addr_ex;
+    assign csr_imm_select = csr_imm_select_ex;
 
     assign make_nop = make_nop_ex;
 
@@ -84,13 +90,15 @@ module control_unit
     begin
         if(!stall) begin
             branch_id <= branch;
-            jump_id <= jump;
+            jal_id <= jal;
+            jalr_id <= jalr;
             ecall_id <= ecall;
             ebreak_id <= ebreak;
             mret_id <= mret;
 
             branch_ex <= branch_id;
-            jump_ex <= jump_id;
+            jal_ex <= jal_id;
+            jalr_ex <= jalr_id;
             ecall_ex <= ecall_id;
             ebreak_ex <= ebreak_id;
             mret_ex <= mret_id;
@@ -114,13 +122,15 @@ module control_unit
         if(rst)
         begin
             branch_id <= 1'b0;
-            jump_id <= 1'b0;
+            jal_id <= 1'b0;
+            jalr_id <= 1'b0;
             ecall_id <= 1'b0;
             ebreak_id <= 1'b0;
             mret_id <= 1'b0;
 
             branch_ex <= 1'b0;
-            jump_ex <= 1'b0;
+            jal_ex <= 1'b0;
+            jalr_ex <= 1'b0;
             ecall_ex <= 1'b0;
             ebreak_ex <= 1'b0;
             mret_ex <= 1'b0;
@@ -151,7 +161,8 @@ module control_unit
         alu_imm_select = 1'b1;      // choose the immediate
         alu_pc_select = 2'b00;      // don't select PC at ALU
         branch = 1'b0;
-        jump = 1'b0;
+        jal = 1'b0;
+        jalr = 1'b0;
         st_en_if = 1'b0;
         csr_r_en_if = 1'b0;
         csr_w_en_if = 1'b0;
@@ -159,6 +170,7 @@ module control_unit
         csr_imm_select_if = 2'b0;
         csr_op_if = 3'b000;
         mret = 1'b0;
+        wfi = 1'b0;
         ecall = 1'b0;
         ebreak = 1'b0;
         ldst_is_unsigned = 1'b0;
@@ -318,6 +330,7 @@ module control_unit
                 alu_subunit_op_sel = 4'b0011;
                 w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
+                illegal_instr = (instr[31:25] != 7'b000_0000);
             end
             {FUNCT3_SRLI, I_OPCODE}: // SRLI / SRAI
             begin
@@ -328,6 +341,7 @@ module control_unit
                     alu_subunit_op_sel = 4'b0001;
                     w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
+                    illegal_instr = (instr[31:25] != 7'b000_0000);
                 end
                 else                        // SRAI
                 begin
@@ -336,6 +350,7 @@ module control_unit
                     alu_subunit_op_sel = 4'b0111;
                     w_en_rf_if = 1'b1;
                     rf_w_select = 2'b00;
+                    illegal_instr = (instr[31:25] != 7'b010_0000);
                 end
             end
             {FUNCT3_LB, LOAD_OPCODE}: // LB
@@ -500,25 +515,12 @@ module control_unit
                 alu_imm_select = 1'b1;
                 w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
-                csr_r_en_if = 1'b1;
-                csr_w_en_if = 1'b0;
-                csr_op_if = 3'b000;
-                case (instr[31:20])
-                    12'h000:    // ECALL
-                    begin
-                        ecall = 1'b1;
-                        csr_addr_if = CSR_MTVEC_ADDR;
-                    end
-                    12'h001:    // EBREAK
-                    begin
-                        ebreak = 1'b1;
-                        csr_addr_if = CSR_MTVEC_ADDR;
-                    end
-                    12'h302:    // MRET
-                    begin
-                        mret = 1'b1;
-                        csr_addr_if = CSR_MEPC_ADDR;
-                    end
+                case (instr)
+                    32'h00000073: ecall = 1'b1;
+                    32'h00100073: ebreak = 1'b1;
+                    32'h30200073: mret = 1'b1;
+                    32'h10500073: wfi = 1'b1;
+                    default: illegal_instr = 1'b1;
                 endcase
             end
             {FUNCT3_CSRRW, SYSTEM_OPCODE}:
@@ -567,7 +569,7 @@ module control_unit
                 csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
                 csr_w_en_if = 1'b1;
                 csr_addr_if = instr[31:20];
-                csr_imm_select_if = 2'b01;
+                csr_imm_select_if = 1'b1;
                 csr_op_if = 3'b101;
             end
             {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
@@ -577,7 +579,7 @@ module control_unit
                 csr_r_en_if = 1'b1;
                 csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr_if = instr[31:20];
-                csr_imm_select_if = 2'b01;
+                csr_imm_select_if = 1'b1;
                 csr_op_if = 3'b110;
             end
             {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
@@ -587,7 +589,7 @@ module control_unit
                 csr_r_en_if = 1'b1;
                 csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
                 csr_addr_if = instr[31:20];
-                csr_imm_select_if = 2'b01;
+                csr_imm_select_if = 1'b1;
                 csr_op_if = 3'b111;
             end
             default:    // JAL / JALR / LUI / AUIPC
@@ -599,7 +601,7 @@ module control_unit
                         alu_cu_input_sel = 1'b0;
                         alu_subunit_res_sel = 2'b00;
                         alu_subunit_op_sel = 4'b0000; 
-                        jump = 1'b1;
+                        jal = 1'b1;
                         w_en_rf_if = 1'b1;
                         rf_w_select = 2'b10;
                     end
@@ -608,7 +610,7 @@ module control_unit
                         alu_cu_input_sel = 1'b0;
                         alu_subunit_res_sel = 2'b00;
                         alu_subunit_op_sel = 4'b0000;
-                        jump = 1'b1;
+                        jalr = 1'b1;
                         w_en_rf_if = 1'b1;
                         rf_w_select = 2'b10;
                     end
@@ -643,7 +645,7 @@ module control_unit
             end
         endcase
 
-        if(((branch_ex && branch_true) || jump_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned) && !make_nop_ex)
+        if(((branch_ex && branch_true) || jal_ex || jalr_ex || ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_csr_ex || instr_access_misaligned || msi_i || mti_i || mei_i) && !make_nop_ex)
         begin
             make_nop_if_buffer = 1'b1;
         end

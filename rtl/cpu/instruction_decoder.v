@@ -1,6 +1,6 @@
 // Instruction decoder of the CPU
 // Created:     2024-01-20
-// Modified:    2026-07-06
+// Modified:    2026-07-15
 // Author:      Kagan Dikmen
 
 module instruction_decoder
@@ -11,6 +11,7 @@ module instruction_decoder
     input clk,
     input rst,
     input [31:0] instr,
+    input illegal_instr,
     input stall,
     
     output reg [4:0] rs1_addr,
@@ -123,7 +124,7 @@ module instruction_decoder
     always @(posedge clk)
     begin
         if(!stall) begin
-            rd_buff[1] <= rd_addr;
+            rd_buff[1] <= illegal_instr ? 5'b0 : rd_addr;
             rd_buff[0] <= rd_buff[1];
         end
         

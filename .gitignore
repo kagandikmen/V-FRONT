@@ -19,3 +19,4 @@ xsim.dir/
 *.zip
 *.mem
 build
+*.do

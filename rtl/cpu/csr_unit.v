@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-07-11
+// Modified:    2026-07-15
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -18,6 +18,8 @@ module csr_unit
     input [31:0] pc,
 
     input mret,
+    input jalr,
+    input wfi,
 
     input [2:0] op,
     input [31:0] in,
@@ -31,127 +33,223 @@ module csr_unit
     input [14:0] mem_addr,
     input [4:0] rd_addr,
 
+    input [31:0] instr,
     input illegal_instr,
-    output illegal_csr,
+    output illegal_csr_o,
+    output illegal_mret_o,
+    output illegal_wfi_o,
 
     input instr_access_misaligned,
-    input [31:0] instr_addr
+    input [31:0] instr_addr,
+
+    input timer_irq_i,
+    input ext_irq_i,
+    output msi,
+    output mti,
+    output mei,
+
+    input instret_en
     );
 
     `include "common_library.vh"
 
+    localparam CSR_RF_JVT_IDX           = 0;
+    localparam CSR_RF_MSTATUS_IDX       = 1;
+    localparam CSR_RF_MISA_IDX          = 2;
+    localparam CSR_RF_MIE_IDX           = 3;
+    localparam CSR_RF_MTVEC_IDX         = 4;
+    localparam CSR_RF_MCOUNTEREN_IDX    = 5;
+    localparam CSR_RF_MSTATUSH_IDX      = 6;
+    localparam CSR_RF_MSCRATCH_IDX      = 7;
+    localparam CSR_RF_MEPC_IDX          = 8;
+    localparam CSR_RF_MCAUSE_IDX        = 9;
+    localparam CSR_RF_MTVAL_IDX         = 10;
+    localparam CSR_RF_MIP_IDX           = 11;
+    localparam CSR_RF_MTINST_IDX        = 12;
+    localparam CSR_RF_MTVAL2_IDX        = 13;
+    localparam CSR_RF_MCYCLE_IDX        = 14;
+    localparam CSR_RF_MINSTRET_IDX      = 15;
+    localparam CSR_RF_MCYCLEH_IDX       = 16;
+    localparam CSR_RF_MINSTRETH_IDX     = 17;
+    localparam CSR_RF_MVENDORID_IDX     = 18;
+    localparam CSR_RF_MARCHID_IDX       = 19;
+    localparam CSR_RF_MIMPID_IDX        = 20;
+    localparam CSR_RF_MHARTID_IDX       = 21;
+    localparam CSR_RF_MCONFIGPTR_IDX    = 22;
+
     reg spec_reg_r_en, spec_reg_w_en;
     reg [31:0] write_value;
-    reg [31:0] spec_csr_registers [12:0];
+    reg [31:0] csr_rf [22:0];
 
     reg [1:0] current_priv;
 
     reg not_csr;
     reg write_to_ro_csr;
+    wire illegal_csr, illegal_wfi, illegal_mret;
 
-    localparam SPEC_CSR_JVT_INDEX       = 0;
-    localparam SPEC_CSR_MSTATUS_INDEX   = 1;
-    localparam SPEC_CSR_MISA_INDEX      = 2;
-    localparam SPEC_CSR_MIE_INDEX       = 3;
-    localparam SPEC_CSR_MTVEC_INDEX     = 4;
-    localparam SPEC_CSR_MTVT_INDEX      = 5;
-    localparam SPEC_CSR_MSCRATCH_INDEX  = 6;
-    localparam SPEC_CSR_MEPC_INDEX      = 7;
-    localparam SPEC_CSR_MCAUSE_INDEX    = 8;
-    localparam SPEC_CSR_MTVAL_INDEX     = 9;
-    localparam SPEC_CSR_CUSTOM1_INDEX   = 10;
-    localparam SPEC_CSR_CUSTOM2_INDEX   = 11;
-    localparam SPEC_CSR_MHARTID_INDEX   = 12;
+    wire msi_en, mti_en, mei_en;
+    wire msip, mtip, meip;
+    wire msie, mtie, meie;
+
+    wire mstatus_tw;
+
+    assign msip = csr_rf[CSR_RF_MIP_IDX][3];
+    assign mtip = timer_irq_i;
+    assign meip = ext_irq_i;
+
+    assign msie = csr_rf[CSR_RF_MIE_IDX][3];
+    assign mtie = csr_rf[CSR_RF_MIE_IDX][7];
+    assign meie = csr_rf[CSR_RF_MIE_IDX][11];
+
+    assign msi_en = msip && msie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+    assign mti_en = mtip && mtie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+    assign mei_en = meip && meie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+
+    assign msi = msi_en;
+    assign mti = mti_en;
+    assign mei = mei_en;
+
+    assign mstatus_tw = csr_rf[CSR_RF_MSTATUS_IDX][21];
+
+    assign illegal_csr = ((r_en || w_en) && (not_csr || (current_priv < csr_addr[9:8]))) || write_to_ro_csr;
+    assign illegal_csr_o = illegal_csr;
+
+    assign illegal_mret = mret && (current_priv != 2'b11);
+    assign illegal_mret_o = illegal_mret;
+
+    assign illegal_wfi = wfi && (current_priv == 2'b00) && (mstatus_tw == 1'b1);
+    assign illegal_wfi_o = illegal_wfi;
 
     // write
     always @(posedge clk)
     begin
+        {csr_rf[CSR_RF_MCYCLEH_IDX], csr_rf[CSR_RF_MCYCLE_IDX]}     <= {csr_rf[CSR_RF_MCYCLEH_IDX], csr_rf[CSR_RF_MCYCLE_IDX]}      + 64'd1;
+        {csr_rf[CSR_RF_MINSTRETH_IDX], csr_rf[CSR_RF_MINSTRET_IDX]} <= {csr_rf[CSR_RF_MINSTRETH_IDX], csr_rf[CSR_RF_MINSTRET_IDX]}  + {63'd0, instret_en};
+
         if (rst == 1'b1)
         begin
             current_priv <= 2'b11;  // boot the chip in M mode
 
-            spec_csr_registers[SPEC_CSR_JVT_INDEX]          <= CSR_JVT_RST;
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX]      <= CSR_MSTATUS_RST;
-            spec_csr_registers[SPEC_CSR_MISA_INDEX]         <= CSR_MISA_RST;
-            spec_csr_registers[SPEC_CSR_MIE_INDEX]          <= CSR_MIE_RST;
-            spec_csr_registers[SPEC_CSR_MTVEC_INDEX]        <= CSR_MTVEC_RST;
-            spec_csr_registers[SPEC_CSR_MTVT_INDEX]         <= CSR_MTVT_RST;
-            spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX]     <= CSR_MSCRATCH_RST;
-            spec_csr_registers[SPEC_CSR_MEPC_INDEX]         <= CSR_MEPC_RST;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]       <= CSR_MCAUSE_RST;
-            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]        <= CSR_MTVAL_RST;
-            spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]      <= CSR_CUSTOM1_RST;
-            spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]      <= CSR_CUSTOM2_RST;
-            spec_csr_registers[SPEC_CSR_MHARTID_INDEX]      <= CSR_MHARTID_RST;
+            csr_rf[CSR_RF_JVT_IDX]          <= CSR_JVT_RST;
+            csr_rf[CSR_RF_MSTATUS_IDX]      <= CSR_MSTATUS_RST;
+            csr_rf[CSR_RF_MISA_IDX]         <= CSR_MISA_RST;
+            csr_rf[CSR_RF_MIE_IDX]          <= CSR_MIE_RST;
+            csr_rf[CSR_RF_MTVEC_IDX]        <= CSR_MTVEC_RST;
+            csr_rf[CSR_RF_MCOUNTEREN_IDX]   <= CSR_MCOUNTEREN_RST;
+            csr_rf[CSR_RF_MSTATUSH_IDX]     <= CSR_MSTATUSH_RST;
+            csr_rf[CSR_RF_MSCRATCH_IDX]     <= CSR_MSCRATCH_RST;
+            csr_rf[CSR_RF_MEPC_IDX]         <= CSR_MEPC_RST;
+            csr_rf[CSR_RF_MCAUSE_IDX]       <= CSR_MCAUSE_RST;
+            csr_rf[CSR_RF_MTVAL_IDX]        <= CSR_MTVAL_RST;
+            csr_rf[CSR_RF_MIP_IDX]          <= CSR_MIP_RST;
+            csr_rf[CSR_RF_MTINST_IDX]       <= CSR_MTINST_RST;
+            csr_rf[CSR_RF_MTVAL2_IDX]       <= CSR_MTVAL2_RST;
+            csr_rf[CSR_RF_MCYCLE_IDX]       <= CSR_MCYCLE_RST;
+            csr_rf[CSR_RF_MINSTRET_IDX]     <= CSR_MINSTRET_RST;
+            csr_rf[CSR_RF_MCYCLEH_IDX]      <= CSR_MCYCLEH_RST;
+            csr_rf[CSR_RF_MINSTRETH_IDX]    <= CSR_MINSTRETH_RST;
+            csr_rf[CSR_RF_MVENDORID_IDX]    <= CSR_MVENDORID_RST;
+            csr_rf[CSR_RF_MARCHID_IDX]      <= CSR_MARCHID_RST;
+            csr_rf[CSR_RF_MIMPID_IDX]       <= CSR_MIMPID_RST;
+            csr_rf[CSR_RF_MHARTID_IDX]      <= CSR_MHARTID_RST;
+            csr_rf[CSR_RF_MCONFIGPTR_IDX]   <= CSR_MCONFIGPTR_RST;
         end
-        else if (mret == 1'b1)
+        else if (illegal_instr || illegal_csr || illegal_mret || illegal_wfi)
         begin
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= 1'b1;
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= 2'b11;     // set back to least-privileged mode supported (M)
-            current_priv <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11];
-        end
-        else if (ecall || ebreak)
-        begin
-            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (ecall) ? 32'd11 : 32'd3;
-            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= 'b0;
-
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
-            current_priv <= 2'b11;
-        end
-        else if (is_misaligned)
-        begin
-            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
-            spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX] <= in;     // saves the instruction word
-            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= {17'b0, mem_addr};
-            spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]  <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
-
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
-            current_priv <= 2'b11;
-        end
-        else if (illegal_instr || illegal_csr)
-        begin
-            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd2;
-
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
-            current_priv <= 2'b11;
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd2;
+            csr_rf[CSR_RF_MTVAL_IDX]    <= instr;
+            trap_to_M();
         end
         else if (instr_access_misaligned)
         begin
-            spec_csr_registers[SPEC_CSR_MEPC_INDEX]     <= pc;
-            spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]   <= 32'd0;
-            spec_csr_registers[SPEC_CSR_MTVAL_INDEX]    <= instr_addr;
-
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][7] <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1];
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][1] <= 1'b0;
-            spec_csr_registers[SPEC_CSR_MSTATUS_INDEX][12:11] <= current_priv;
-            current_priv <= 2'b11;
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd0;
+            csr_rf[CSR_RF_MTVAL_IDX]    <= jalr ? {instr_addr[31:1], 1'b0} : instr_addr;
+            trap_to_M();
         end
-        else if (spec_reg_w_en)
+        else if (mret)
+        begin
+            csr_rf[CSR_RF_MSTATUS_IDX][3]       <= csr_rf[CSR_RF_MSTATUS_IDX][7];
+            csr_rf[CSR_RF_MSTATUS_IDX][7]       <= 1'b1;
+            csr_rf[CSR_RF_MSTATUS_IDX][12:11]   <= 2'b00;     // set back to least-privileged mode supported (U)
+            current_priv                        <= csr_rf[CSR_RF_MSTATUS_IDX][12:11];
+        end
+        else if (ecall)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= (current_priv == 2'b00) ? 32'd8 : 32'd11;
+            csr_rf[CSR_RF_MTVAL_IDX]    <= 'b0;
+            trap_to_M();
+        end
+        else if (ebreak)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd3;
+            csr_rf[CSR_RF_MTVAL_IDX]    <= 'b0;
+            trap_to_M();
+        end
+        else if (is_misaligned)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
+            csr_rf[CSR_RF_MSCRATCH_IDX] <= instr;
+            csr_rf[CSR_RF_MTVAL_IDX]    <= {17'b0, mem_addr};
+            csr_rf[CSR_RF_MTVAL2_IDX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
+            trap_to_M();
+        end
+        else if (mei_en)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd11};
+            trap_to_M();
+        end
+        else if (msi_en)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd3};
+            trap_to_M();
+        end
+        else if (mti_en)
+        begin
+            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd7};
+            trap_to_M();
+        end
+        else if (spec_reg_w_en && !(current_priv < csr_addr[9:8]))
         begin
             case(csr_addr)
-                CSR_JVT_ADDR:          spec_csr_registers[SPEC_CSR_JVT_INDEX]       <= write_value;
-                CSR_MSTATUS_ADDR:      spec_csr_registers[SPEC_CSR_MSTATUS_INDEX]   <= write_value;
-                CSR_MISA_ADDR:         spec_csr_registers[SPEC_CSR_MISA_INDEX]      <= write_value;
-                CSR_MIE_ADDR:          spec_csr_registers[SPEC_CSR_MIE_INDEX]       <= write_value;
-                CSR_MTVEC_ADDR:        spec_csr_registers[SPEC_CSR_MTVEC_INDEX]     <= write_value;
-                CSR_MTVT_ADDR:         spec_csr_registers[SPEC_CSR_MTVT_INDEX]      <= write_value;
-                CSR_MSCRATCH_ADDR:     spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX]  <= write_value;
-                CSR_MEPC_ADDR:         spec_csr_registers[SPEC_CSR_MEPC_INDEX]      <= write_value;
-                CSR_MCAUSE_ADDR:       spec_csr_registers[SPEC_CSR_MCAUSE_INDEX]    <= write_value;
-                CSR_MTVAL_ADDR:        spec_csr_registers[SPEC_CSR_MTVAL_INDEX]     <= write_value;
-                CSR_CUSTOM1_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX]   <= write_value;
-                CSR_CUSTOM2_ADDR:      spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX]   <= write_value;
+                CSR_JVT_ADDR:          csr_rf[CSR_RF_JVT_IDX]           <= write_value;
+                CSR_MSTATUS_ADDR:      csr_rf[CSR_RF_MSTATUS_IDX]       <= write_value;
+                CSR_MISA_ADDR:         csr_rf[CSR_RF_MISA_IDX]          <= write_value;
+                CSR_MIE_ADDR:          csr_rf[CSR_RF_MIE_IDX]           <= write_value;
+                CSR_MTVEC_ADDR:        csr_rf[CSR_RF_MTVEC_IDX]         <= write_value;
+                CSR_MCOUNTEREN_ADDR:   csr_rf[CSR_RF_MCOUNTEREN_IDX]    <= write_value;
+                CSR_MSTATUSH_ADDR:     csr_rf[CSR_RF_MSTATUSH_IDX]      <= write_value;
+                CSR_MSCRATCH_ADDR:     csr_rf[CSR_RF_MSCRATCH_IDX]      <= write_value;
+                CSR_MEPC_ADDR:         csr_rf[CSR_RF_MEPC_IDX]          <= write_value;
+                CSR_MCAUSE_ADDR:       csr_rf[CSR_RF_MCAUSE_IDX]        <= write_value;
+                CSR_MTVAL_ADDR:        csr_rf[CSR_RF_MTVAL_IDX]         <= write_value;
+                CSR_MIP_ADDR:          csr_rf[CSR_RF_MIP_IDX]           <= write_value;
+                CSR_MTINST_ADDR:       csr_rf[CSR_RF_MTINST_IDX]        <= write_value;
+                CSR_MTVAL2_ADDR:       csr_rf[CSR_RF_MTVAL2_IDX]        <= write_value;
+                CSR_MCYCLE_ADDR:       csr_rf[CSR_RF_MCYCLE_IDX]        <= write_value;
+                CSR_MINSTRET_ADDR:     csr_rf[CSR_RF_MINSTRET_IDX]      <= write_value;
+                CSR_MCYCLEH_ADDR:      csr_rf[CSR_RF_MCYCLEH_IDX]       <= write_value;
+                CSR_MINSTRETH_ADDR:    csr_rf[CSR_RF_MINSTRETH_IDX]     <= write_value;
             endcase
+
+            if(csr_addr == CSR_MSTATUS_ADDR) begin
+                case(write_value[12:11])
+                    2'b00:      csr_rf[CSR_RF_MSTATUS_IDX][12:11] <= 2'b00;    // U
+                    2'b11:      csr_rf[CSR_RF_MSTATUS_IDX][12:11] <= 2'b11;    // M
+                    default:    csr_rf[CSR_RF_MSTATUS_IDX][12:11] <= 2'b00;    // collapse to U
+                endcase
+            end
+
+            if(csr_addr == CSR_MISA_ADDR) begin
+                csr_rf[CSR_RF_MISA_IDX] <= csr_rf[CSR_RF_MISA_IDX];
+            end
         end
     end
 
@@ -167,18 +265,28 @@ module csr_unit
             || csr_addr == CSR_MISA_ADDR
             || csr_addr == CSR_MIE_ADDR
             || csr_addr == CSR_MTVEC_ADDR
-            || csr_addr == CSR_MTVT_ADDR
+            || csr_addr == CSR_MCOUNTEREN_ADDR
+            || csr_addr == CSR_MSTATUSH_ADDR
             || csr_addr == CSR_MSCRATCH_ADDR
             || csr_addr == CSR_MEPC_ADDR
             || csr_addr == CSR_MCAUSE_ADDR
             || csr_addr == CSR_MTVAL_ADDR
-            || csr_addr == CSR_CUSTOM1_ADDR
-            || csr_addr == CSR_CUSTOM2_ADDR)
+            || csr_addr == CSR_MIP_ADDR
+            || csr_addr == CSR_MTINST_ADDR
+            || csr_addr == CSR_MTVAL2_ADDR
+            || csr_addr == CSR_MCYCLE_ADDR
+            || csr_addr == CSR_MINSTRET_ADDR
+            || csr_addr == CSR_MCYCLEH_ADDR
+            || csr_addr == CSR_MINSTRETH_ADDR)
         begin
             spec_reg_r_en = r_en;
             spec_reg_w_en = w_en;
         end
-        else if(csr_addr == CSR_MHARTID_ADDR)
+        else if(csr_addr == CSR_MVENDORID_ADDR
+            || csr_addr == CSR_MARCHID_ADDR
+            || csr_addr == CSR_MIMPID_ADDR
+            || csr_addr == CSR_MHARTID_ADDR
+            || csr_addr == CSR_MCONFIGPTR_ADDR)
         begin
             spec_reg_r_en = r_en;
             write_to_ro_csr = w_en;
@@ -196,25 +304,39 @@ module csr_unit
         if(spec_reg_r_en)
         begin
             case(csr_addr)
-                CSR_JVT_ADDR:          out <= spec_csr_registers[SPEC_CSR_JVT_INDEX];
-                CSR_MSTATUS_ADDR:      out <= spec_csr_registers[SPEC_CSR_MSTATUS_INDEX];
-                CSR_MISA_ADDR:         out <= spec_csr_registers[SPEC_CSR_MISA_INDEX];
-                CSR_MIE_ADDR:          out <= spec_csr_registers[SPEC_CSR_MIE_INDEX];
-                CSR_MTVEC_ADDR:        out <= spec_csr_registers[SPEC_CSR_MTVEC_INDEX];
-                CSR_MTVT_ADDR:         out <= spec_csr_registers[SPEC_CSR_MTVT_INDEX];
-                CSR_MSCRATCH_ADDR:     out <= spec_csr_registers[SPEC_CSR_MSCRATCH_INDEX];
-                CSR_MEPC_ADDR:         out <= spec_csr_registers[SPEC_CSR_MEPC_INDEX];
-                CSR_MCAUSE_ADDR:       out <= spec_csr_registers[SPEC_CSR_MCAUSE_INDEX];
-                CSR_MTVAL_ADDR:        out <= spec_csr_registers[SPEC_CSR_MTVAL_INDEX];
-                CSR_CUSTOM1_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM1_INDEX];
-                CSR_CUSTOM2_ADDR:      out <= spec_csr_registers[SPEC_CSR_CUSTOM2_INDEX];
-                CSR_MHARTID_ADDR:      out <= spec_csr_registers[SPEC_CSR_MHARTID_INDEX];
+                CSR_JVT_ADDR:          out <= csr_rf[CSR_RF_JVT_IDX];
+                CSR_MSTATUS_ADDR:      out <= csr_rf[CSR_RF_MSTATUS_IDX];
+                CSR_MISA_ADDR:         out <= csr_rf[CSR_RF_MISA_IDX];
+                CSR_MIE_ADDR:          out <= csr_rf[CSR_RF_MIE_IDX];
+                CSR_MTVEC_ADDR:        out <= csr_rf[CSR_RF_MTVEC_IDX];
+                CSR_MCOUNTEREN_ADDR:   out <= csr_rf[CSR_RF_MCOUNTEREN_IDX];
+                CSR_MSTATUSH_ADDR:     out <= csr_rf[CSR_RF_MSTATUSH_IDX];
+                CSR_MSCRATCH_ADDR:     out <= csr_rf[CSR_RF_MSCRATCH_IDX];
+                CSR_MEPC_ADDR:         out <= csr_rf[CSR_RF_MEPC_IDX];
+                CSR_MCAUSE_ADDR:       out <= csr_rf[CSR_RF_MCAUSE_IDX];
+                CSR_MTVAL_ADDR:        out <= csr_rf[CSR_RF_MTVAL_IDX];
+                CSR_MIP_ADDR: begin    out <= csr_rf[CSR_RF_MIP_IDX]; out[11] <= ext_irq_i; out[7] <= timer_irq_i; end
+                CSR_MTINST_ADDR:       out <= csr_rf[CSR_RF_MTINST_IDX];
+                CSR_MTVAL2_ADDR:       out <= csr_rf[CSR_RF_MTVAL2_IDX];
+                CSR_MCYCLE_ADDR:       out <= csr_rf[CSR_RF_MCYCLE_IDX];
+                CSR_MINSTRET_ADDR:     out <= csr_rf[CSR_RF_MINSTRET_IDX];
+                CSR_MCYCLEH_ADDR:      out <= csr_rf[CSR_RF_MCYCLEH_IDX];
+                CSR_MINSTRETH_ADDR:    out <= csr_rf[CSR_RF_MINSTRETH_IDX];
+                CSR_MVENDORID_ADDR:    out <= csr_rf[CSR_RF_MVENDORID_IDX];
+                CSR_MARCHID_ADDR:      out <= csr_rf[CSR_RF_MARCHID_IDX];
+                CSR_MIMPID_ADDR:       out <= csr_rf[CSR_RF_MIMPID_IDX];
+                CSR_MHARTID_ADDR:      out <= csr_rf[CSR_RF_MHARTID_IDX];
+                CSR_MCONFIGPTR_ADDR:   out <= csr_rf[CSR_RF_MCONFIGPTR_IDX];
                 default:               out <= 'b0;
             endcase
         end
 
-        if(illegal_instr || illegal_csr || instr_access_misaligned) begin
-            out <= spec_csr_registers[SPEC_CSR_MTVEC_INDEX];
+        if(illegal_instr || illegal_csr || illegal_mret || illegal_wfi || instr_access_misaligned) begin
+            out <= csr_rf[CSR_RF_MTVEC_IDX];
+        end else if(mret) begin
+            out <= csr_rf[CSR_RF_MEPC_IDX];
+        end else if(is_misaligned || msi_en || mti_en || mei_en || ecall || ebreak) begin
+            out <= csr_rf[CSR_RF_MTVEC_IDX];
         end
     end
 
@@ -233,6 +355,13 @@ module csr_unit
         endcase
     end
 
-    assign illegal_csr = ((r_en || w_en) && not_csr) || write_to_ro_csr;
+    task trap_to_M;
+        begin
+            csr_rf[CSR_RF_MSTATUS_IDX][7] <= csr_rf[CSR_RF_MSTATUS_IDX][3];
+            csr_rf[CSR_RF_MSTATUS_IDX][3] <= 1'b0;
+            csr_rf[CSR_RF_MSTATUS_IDX][12:11] <= current_priv;
+            current_priv <= 2'b11;
+        end
+    endtask
 
 endmodule

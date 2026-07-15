@@ -1,9 +1,10 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-07-13
+# Modified:		2026-07-14
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
+include ut/riscv-tests/isa/rv32mi/Makefrag
 include ut/v-front/Makefrag
 
 .DEFAULT_GOAL := test
@@ -32,16 +33,19 @@ DESIGN_SOURCES := \
 SIMULATION_SOURCES := \
 	rtl/soc/soc_tb.v
 
-TESTDIRS := ut/riscv-tests/isa/rv32ui ut/v-front
+TESTDIRS := ut/riscv-tests/isa/rv32ui ut/riscv-tests/isa/rv32mi ut/v-front
 
-TESTS := $(rv32ui_sc_tests) $(v-front_tests)
+TESTS := $(rv32ui_sc_tests) $(rv32mi_sc_tests) $(v-front_tests)
 
-FAILING_TESTS := 
+FAILING_TESTS :=
 
 # Exclude the tests that have to be conducted by inspecting simulations
 EXCLUDE_TESTS := csr_permissions illegal_instr illegal_instr_addr
 
-PASSING_TESTS := $(filter-out $(FAILING_TESTS) $(EXCLUDE_TESTS), $(TESTS))
+# (Yet) unimplemented M-mode functionalities
+UNIMP_TESTS := breakpoint zicntr instret_overflow pmpaddr
+
+PASSING_TESTS := $(filter-out $(FAILING_TESTS) $(EXCLUDE_TESTS) $(UNIMP_TESTS), $(TESTS))
 
 CFLAGS += -march=rv32i_zicsr_zifencei -Wall -Wextra -Os -fomit-frame-pointer \
 	-ffreestanding -fno-builtin -fanalyzer -std=gnu99 \
@@ -79,7 +83,7 @@ compile_tests: $(BUILD_TEST_DIR) v-front.f v-front.prj
 	$(RISCV_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
 	for testfile in $(wildcard $</*.S) ; do \
 		test=$${testfile##*/}; test=$${test%.*}; \
-		$(RISCV_PREFIX)-gcc -c $(CFLAGS) -Iut/riscv-tests/env/p -Iut/riscv-tests/isa/macros/scalar -Iut/riscv-tests/isa/rv32ui -o $</$$test.o $</$$test.S; \
+		$(RISCV_PREFIX)-gcc -c $(CFLAGS) -Iut/riscv-tests/env/p -Iut/riscv-tests/isa/macros/scalar -Iut/riscv-tests/isa/rv32ui -Iut/riscv-tests/isa/rv32mi -o $</$$test.o $</$$test.S; \
 		$(RISCV_PREFIX)-gcc -o $</$$test.elf $(LDFLAGS) $</$$test.o sw/mtvec_handler.o; \
 		$(RISCV_PREFIX)-objcopy -j .text -j .data -j .rodata -O verilog --verilog-data-width=4 $</$$test.elf $</$$test.mem; \
 	done
