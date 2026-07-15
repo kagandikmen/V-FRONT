@@ -54,33 +54,30 @@ module csr_unit
     localparam CSR_RF_JVT_IDX           = 0;
     localparam CSR_RF_MSTATUS_IDX       = 1;
     localparam CSR_RF_MISA_IDX          = 2;
-    localparam CSR_RF_MEDELEG_IDX       = 3;    
-    localparam CSR_RF_MIDELEG_IDX       = 4;
-    localparam CSR_RF_MIE_IDX           = 5;
-    localparam CSR_RF_MTVEC_IDX         = 6;
-    localparam CSR_RF_MCOUNTEREN_IDX    = 7;
-    localparam CSR_RF_MSTATUSH_IDX      = 8;
-    localparam CSR_RF_MEDELEGH_IDX      = 9;
-    localparam CSR_RF_MSCRATCH_IDX      = 10;
-    localparam CSR_RF_MEPC_IDX          = 11;
-    localparam CSR_RF_MCAUSE_IDX        = 12;
-    localparam CSR_RF_MTVAL_IDX         = 13;
-    localparam CSR_RF_MIP_IDX           = 14;
-    localparam CSR_RF_MTINST_IDX        = 15;
-    localparam CSR_RF_MTVAL2_IDX        = 16;
-    localparam CSR_RF_MCYCLE_IDX        = 17;
-    localparam CSR_RF_MINSTRET_IDX      = 18;
-    localparam CSR_RF_MCYCLEH_IDX       = 19;
-    localparam CSR_RF_MINSTRETH_IDX     = 20;
-    localparam CSR_RF_MVENDORID_IDX     = 21;
-    localparam CSR_RF_MARCHID_IDX       = 22;
-    localparam CSR_RF_MIMPID_IDX        = 23;
-    localparam CSR_RF_MHARTID_IDX       = 24;
-    localparam CSR_RF_MCONFIGPTR_IDX    = 25;
+    localparam CSR_RF_MIE_IDX           = 3;
+    localparam CSR_RF_MTVEC_IDX         = 4;
+    localparam CSR_RF_MCOUNTEREN_IDX    = 5;
+    localparam CSR_RF_MSTATUSH_IDX      = 6;
+    localparam CSR_RF_MSCRATCH_IDX      = 7;
+    localparam CSR_RF_MEPC_IDX          = 8;
+    localparam CSR_RF_MCAUSE_IDX        = 9;
+    localparam CSR_RF_MTVAL_IDX         = 10;
+    localparam CSR_RF_MIP_IDX           = 11;
+    localparam CSR_RF_MTINST_IDX        = 12;
+    localparam CSR_RF_MTVAL2_IDX        = 13;
+    localparam CSR_RF_MCYCLE_IDX        = 14;
+    localparam CSR_RF_MINSTRET_IDX      = 15;
+    localparam CSR_RF_MCYCLEH_IDX       = 16;
+    localparam CSR_RF_MINSTRETH_IDX     = 17;
+    localparam CSR_RF_MVENDORID_IDX     = 18;
+    localparam CSR_RF_MARCHID_IDX       = 19;
+    localparam CSR_RF_MIMPID_IDX        = 20;
+    localparam CSR_RF_MHARTID_IDX       = 21;
+    localparam CSR_RF_MCONFIGPTR_IDX    = 22;
 
     reg spec_reg_r_en, spec_reg_w_en;
     reg [31:0] write_value;
-    reg [31:0] csr_rf [25:0];
+    reg [31:0] csr_rf [22:0];
 
     reg [1:0] current_priv;
 
@@ -134,13 +131,10 @@ module csr_unit
             csr_rf[CSR_RF_JVT_IDX]          <= CSR_JVT_RST;
             csr_rf[CSR_RF_MSTATUS_IDX]      <= CSR_MSTATUS_RST;
             csr_rf[CSR_RF_MISA_IDX]         <= CSR_MISA_RST;
-            csr_rf[CSR_RF_MEDELEG_IDX]      <= CSR_MEDELEG_RST;
-            csr_rf[CSR_RF_MIDELEG_IDX]      <= CSR_MIDELEG_RST;
             csr_rf[CSR_RF_MIE_IDX]          <= CSR_MIE_RST;
             csr_rf[CSR_RF_MTVEC_IDX]        <= CSR_MTVEC_RST;
             csr_rf[CSR_RF_MCOUNTEREN_IDX]   <= CSR_MCOUNTEREN_RST;
             csr_rf[CSR_RF_MSTATUSH_IDX]     <= CSR_MSTATUSH_RST;
-            csr_rf[CSR_RF_MEDELEGH_IDX]     <= CSR_MEDELEGH_RST;
             csr_rf[CSR_RF_MSCRATCH_IDX]     <= CSR_MSCRATCH_RST;
             csr_rf[CSR_RF_MEPC_IDX]         <= CSR_MEPC_RST;
             csr_rf[CSR_RF_MCAUSE_IDX]       <= CSR_MCAUSE_RST;
@@ -226,13 +220,10 @@ module csr_unit
                 CSR_JVT_ADDR:          csr_rf[CSR_RF_JVT_IDX]           <= write_value;
                 CSR_MSTATUS_ADDR:      csr_rf[CSR_RF_MSTATUS_IDX]       <= write_value;
                 CSR_MISA_ADDR:         csr_rf[CSR_RF_MISA_IDX]          <= write_value;
-                CSR_MEDELEG_ADDR:      csr_rf[CSR_RF_MEDELEG_IDX]       <= write_value;
-                CSR_MIDELEG_ADDR:      csr_rf[CSR_RF_MIDELEG_IDX]       <= write_value;
                 CSR_MIE_ADDR:          csr_rf[CSR_RF_MIE_IDX]           <= write_value;
                 CSR_MTVEC_ADDR:        csr_rf[CSR_RF_MTVEC_IDX]         <= write_value;
                 CSR_MCOUNTEREN_ADDR:   csr_rf[CSR_RF_MCOUNTEREN_IDX]    <= write_value;
                 CSR_MSTATUSH_ADDR:     csr_rf[CSR_RF_MSTATUSH_IDX]      <= write_value;
-                CSR_MEDELEGH_ADDR:     csr_rf[CSR_RF_MEDELEGH_IDX]      <= write_value;
                 CSR_MSCRATCH_ADDR:     csr_rf[CSR_RF_MSCRATCH_IDX]      <= write_value;
                 CSR_MEPC_ADDR:         csr_rf[CSR_RF_MEPC_IDX]          <= write_value;
                 CSR_MCAUSE_ADDR:       csr_rf[CSR_RF_MCAUSE_IDX]        <= write_value;
@@ -270,13 +261,10 @@ module csr_unit
         if(csr_addr == CSR_JVT_ADDR 
             || csr_addr == CSR_MSTATUS_ADDR
             || csr_addr == CSR_MISA_ADDR
-            || csr_addr == CSR_MEDELEG_ADDR
-            || csr_addr == CSR_MIDELEG_ADDR
             || csr_addr == CSR_MIE_ADDR
             || csr_addr == CSR_MTVEC_ADDR
             || csr_addr == CSR_MCOUNTEREN_ADDR
             || csr_addr == CSR_MSTATUSH_ADDR
-            || csr_addr == CSR_MEDELEGH_ADDR
             || csr_addr == CSR_MSCRATCH_ADDR
             || csr_addr == CSR_MEPC_ADDR
             || csr_addr == CSR_MCAUSE_ADDR
@@ -317,13 +305,10 @@ module csr_unit
                 CSR_JVT_ADDR:          out <= csr_rf[CSR_RF_JVT_IDX];
                 CSR_MSTATUS_ADDR:      out <= csr_rf[CSR_RF_MSTATUS_IDX];
                 CSR_MISA_ADDR:         out <= csr_rf[CSR_RF_MISA_IDX];
-                CSR_MEDELEG_ADDR:      out <= csr_rf[CSR_RF_MEDELEG_IDX];
-                CSR_MIDELEG_ADDR:      out <= csr_rf[CSR_RF_MIDELEG_IDX];
                 CSR_MIE_ADDR:          out <= csr_rf[CSR_RF_MIE_IDX];
                 CSR_MTVEC_ADDR:        out <= csr_rf[CSR_RF_MTVEC_IDX];
                 CSR_MCOUNTEREN_ADDR:   out <= csr_rf[CSR_RF_MCOUNTEREN_IDX];
                 CSR_MSTATUSH_ADDR:     out <= csr_rf[CSR_RF_MSTATUSH_IDX];
-                CSR_MEDELEGH_ADDR:     out <= csr_rf[CSR_RF_MEDELEGH_IDX];
                 CSR_MSCRATCH_ADDR:     out <= csr_rf[CSR_RF_MSCRATCH_IDX];
                 CSR_MEPC_ADDR:         out <= csr_rf[CSR_RF_MEPC_IDX];
                 CSR_MCAUSE_ADDR:       out <= csr_rf[CSR_RF_MCAUSE_IDX];
