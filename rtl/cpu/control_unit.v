@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2026-07-14
+// Modified:    2026-07-15
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -515,11 +515,12 @@ module control_unit
                 alu_imm_select = 1'b1;
                 w_en_rf_if = 1'b0;
                 rf_w_select = 2'b00;
-                case (instr[31:20])
-                    12'h000: ecall = 1'b1;
-                    12'h001: ebreak = 1'b1;
-                    12'h302: mret = 1'b1;
-                    12'h105: wfi = 1'b1;
+                case (instr)
+                    32'h00000073: ecall = 1'b1;
+                    32'h00100073: ebreak = 1'b1;
+                    32'h30200073: mret = 1'b1;
+                    32'h10500073: wfi = 1'b1;
+                    default: illegal_instr = 1'b1;
                 endcase
             end
             {FUNCT3_CSRRW, SYSTEM_OPCODE}:
