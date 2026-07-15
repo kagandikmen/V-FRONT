@@ -32,4 +32,4 @@ mconfigptr      | 0xF15          | 0x0000_0000    | MRO
 `MRW` = machine read & write
 `MRO` = machine read-only
 
-V-FRONT does not implement read/write masking yet, except for the misa register and the MPP field of mstatus. Otherwise, all fields of a CSR are read-write as long as the CSR itself is read-write. Accesses to non-existent or unpermitted CSRs raise an illegal instruction exception (mcause = 2). Implementing interrupts is ongoing work as of 2026-07-14.
+V-FRONT does not implement read/write masking yet, except for the misa register and the MPP field of mstatus. Otherwise, all fields of a CSR are read-write as long as the CSR itself is read-write. Accesses to non-existent or unpermitted CSRs raise an illegal instruction exception (mcause = 2).

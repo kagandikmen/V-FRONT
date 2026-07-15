@@ -63,7 +63,7 @@ from V-FRONT project root. To run the unit tests using Vivado, run:
 ```bash
 make SIM_TOOL=vivado
 ```
-In correct setup, the tests should all pass; there is no test failing as of 2026-07-13.
+In correct setup, the tests should all pass; there is no test failing as of 2026-07-15.
 
 V-FRONT comes with simulation flow scripts for Vivado and QuestaSim. To create the "ideal" Vivado project for V-FRONT, use:
 ```bash
@@ -102,7 +102,7 @@ Find an example of how a generic C program can be compiled to run on V-FRONT by 
 
 V-FRONT implements a five-stage pipelined von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for program memory and the second 16 KB for data memory. Misaligned accesses to the data memory are detected by the CPU, which then raises an exception and jumps to a trap vector to handle the misaligned access.
 
-V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md). As of 2026-07-14, the hardware can raise exceptions in case of:
+V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md). As of 2026-07-15, the hardware can raise exceptions in case of:
 
 - a misaligned data memory access,
 - an illegal instruction,
@@ -112,21 +112,21 @@ Software exceptions are raised through `ecall` and `ebreak` instructions. Any ex
 
 V-FRONT supports user mode (U-mode) and machine mode (M-mode) as its privilege modes.
 
-V-FRONT implements `fence` and `fence_i` instructions as pure `NOP`s, as these instructions do not serve any meaningful purpose in a single-core setting.
+V-FRONT implements `fence` and `fence_i` instructions as pure NOPs, as these instructions do not serve any meaningful purpose in a single-core setting. As explicitly allowed by the spec, `wfi` is also implemented as a pure NOP, but it can still trigger an illegal instruction exception in the case of insufficient privilege.
 
 V-FRONT is tested for functional correctness and ISA compliance using the unit tests in the [ut](ut/) folder. This directory includes tests sourced from [riscv-tests](https://github.com/riscv-software-src/riscv-tests). There are additional tests under [ut/v-front](ut/v-front/) as well. See [Getting Started](#getting-started) to learn how you can run the tests yourself.
 
 ## Status
 
-The unit tests all pass as of 2026-07-14. The design is fully synthesizable.
+The unit tests all pass as of 2026-07-15. The design is fully synthesizable.
 
 ### Known Issues
 
-- The five-stage pipeline is fully implemented and tested, but not optimized yet for performance. As a result, the current implementation runs at relatively low clock frequencies (below 20 MHz on Zynq 7020).
-- The control logic shoulders instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
-- There are parametrization issues. Some parameters (like `PC_WIDTH`) do little to nothing.
 - The CSR module does not implement read/write masking yet. CSR write operations can write to any field of a register as long as the register is read-write.
-- Interrupts are only halfway implemented.
+- There are parametrization issues. Some parameters (like `PC_WIDTH`) do little to nothing.
+- Spec compliance needs to be strengthened; future work will involve [riscv-arch-test](https://github.com/riscv/riscv-arch-test).
+- The control logic shoulders instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
+- The design is not optimized yet for performance.
 - Documentation is very limited; needs to be extended.
 
 ## Contributing
