@@ -43,7 +43,7 @@ jobs:
 
       - name: Run the tests
         run: |
-          make MODE=ci
+          make SIM_MODE=ci
 
       - name: Clean
         run: |
