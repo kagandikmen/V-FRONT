@@ -7,3 +7,7 @@
 [submodule "cohesive"]
 	path = rtl/soc
 	url = git@github.com:kagandikmen/cohesive.git
+[submodule "ut/riscv-arch-test"]
+	path = ut/riscv-arch-test
+	url = https://github.com/riscv/riscv-arch-test.git
+	branch = act4
