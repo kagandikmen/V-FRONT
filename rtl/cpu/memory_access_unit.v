@@ -1,17 +1,18 @@
 // Memory access unit of the CPU
 // Created:     2025-05-28
-// Modified:    2026-07-07
+// Modified:    2026-09-14
 // Author:      Kagan Dikmen
 
 module memory_access_unit
     #(
-        parameter BYTE_WIDTH = 8
+        parameter BYTE_WIDTH = 8,
+        parameter DMEM_ADDR_WIDTH = 16
     )(
         input clk,
         input rst,
         input make_nop_i,
         input [31:0] addr_in,
-        output [12:0] addr_out,
+        output [DMEM_ADDR_WIDTH-1:0] addr_out,
         input [3:0] ldst_mask,
         input ldst_is_unsigned,
         input st_en,
@@ -59,7 +60,7 @@ module memory_access_unit
     assign is_store_ongoing_o = is_store_ongoing_reg;
     assign is_load_ongoing_o = is_load_ongoing_reg;
 
-    assign addr_out = addr_in[14:2];
+    assign addr_out = addr_in[DMEM_ADDR_WIDTH-1+2:2];
     assign offset = addr_in[1:0];
 
     assign access_misaligned = (ldst_mask == 4'b1111 && offset != 2'b00) || (ldst_mask == 4'b0011 && offset[0] != 1'b0);

@@ -1,11 +1,12 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-07-15
+// Modified:    2026-09-14
 // Author:      Kagan Dikmen
 
 module csr_unit
     #(
-    parameter CSR_ADDR_WIDTH = 12
+    parameter CSR_ADDR_WIDTH = 12,
+    parameter DMEM_ADDR_WIDTH = 16
     )(
     input clk,
     input rst,
@@ -30,7 +31,7 @@ module csr_unit
     input is_misaligned,
     input is_misalignment_store,
     input [31:0] misaligned_store_value,
-    input [14:0] mem_addr,
+    input [DMEM_ADDR_WIDTH-1+2:0] mem_addr,
     input [4:0] rd_addr,
 
     input [31:0] instr,
@@ -194,7 +195,7 @@ module csr_unit
             csr_rf[CSR_RF_MEPC_IDX]     <= pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
             csr_rf[CSR_RF_MSCRATCH_IDX] <= instr;
-            csr_rf[CSR_RF_MTVAL_IDX]    <= {17'b0, mem_addr};
+            csr_rf[CSR_RF_MTVAL_IDX]    <= mem_addr;
             csr_rf[CSR_RF_MTVAL2_IDX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
             trap_to_M();
         end

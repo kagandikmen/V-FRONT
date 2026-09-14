@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-15
+// Modified:    2026-09-14
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -15,7 +15,7 @@
 
 module cpu 
     #(
-    parameter DMEM_ADDR_WIDTH = 13,
+    parameter DMEM_ADDR_WIDTH = 16,
     parameter DMEM_DATA_WIDTH = 32,
     parameter OP_LENGTH = 32,
     parameter PC_WIDTH = 16,
@@ -32,7 +32,7 @@ module cpu
     output wire mem_if_en_o,
     output wire mem_enb_o,
     output wire [3:0] mem_wr_mode_o,
-    output wire [12:0] mem_addra_o,
+    output wire [DMEM_ADDR_WIDTH-1:0] mem_addra_o,
     output wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o,
     output wire [OP_LENGTH-1:0] mem_dinb_o,
 
@@ -247,7 +247,7 @@ module cpu
             .next_pc(next_pc)
         );
 
-    assign mem_addra_o = next_pc[14:2];
+    assign mem_addra_o = next_pc[DMEM_ADDR_WIDTH-1+2:2];
     assign instr_access_misaligned = !make_nop_ex && ((((branch_ex && comp_result) || jal_ex) && (alu_result[1] || alu_result[0])) || (jalr_ex && alu_result[1]));
     
     always @(posedge sysclk)
@@ -418,7 +418,7 @@ module cpu
             .z(csr_in)
         );
     
-    csr_unit #(.CSR_ADDR_WIDTH(12)) csr_unit_cpu
+    csr_unit #(.CSR_ADDR_WIDTH(12), .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH)) csr_unit_cpu
         (
             .clk(sysclk),
             .rst(rst),
@@ -437,7 +437,7 @@ module cpu
             .is_misaligned(is_misaligned),
             .is_misalignment_store(is_misalignment_store),
             .misaligned_store_value(alu_opd2),
-            .mem_addr(alu_result[14:0]),
+            .mem_addr(alu_result[DMEM_ADDR_WIDTH-1+2:0]),
             .rd_addr(rd_addr_ex),
             .instr(instr_ex),
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
@@ -485,7 +485,7 @@ module cpu
         end
     end
 
-    memory_access_unit #(.BYTE_WIDTH(8))
+    memory_access_unit #(.BYTE_WIDTH(8), .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH))
         memory_access_unit_cpu
         (
             .clk(sysclk),
