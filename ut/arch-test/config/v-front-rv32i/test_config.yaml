@@ -1,6 +1,6 @@
 name: v-front-rv32i
-compiler_exe: riscv32-unknown-elf-gcc
-objdump_exe: riscv32-unknown-elf-objdump
+compiler_exe: riscv-none-elf-gcc
+objdump_exe: riscv-none-elf-objdump
 ref_model_exe: sail_riscv_sim
 udb_config: v-front-rv32i.yaml
 linker_script: link.ld
