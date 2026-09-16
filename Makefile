@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-07-16
+# Modified:		2026-07-17
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -94,6 +94,7 @@ compile_tests: $(BUILD_RV_TESTS_DIR) v-front.f v-front.prj
 	done
 
 riscv-tests: compile_tests
+	EXIT_CODE=0; \
 	for test in $(PASSING_TESTS) ; do \
 		printf "Running test %-50s\t" "$$test:"; \
 		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n $(BUILD_RV_TESTS_DIR)/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
@@ -122,21 +123,24 @@ riscv-tests: compile_tests
 		echo "$$RESULT"; \
 		if [ "$(SIM_MODE)" = "ci" ] || [ "$(SIM_MODE)" = "CI" ]; then \
 			if echo "$$RESULT" | grep -q 'Failure'; then \
-				echo "Test $$test failed!"; \
-				exit 1; \
+				EXIT_CODE=1; \
 			fi; \
 		fi; \
-	done
+	done; \
+	if [ "$$EXIT_CODE" = "1" ]; then \
+		exit 1; \
+	fi
 
 riscv-arch-test_generate:
 	$(MAKE) -C $(ACT_DIR) \
 		CONFIG_FILES="$(ACT_CONFIG)" \
 		WORKDIR="$(ACT_WORKDIR)" \
 		EXTENSIONS="" \
-		DEBUG="False" \
+		DEBUG="" \
 		--jobs 1
 
 riscv-arch-test_run: riscv-arch-test_generate v-front.f
+	EXIT_CODE=0; \
 	for ACT_ELF in $$(find "$(ACT_ELF_ROOT)" -type f -name '*.elf' | sort); do \
 		REL=$${ACT_ELF#"$(ACT_ELF_ROOT)/"}; \
 		TEST=$${REL%.elf}; \
@@ -159,11 +163,13 @@ riscv-arch-test_run: riscv-arch-test_generate v-front.f
 		echo "$$RESULT"; \
 		if [ "$(SIM_MODE)" = "ci" ] || [ "$(SIM_MODE)" = "CI" ]; then \
 			if echo "$$RESULT" | grep -q 'Failure'; then \
-				echo "Test $$test failed!"; \
-				exit 1; \
+				EXIT_CODE=1; \
 			fi; \
 		fi; \
-	done
+	done; \
+	if [ "$$EXIT_CODE" = "1" ]; then \
+		exit 1; \
+	fi
 
 riscv-arch-test: riscv-arch-test_run
 
