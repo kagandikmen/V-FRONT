@@ -18,6 +18,7 @@ GUI ?= 0
 
 MEMFILE		?= sim/init.mem
 RESET_ADDR	?= 0
+TOHOST_ADDR ?= 16384
 
 INCLUDE := $(addprefix +incdir+,$(INC_DIR))
 
@@ -27,6 +28,7 @@ SET_VARS := set FLIST 		{$(FLIST)};	\
 			set INCLUDE 	{$(INCLUDE)}; \
 			set MEMFILE 	{$(MEMFILE)}; \
 			set RESET_ADDR	{$(RESET_ADDR)}; \
+			set TOHOST_ADDR {$(TOHOST_ADDR)}; \
 			set BUILD_DIR	{$(BUILD_DIR)}
 
 export QSIM_INI := $(BUILD_DIR)/modelsim.ini

@@ -12,12 +12,13 @@ if {[file exists $BUILD_DIR/work]} {
 vlib $BUILD_DIR/work
 vmap work $BUILD_DIR/work
 
-vlog {*}$INCLUDE -f $FLIST {*}$TBLIST
+vlog {*}$INCLUDE -f $FLIST {*}$TBLIST +define+UT
 
 vsim -voptargs=+acc \
     -wlf $BUILD_DIR/vsim.wlf \
     -g MEM_INIT_FILE=\"$MEMFILE\" \
     -g RESET_ADDR=$RESET_ADDR \
+    -g TOHOST_ADDR=$TOHOST_ADDR \
     work.$TOP
 
 # log all signals from the start

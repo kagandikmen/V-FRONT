@@ -52,6 +52,8 @@ UNIMP_TESTS := breakpoint zicntr instret_overflow pmpaddr
 
 PASSING_TESTS := $(filter-out $(FAILING_TESTS) $(EXCLUDE_TESTS) $(UNIMP_TESTS), $(TESTS))
 
+DEBUG_TEST ?=
+
 CFLAGS += -march=rv32i_zicsr_zifencei -Wall -Wextra -Os -fomit-frame-pointer \
 	-ffreestanding -fno-builtin -fanalyzer -std=gnu99 \
 	-Wall -Werror=implicit-function-declaration -ffunction-sections -fdata-sections
@@ -136,7 +138,7 @@ riscv-arch-test_generate:
 		CONFIG_FILES="$(ACT_CONFIG)" \
 		WORKDIR="$(ACT_WORKDIR)" \
 		EXTENSIONS="" \
-		DEBUG="" \
+		DEBUG= \
 		--jobs 1
 
 riscv-arch-test_run: riscv-arch-test_generate v-front.f
@@ -174,6 +176,26 @@ riscv-arch-test_run: riscv-arch-test_generate v-front.f
 riscv-arch-test: riscv-arch-test_run
 
 test: riscv-tests riscv-arch-test
+
+debug_arch_test: riscv-arch-test_generate v-front.f
+	if [ "$(DEBUG_TEST)" = "" ]; then \
+		echo "Error: DEBUG_TEST not set!"; \
+		exit 1; \
+	fi; \
+	ACT_ELF=$$(find "$(ACT_ELF_ROOT)" -type f -wholename '*$(DEBUG_TEST).elf'); \
+	REL=$${ACT_ELF#"$(ACT_ELF_ROOT)/"}; \
+	TEST=$${REL%.elf}; \
+	TEST_ID=$$(printf '%s' "$$TEST" | tr '/' '_'); \
+	printf "Running test %-50s\t" "$$TEST:"; \
+	ACT_MEM="$(ACT_WORKDIR)/$$TEST_ID.mem"; \
+	$(RISCV_PREFIX)-objcopy -j .text.init -j .text.rvtest -j .text.rvmodel -j .data -j .rodata -O verilog --verilog-data-width=4 "$$ACT_ELF" "$$ACT_MEM"; \
+	ACT_TOHOST=$$($(RISCV_PREFIX)-nm -n "$$ACT_ELF" | gawk '$$3 == "tohost" { print strtonum("0x" $$1) }'); \
+	ACT_RESET_ADDR_HEX=$$($(RISCV_PREFIX)-nm -n "$$ACT_ELF" | gawk '$$3 == "rvtest_entry_point" { print $$1 }'); \
+	$(MAKE) -f target/questa/Makefile run \
+		GUI=1 \
+		MEMFILE="$$ACT_MEM" \
+		RESET_ADDR="32'h$$ACT_RESET_ADDR_HEX" \
+		TOHOST_ADDR="$$ACT_TOHOST"
 
 $(BUILD_DIR)/vivado:
 	vivado -source target/vivado/create_project.tcl -mode batch
