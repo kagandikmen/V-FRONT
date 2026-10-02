@@ -229,7 +229,7 @@ module csr_unit
                 CSR_MISA_ADDR:         csr_rf[CSR_RF_MISA_IDX]          <= write_value;
                 CSR_MIE_ADDR:          csr_rf[CSR_RF_MIE_IDX]           <= write_value;
                 CSR_MTVEC_ADDR:        csr_rf[CSR_RF_MTVEC_IDX]         <= write_value;
-                CSR_MCOUNTEREN_ADDR:   csr_rf[CSR_RF_MCOUNTEREN_IDX]    <= write_value;
+                CSR_MCOUNTEREN_ADDR:   csr_rf[CSR_RF_MCOUNTEREN_IDX]    <= write_value & CSR_MCOUNTEREN_WMASK;
                 CSR_MSTATUSH_ADDR:     csr_rf[CSR_RF_MSTATUSH_IDX]      <= write_value;
                 CSR_MSCRATCH_ADDR:     csr_rf[CSR_RF_MSCRATCH_IDX]      <= write_value;
                 CSR_MEPC_ADDR:         csr_rf[CSR_RF_MEPC_IDX]          <= write_value;
