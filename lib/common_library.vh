@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2026-07-15
+// Modified:    2026-10-02
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -134,6 +134,10 @@ localparam CSR_MCYCLE_ADDR      = 12'hb00;
 localparam CSR_MINSTRET_ADDR    = 12'hb02;
 localparam CSR_MCYCLEH_ADDR     = 12'hb80;
 localparam CSR_MINSTRETH_ADDR   = 12'hb82;
+localparam CSR_CYCLE_ADDR       = 12'hc00;
+localparam CSR_INSTRET_ADDR     = 12'hc02;
+localparam CSR_CYCLEH_ADDR      = 12'hc80;
+localparam CSR_INSTRETH_ADDR    = 12'hc82;
 localparam CSR_MVENDORID_ADDR   = 12'hf11;
 localparam CSR_MARCHID_ADDR     = 12'hf12;
 localparam CSR_MIMPID_ADDR      = 12'hf13;

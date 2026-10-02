@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-09-14
+// Modified:    2026-10-02
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -39,6 +39,7 @@ module csr_unit
     output illegal_csr_o,
     output illegal_mret_o,
     output illegal_wfi_o,
+    output illegal_zicntr_o,
 
     input instr_access_misaligned,
     input [31:0] instr_addr,
@@ -86,7 +87,7 @@ module csr_unit
 
     reg not_csr;
     reg write_to_ro_csr;
-    wire illegal_csr, illegal_wfi, illegal_mret;
+    wire illegal_csr, illegal_wfi, illegal_mret, illegal_zicntr;
 
     wire msi_en, mti_en, mei_en;
     wire msip, mtip, meip;
@@ -120,6 +121,9 @@ module csr_unit
 
     assign illegal_wfi = wfi && (current_priv == 2'b00) && (mstatus_tw == 1'b1);
     assign illegal_wfi_o = illegal_wfi;
+
+    assign illegal_zicntr = (((csr_addr == CSR_CYCLE_ADDR || csr_addr == CSR_CYCLEH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][0]) || ((csr_addr == CSR_INSTRET_ADDR || csr_addr == CSR_INSTRETH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][2])) && (r_en || w_en) && (current_priv != 2'b11);
+    assign illegal_zicntr_o = illegal_zicntr;
 
     // write
     always @(posedge clk)
@@ -155,7 +159,7 @@ module csr_unit
             csr_rf[CSR_RF_MHARTID_IDX]      <= CSR_MHARTID_RST;
             csr_rf[CSR_RF_MCONFIGPTR_IDX]   <= CSR_MCONFIGPTR_RST;
         end
-        else if (illegal_instr || illegal_csr || illegal_mret || illegal_wfi)
+        else if (illegal_instr || illegal_csr || illegal_mret || illegal_wfi || illegal_zicntr)
         begin
             csr_rf[CSR_RF_MEPC_IDX]     <= pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= 32'd2;
@@ -278,7 +282,8 @@ module csr_unit
             || csr_addr == CSR_MCYCLE_ADDR
             || csr_addr == CSR_MINSTRET_ADDR
             || csr_addr == CSR_MCYCLEH_ADDR
-            || csr_addr == CSR_MINSTRETH_ADDR)
+            || csr_addr == CSR_MINSTRETH_ADDR
+            )
         begin
             spec_reg_r_en = r_en;
             spec_reg_w_en = w_en;
@@ -287,7 +292,12 @@ module csr_unit
             || csr_addr == CSR_MARCHID_ADDR
             || csr_addr == CSR_MIMPID_ADDR
             || csr_addr == CSR_MHARTID_ADDR
-            || csr_addr == CSR_MCONFIGPTR_ADDR)
+            || csr_addr == CSR_MCONFIGPTR_ADDR
+            || csr_addr == CSR_CYCLE_ADDR
+            || csr_addr == CSR_INSTRET_ADDR
+            || csr_addr == CSR_CYCLEH_ADDR
+            || csr_addr == CSR_INSTRETH_ADDR
+            )
         begin
             spec_reg_r_en = r_en;
             write_to_ro_csr = w_en;
@@ -323,6 +333,10 @@ module csr_unit
                 CSR_MINSTRET_ADDR:     out <= csr_rf[CSR_RF_MINSTRET_IDX];
                 CSR_MCYCLEH_ADDR:      out <= csr_rf[CSR_RF_MCYCLEH_IDX];
                 CSR_MINSTRETH_ADDR:    out <= csr_rf[CSR_RF_MINSTRETH_IDX];
+                CSR_CYCLE_ADDR:        out <= csr_rf[CSR_RF_MCYCLE_IDX];
+                CSR_INSTRET_ADDR:      out <= csr_rf[CSR_RF_MINSTRET_IDX];
+                CSR_CYCLEH_ADDR:       out <= csr_rf[CSR_RF_MCYCLEH_IDX];
+                CSR_INSTRETH_ADDR:     out <= csr_rf[CSR_RF_MINSTRETH_IDX];
                 CSR_MVENDORID_ADDR:    out <= csr_rf[CSR_RF_MVENDORID_IDX];
                 CSR_MARCHID_ADDR:      out <= csr_rf[CSR_RF_MARCHID_IDX];
                 CSR_MIMPID_ADDR:       out <= csr_rf[CSR_RF_MIMPID_IDX];
@@ -332,7 +346,7 @@ module csr_unit
             endcase
         end
 
-        if(illegal_instr || illegal_csr || illegal_mret || illegal_wfi || instr_access_misaligned) begin
+        if(illegal_instr || illegal_csr || illegal_mret || illegal_wfi || illegal_zicntr || instr_access_misaligned) begin
             out <= csr_rf[CSR_RF_MTVEC_IDX];
         end else if(mret) begin
             out <= csr_rf[CSR_RF_MEPC_IDX];
