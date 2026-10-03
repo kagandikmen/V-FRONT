@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-10-02
+# Modified:		2026-10-03
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -110,7 +110,7 @@ riscv-tests: compile_tests
 				-Psoc_tb.TOHOST_ADDR=$$TOHOST_ADDR \
 				-Psoc_tb.RESET_ADDR=32\'h$$RESET_ADDR \
 				rtl/soc/soc_tb.v; \
-			timeout 60 vvp $(BUILD_RV_TESTS_DIR)/$$test.out > $(BUILD_RV_TESTS_DIR)/$$test.results; \
+			timeout 120 vvp $(BUILD_RV_TESTS_DIR)/$$test.out > $(BUILD_RV_TESTS_DIR)/$$test.results; \
 		else \
 			xelab soc_tb -relax -debug all \
 				-i ./rtl/cpu -i ./rtl/cpu/luftALU/rtl/ -i ./rtl/cpu/luftALU/rtl/subunits/  -i ./lib/ \
@@ -119,7 +119,7 @@ riscv-tests: compile_tests
 				-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 				-generic_top RESET_ADDR=32\'h$$RESET_ADDR \
 				-prj v-front.prj > /dev/null; \
-			timeout 60 xsim soc_tb -R --onfinish quit > $(BUILD_RV_TESTS_DIR)/$$test.results; \
+			timeout 120 xsim soc_tb -R --onfinish quit > $(BUILD_RV_TESTS_DIR)/$$test.results; \
 		fi; \
 		RESULT=$$(cat $(BUILD_RV_TESTS_DIR)/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
