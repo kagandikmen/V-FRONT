@@ -227,15 +227,15 @@ module csr_unit
                 CSR_JVT_ADDR:          csr_rf[CSR_RF_JVT_IDX]           <= write_value;
                 CSR_MSTATUS_ADDR:      csr_rf[CSR_RF_MSTATUS_IDX]       <= write_value & CSR_MSTATUS_WMASK;
                 CSR_MISA_ADDR:         csr_rf[CSR_RF_MISA_IDX]          <= write_value;
-                CSR_MIE_ADDR:          csr_rf[CSR_RF_MIE_IDX]           <= write_value;
+                CSR_MIE_ADDR:          csr_rf[CSR_RF_MIE_IDX]           <= write_value & CSR_MIE_WMASK;
                 CSR_MTVEC_ADDR:        csr_rf[CSR_RF_MTVEC_IDX]         <= write_value;
                 CSR_MCOUNTEREN_ADDR:   csr_rf[CSR_RF_MCOUNTEREN_IDX]    <= write_value & CSR_MCOUNTEREN_WMASK;
-                CSR_MSTATUSH_ADDR:     csr_rf[CSR_RF_MSTATUSH_IDX]      <= write_value;
+                CSR_MSTATUSH_ADDR:     csr_rf[CSR_RF_MSTATUSH_IDX]      <= write_value & CSR_MSTATUSH_WMASK;
                 CSR_MSCRATCH_ADDR:     csr_rf[CSR_RF_MSCRATCH_IDX]      <= write_value;
-                CSR_MEPC_ADDR:         csr_rf[CSR_RF_MEPC_IDX]          <= write_value;
+                CSR_MEPC_ADDR:         csr_rf[CSR_RF_MEPC_IDX]          <= write_value & CSR_MEPC_WMASK;
                 CSR_MCAUSE_ADDR:       csr_rf[CSR_RF_MCAUSE_IDX]        <= write_value;
                 CSR_MTVAL_ADDR:        csr_rf[CSR_RF_MTVAL_IDX]         <= write_value;
-                CSR_MIP_ADDR:          csr_rf[CSR_RF_MIP_IDX]           <= write_value;
+                CSR_MIP_ADDR:          csr_rf[CSR_RF_MIP_IDX]           <= write_value & CSR_MIP_WMASK;
                 CSR_MTINST_ADDR:       csr_rf[CSR_RF_MTINST_IDX]        <= write_value;
                 CSR_MTVAL2_ADDR:       csr_rf[CSR_RF_MTVAL2_IDX]        <= write_value;
                 CSR_MCYCLE_ADDR:       csr_rf[CSR_RF_MCYCLE_IDX]        <= write_value;
@@ -249,6 +249,13 @@ module csr_unit
                     2'b00:      csr_rf[CSR_RF_MSTATUS_IDX][12:11] <= 2'b00;    // U
                     2'b11:      csr_rf[CSR_RF_MSTATUS_IDX][12:11] <= 2'b11;    // M
                     default:    csr_rf[CSR_RF_MSTATUS_IDX][12:11] <= 2'b00;    // collapse to U
+                endcase
+            end
+
+            if(csr_addr == CSR_MTVEC_ADDR) begin
+                case(write_value[1:0])
+                    2'b00:      csr_rf[CSR_RF_MTVEC_IDX] <= write_value;
+                    default:    csr_rf[CSR_RF_MTVEC_IDX] <= csr_rf[CSR_RF_MTVEC_IDX];
                 endcase
             end
 

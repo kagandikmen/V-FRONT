@@ -169,7 +169,11 @@ localparam CSR_MHARTID_RST      = 32'h0000_0000;
 localparam CSR_MCONFIGPTR_RST   = 32'h0000_0000;
 
 localparam CSR_MSTATUS_WMASK    = 32'h0022_1888;
+localparam CSR_MIE_WMASK        = 32'h0000_0888;
+localparam CSR_MEPC_WMASK       = 32'hffff_fffc;
+localparam CSR_MSTATUSH_WMASK   = 32'h0000_0000;
 localparam CSR_MCOUNTEREN_WMASK = 32'h0000_0005;
+localparam CSR_MIP_WMASK        = 32'H0000_0008;
 
 //  The following function calculates the address width based on specified RAM depth
 function integer clogb2;
