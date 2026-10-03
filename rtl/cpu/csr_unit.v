@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-10-02
+// Modified:    2026-10-03
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -225,7 +225,7 @@ module csr_unit
         begin
             case(csr_addr)
                 CSR_JVT_ADDR:          csr_rf[CSR_RF_JVT_IDX]           <= write_value;
-                CSR_MSTATUS_ADDR:      csr_rf[CSR_RF_MSTATUS_IDX]       <= write_value;
+                CSR_MSTATUS_ADDR:      csr_rf[CSR_RF_MSTATUS_IDX]       <= write_value & CSR_MSTATUS_WMASK;
                 CSR_MISA_ADDR:         csr_rf[CSR_RF_MISA_IDX]          <= write_value;
                 CSR_MIE_ADDR:          csr_rf[CSR_RF_MIE_IDX]           <= write_value;
                 CSR_MTVEC_ADDR:        csr_rf[CSR_RF_MTVEC_IDX]         <= write_value;
