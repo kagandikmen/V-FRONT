@@ -33,6 +33,7 @@ QUESTA_MEMFILE ?= sim/init.mem
 DESIGN_SOURCES := \
 	rtl/soc/soc.v \
 	rtl/soc/bram_dual.v \
+	rtl/soc/machine_interrupt_controller.v \
 	rtl/cpu/cpu.v
 
 SIMULATION_SOURCES := \

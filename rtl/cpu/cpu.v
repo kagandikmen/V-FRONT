@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-10-02
+// Modified:    2026-10-04
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -32,13 +32,15 @@ module cpu
     output wire mem_if_en_o,
     output wire mem_enb_o,
     output wire [3:0] mem_wr_mode_o,
+    output wire [31:0] mem_addr_full_o,
     output wire [DMEM_ADDR_WIDTH-1:0] mem_addra_o,
     output wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o,
     output wire [OP_LENGTH-1:0] mem_dinb_o,
 
     // Interrupt interface
     input wire timer_irq_i,
-    input wire ext_irq_i
+    input wire ext_irq_i,
+    input wire sw_irq_i
     );
 
 
@@ -97,6 +99,7 @@ module cpu
     reg [OP_LENGTH-1:0] alu_result_bypass_buffer_ex, csr_result_bypass_buffer_ex;
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
+    wire [OP_LENGTH-1:0] interrupt_resume_pc;
     wire csr_unit_r_en, csr_unit_w_en;
     wire csr_imm_select;
     wire [11:0] csr_unit_addr;
@@ -250,6 +253,10 @@ module cpu
 
     assign mem_addra_o = next_pc[DMEM_ADDR_WIDTH-1+2:2];
     assign instr_access_misaligned = !make_nop_ex && ((((branch_ex && comp_result) || jal_ex) && (alu_result[1] || alu_result[0])) || (jalr_ex && alu_result[1]));
+
+    assign interrupt_resume_pc = jalr_ex ? {alu_result[OP_LENGTH-1:1], 1'b0} :
+                                 ((branch_ex && comp_result) || jal_ex) ? alu_result :
+                                 pc_plus4_ex;
     
     always @(posedge sysclk)
     begin
@@ -448,8 +455,11 @@ module cpu
             .illegal_zicntr_o(illegal_zicntr_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
             .instr_addr(alu_result),
+            .interrupt_resume_pc(interrupt_resume_pc),
+            .interrupt_accept_i(!make_nop_ex && !cpu_stall),
             .timer_irq_i(timer_irq_i),
             .ext_irq_i(ext_irq_i),
+            .sw_irq_i(sw_irq_i),
             .msi(msi_ex),
             .mti(mti_ex),
             .mei(mei_ex),
@@ -514,6 +524,7 @@ module cpu
 
     assign mem_dinb_o = mem_acc_out;
     assign mem_enb_o = mem_enb_buf && ready_for_mem_acc;
+    assign mem_addr_full_o = alu_result_me;
 
     assign cpu_stall = filled_me && !(mem_rdata_valid_i || mem_wdata_valid_i) && ((mem_enb_buf && ready_for_mem_acc) || ((is_load_ongoing && !mem_rdata_valid_i) || (is_store_ongoing && !mem_wdata_valid_i)));
 

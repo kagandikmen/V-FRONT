@@ -1,6 +1,6 @@
 // Common parameters library for the CPU
 // Created:     2024-01-20
-// Modified:    2026-10-03
+// Modified:    2026-10-04
 // Author:      Kagan Dikmen
 
 // OPCODES
@@ -173,7 +173,7 @@ localparam CSR_MIE_WMASK        = 32'h0000_0888;
 localparam CSR_MEPC_WMASK       = 32'hffff_fffc;
 localparam CSR_MSTATUSH_WMASK   = 32'h0000_0000;
 localparam CSR_MCOUNTEREN_WMASK = 32'h0000_0005;
-localparam CSR_MIP_WMASK        = 32'H0000_0008;
+localparam CSR_MIP_WMASK        = 32'h0000_0000;
 
 //  The following function calculates the address width based on specified RAM depth
 function integer clogb2;

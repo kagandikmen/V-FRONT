@@ -1,6 +1,6 @@
 // CSR unit
 // Created:     2025-05-25
-// Modified:    2026-10-03
+// Modified:    2026-10-04
 // Author:      Kagan Dikmen
 
 module csr_unit
@@ -43,9 +43,13 @@ module csr_unit
 
     input instr_access_misaligned,
     input [31:0] instr_addr,
+    input [31:0] interrupt_resume_pc,
+    input interrupt_accept_i,
 
     input timer_irq_i,
     input ext_irq_i,
+    input sw_irq_i,
+
     output msi,
     output mti,
     output mei,
@@ -95,7 +99,7 @@ module csr_unit
 
     wire mstatus_tw;
 
-    assign msip = csr_rf[CSR_RF_MIP_IDX][3];
+    assign msip = sw_irq_i;
     assign mtip = timer_irq_i;
     assign meip = ext_irq_i;
 
@@ -103,9 +107,9 @@ module csr_unit
     assign mtie = csr_rf[CSR_RF_MIE_IDX][7];
     assign meie = csr_rf[CSR_RF_MIE_IDX][11];
 
-    assign msi_en = msip && msie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
-    assign mti_en = mtip && mtie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
-    assign mei_en = meip && meie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+    assign msi_en = interrupt_accept_i && msip && msie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+    assign mti_en = interrupt_accept_i && mtip && mtie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
+    assign mei_en = interrupt_accept_i && meip && meie && (current_priv < 2'b11 || csr_rf[CSR_RF_MSTATUS_IDX][3]);
 
     assign msi = msi_en;
     assign mti = mti_en;
@@ -205,19 +209,19 @@ module csr_unit
         end
         else if (mei_en)
         begin
-            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MEPC_IDX]     <= interrupt_resume_pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd11};
             trap_to_M();
         end
         else if (msi_en)
         begin
-            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MEPC_IDX]     <= interrupt_resume_pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd3};
             trap_to_M();
         end
         else if (mti_en)
         begin
-            csr_rf[CSR_RF_MEPC_IDX]     <= pc;
+            csr_rf[CSR_RF_MEPC_IDX]     <= interrupt_resume_pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= {1'b1, 31'd7};
             trap_to_M();
         end
@@ -235,7 +239,7 @@ module csr_unit
                 CSR_MEPC_ADDR:         csr_rf[CSR_RF_MEPC_IDX]          <= write_value & CSR_MEPC_WMASK;
                 CSR_MCAUSE_ADDR:       csr_rf[CSR_RF_MCAUSE_IDX]        <= write_value;
                 CSR_MTVAL_ADDR:        csr_rf[CSR_RF_MTVAL_IDX]         <= write_value;
-                CSR_MIP_ADDR:          csr_rf[CSR_RF_MIP_IDX]           <= write_value & CSR_MIP_WMASK;
+                CSR_MIP_ADDR:          csr_rf[CSR_RF_MIP_IDX]           <= write_value & CSR_MIP_WMASK;             // read-only
                 CSR_MTINST_ADDR:       csr_rf[CSR_RF_MTINST_IDX]        <= write_value;
                 CSR_MTVAL2_ADDR:       csr_rf[CSR_RF_MTVAL2_IDX]        <= write_value;
                 CSR_MCYCLE_ADDR:       csr_rf[CSR_RF_MCYCLE_IDX]        <= write_value;
@@ -333,7 +337,7 @@ module csr_unit
                 CSR_MEPC_ADDR:         out <= csr_rf[CSR_RF_MEPC_IDX];
                 CSR_MCAUSE_ADDR:       out <= csr_rf[CSR_RF_MCAUSE_IDX];
                 CSR_MTVAL_ADDR:        out <= csr_rf[CSR_RF_MTVAL_IDX];
-                CSR_MIP_ADDR: begin    out <= csr_rf[CSR_RF_MIP_IDX]; out[11] <= ext_irq_i; out[7] <= timer_irq_i; end
+                CSR_MIP_ADDR: begin    out <= 32'b0; out[3] <= sw_irq_i; out[7] <= timer_irq_i; out[11] <= ext_irq_i; end
                 CSR_MTINST_ADDR:       out <= csr_rf[CSR_RF_MTINST_IDX];
                 CSR_MTVAL2_ADDR:       out <= csr_rf[CSR_RF_MTVAL2_IDX];
                 CSR_MCYCLE_ADDR:       out <= csr_rf[CSR_RF_MCYCLE_IDX];
