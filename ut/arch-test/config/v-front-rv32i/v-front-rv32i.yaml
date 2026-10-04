@@ -15,7 +15,7 @@ implemented_extensions:
 
 params:
   # Zicntr params
-  TIME_CSR_IMPLEMENTED: false
+  TIME_CSR_IMPLEMENTED: true
   # U params
   MUTABLE_MISA_U: false
   U_MODE_ENDIANNESS: little
@@ -89,7 +89,42 @@ params:
       false,
       false,
     ]
-  MCOUNTINHIBIT_IMPLEMENTED: false
+  MCOUNTINHIBIT_IMPLEMENTED: true
+  COUNTINHIBIT_EN:
+    [
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]
   MCOUNTENABLE_EN:
     [
       true,

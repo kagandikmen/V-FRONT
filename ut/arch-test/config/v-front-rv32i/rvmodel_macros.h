@@ -71,6 +71,9 @@ fromhost:                                                         \
 #define RVMODEL_SET_SSW_INT(_R1, _R2)
 #define RVMODEL_CLR_SSW_INT(_R1, _R2)
 
+#define UDB_TIME_CSR_IMPLEMENTED
+#define UDB_MCOUNTINHIBIT_IMPLEMENTED
+
 /*
  * Write 1 to tohost to report success.
  *
