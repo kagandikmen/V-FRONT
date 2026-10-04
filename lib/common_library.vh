@@ -116,35 +116,38 @@ localparam RF_ADDR_LENGTH   = 5;        // log2(RF_DEPTH) = 5
 
 // CSR
 
-localparam CSR_JVT_ADDR         = 12'h017;
-localparam CSR_MSTATUS_ADDR     = 12'h300;
-localparam CSR_MISA_ADDR        = 12'h301;
-localparam CSR_MIE_ADDR         = 12'h304;
-localparam CSR_MTVEC_ADDR       = 12'h305;
-localparam CSR_MCOUNTEREN_ADDR  = 12'h306;
-localparam CSR_MSTATUSH_ADDR    = 12'h310;
-localparam CSR_MSCRATCH_ADDR    = 12'h340;
-localparam CSR_MEPC_ADDR        = 12'h341;
-localparam CSR_MCAUSE_ADDR      = 12'h342;
-localparam CSR_MTVAL_ADDR       = 12'h343;
-localparam CSR_MIP_ADDR         = 12'h344;
-localparam CSR_MTINST_ADDR      = 12'h34a;
-localparam CSR_MTVAL2_ADDR      = 12'h34b;
-localparam CSR_MCYCLE_ADDR      = 12'hb00;
-localparam CSR_MINSTRET_ADDR    = 12'hb02;
-localparam CSR_MCYCLEH_ADDR     = 12'hb80;
-localparam CSR_MINSTRETH_ADDR   = 12'hb82;
-localparam CSR_CYCLE_ADDR       = 12'hc00;
-localparam CSR_TIME_ADDR        = 12'hc01;
-localparam CSR_INSTRET_ADDR     = 12'hc02;
-localparam CSR_CYCLEH_ADDR      = 12'hc80;
-localparam CSR_TIMEH_ADDR       = 12'hc81;
-localparam CSR_INSTRETH_ADDR    = 12'hc82;
-localparam CSR_MVENDORID_ADDR   = 12'hf11;
-localparam CSR_MARCHID_ADDR     = 12'hf12;
-localparam CSR_MIMPID_ADDR      = 12'hf13;
-localparam CSR_MHARTID_ADDR     = 12'hf14;
-localparam CSR_MCONFIGPTR_ADDR  = 12'hf15;
+localparam CSR_JVT_ADDR             = 12'h017;
+localparam CSR_MSTATUS_ADDR         = 12'h300;
+localparam CSR_MISA_ADDR            = 12'h301;
+localparam CSR_MIE_ADDR             = 12'h304;
+localparam CSR_MTVEC_ADDR           = 12'h305;
+localparam CSR_MCOUNTEREN_ADDR      = 12'h306;
+localparam CSR_MENVCFG_ADDR         = 12'h30a;
+localparam CSR_MSTATUSH_ADDR        = 12'h310;
+localparam CSR_MENVCFGH_ADDR        = 12'h31a;
+localparam CSR_MCOUNTINHIBIT_ADDR   = 12'h320;
+localparam CSR_MSCRATCH_ADDR        = 12'h340;
+localparam CSR_MEPC_ADDR            = 12'h341;
+localparam CSR_MCAUSE_ADDR          = 12'h342;
+localparam CSR_MTVAL_ADDR           = 12'h343;
+localparam CSR_MIP_ADDR             = 12'h344;
+localparam CSR_MTINST_ADDR          = 12'h34a;
+localparam CSR_MTVAL2_ADDR          = 12'h34b;
+localparam CSR_MCYCLE_ADDR          = 12'hb00;
+localparam CSR_MINSTRET_ADDR        = 12'hb02;
+localparam CSR_MCYCLEH_ADDR         = 12'hb80;
+localparam CSR_MINSTRETH_ADDR       = 12'hb82;
+localparam CSR_CYCLE_ADDR           = 12'hc00;
+localparam CSR_TIME_ADDR            = 12'hc01;
+localparam CSR_INSTRET_ADDR         = 12'hc02;
+localparam CSR_CYCLEH_ADDR          = 12'hc80;
+localparam CSR_TIMEH_ADDR           = 12'hc81;
+localparam CSR_INSTRETH_ADDR        = 12'hc82;
+localparam CSR_MVENDORID_ADDR       = 12'hf11;
+localparam CSR_MARCHID_ADDR         = 12'hf12;
+localparam CSR_MIMPID_ADDR          = 12'hf13;
+localparam CSR_MHARTID_ADDR         = 12'hf14;
+localparam CSR_MCONFIGPTR_ADDR      = 12'hf15;
 
 localparam CSR_JVT_RST          = 32'h0000_0000;
 localparam CSR_MSTATUS_RST      = 32'h0000_0000;
@@ -170,12 +173,14 @@ localparam CSR_MIMPID_RST       = 32'h0000_0000;
 localparam CSR_MHARTID_RST      = 32'h0000_0000;
 localparam CSR_MCONFIGPTR_RST   = 32'h0000_0000;
 
-localparam CSR_MSTATUS_WMASK    = 32'h0022_1888;
-localparam CSR_MIE_WMASK        = 32'h0000_0888;
-localparam CSR_MEPC_WMASK       = 32'hffff_fffc;
-localparam CSR_MSTATUSH_WMASK   = 32'h0000_0000;
-localparam CSR_MCOUNTEREN_WMASK = 32'h0000_0005;
-localparam CSR_MIP_WMASK        = 32'h0000_0000;
+localparam CSR_MSTATUS_WMASK        = 32'h0022_1888;
+localparam CSR_MIE_WMASK            = 32'h0000_0888;
+localparam CSR_MEPC_WMASK           = 32'hffff_fffc;
+localparam CSR_MSTATUSH_WMASK       = 32'h0000_0000;
+localparam CSR_MCOUNTEREN_WMASK     = 32'h0000_0005;
+localparam CSR_MENVCFG_WMASK        = 32'h0000_0001;
+localparam CSR_MCOUNTINHIBIT_WMASK  = 32'h0000_0005;
+localparam CSR_MIP_WMASK            = 32'h0000_0000;
 
 //  The following function calculates the address width based on specified RAM depth
 function integer clogb2;
