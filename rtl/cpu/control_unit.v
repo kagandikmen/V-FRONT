@@ -1,6 +1,6 @@
 // Control unit of the CPU
 // Created:     2024-01-25
-// Modified:    2026-07-15
+// Modified:    2026-10-04
 // Author:      Kagan Dikmen
 
 module control_unit
@@ -500,6 +500,8 @@ module control_unit
             end
             {FUNCT3_FENCEI, FENCE_OPCODE}:  // FENCE.I
             begin
+                alu_pc_select = 2'b01;
+                jal = 1'b1;
                 alu_cu_input_sel = 1'b0;
                 alu_subunit_res_sel = 2'b00; 
                 alu_subunit_op_sel = 4'b0000;

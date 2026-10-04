@@ -56,7 +56,7 @@ module immediate_generator
         end
         FENCE_OPCODE:
         begin
-            imm = 32'b0;
+            imm = (instr[14:12] == FUNCT3_FENCEI) ? 32'd4 : 32'b0;
         end
         SYSTEM_OPCODE:
         begin
