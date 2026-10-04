@@ -54,7 +54,8 @@ module csr_unit
     output mti,
     output mei,
 
-    input instret_en
+    input instret_en,
+    input [63:0] time_i
     );
 
     `include "common_library.vh"
@@ -126,7 +127,7 @@ module csr_unit
     assign illegal_wfi = 1'b0;          // WFI is implemented as NOP (for now)
     assign illegal_wfi_o = illegal_wfi;
 
-    assign illegal_zicntr = (((csr_addr == CSR_CYCLE_ADDR || csr_addr == CSR_CYCLEH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][0]) || ((csr_addr == CSR_INSTRET_ADDR || csr_addr == CSR_INSTRETH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][2])) && (r_en || w_en) && (current_priv != 2'b11);
+    assign illegal_zicntr = (((csr_addr == CSR_CYCLE_ADDR || csr_addr == CSR_CYCLEH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][0]) || ((csr_addr == CSR_TIME_ADDR || csr_addr == CSR_TIMEH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][1]) || ((csr_addr == CSR_INSTRET_ADDR || csr_addr == CSR_INSTRETH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][2])) && (r_en || w_en) && (current_priv != 2'b11);
     assign illegal_zicntr_o = illegal_zicntr;
 
     // write
@@ -304,8 +305,10 @@ module csr_unit
             || csr_addr == CSR_MHARTID_ADDR
             || csr_addr == CSR_MCONFIGPTR_ADDR
             || csr_addr == CSR_CYCLE_ADDR
+            || csr_addr == CSR_TIME_ADDR
             || csr_addr == CSR_INSTRET_ADDR
             || csr_addr == CSR_CYCLEH_ADDR
+            || csr_addr == CSR_TIMEH_ADDR
             || csr_addr == CSR_INSTRETH_ADDR
             )
         begin
@@ -344,8 +347,10 @@ module csr_unit
                 CSR_MCYCLEH_ADDR:      out <= csr_rf[CSR_RF_MCYCLEH_IDX];
                 CSR_MINSTRETH_ADDR:    out <= csr_rf[CSR_RF_MINSTRETH_IDX];
                 CSR_CYCLE_ADDR:        out <= csr_rf[CSR_RF_MCYCLE_IDX];
+                CSR_TIME_ADDR:         out <= time_i[31:0];
                 CSR_INSTRET_ADDR:      out <= csr_rf[CSR_RF_MINSTRET_IDX];
                 CSR_CYCLEH_ADDR:       out <= csr_rf[CSR_RF_MCYCLEH_IDX];
+                CSR_TIMEH_ADDR:        out <= time_i[63:32];
                 CSR_INSTRETH_ADDR:     out <= csr_rf[CSR_RF_MINSTRETH_IDX];
                 CSR_MVENDORID_ADDR:    out <= csr_rf[CSR_RF_MVENDORID_IDX];
                 CSR_MARCHID_ADDR:      out <= csr_rf[CSR_RF_MARCHID_IDX];

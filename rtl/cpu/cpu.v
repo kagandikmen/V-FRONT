@@ -40,7 +40,8 @@ module cpu
     // Interrupt interface
     input wire timer_irq_i,
     input wire ext_irq_i,
-    input wire sw_irq_i
+    input wire sw_irq_i,
+    input wire [63:0] time_i
     );
 
 
@@ -460,6 +461,7 @@ module cpu
             .timer_irq_i(timer_irq_i),
             .ext_irq_i(ext_irq_i),
             .sw_irq_i(sw_irq_i),
+            .time_i(time_i),
             .msi(msi_ex),
             .mti(mti_ex),
             .mei(mei_ex),
