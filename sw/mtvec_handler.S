@@ -42,7 +42,8 @@ handle_ecall:
 1:  j 1b
 
 load_misaligned:
-    csrr t5, mscratch
+    csrr t5, mepc
+    lw t5, 0(t5)
     li t6, 0x00007000
     and t6, t5, t6  
     srli t6, t6, 0xc    # stores funct3
@@ -54,7 +55,8 @@ load_misaligned:
     beq t6, t3, lhu_misalignment
 
 lw_misalignment:
-    csrr t5, mscratch
+    csrr t5, mepc
+    lw t5, 0(t5)
     csrr t3, mtval              # stores addr
     andi t4, t3, 0x00000003     # stores offset
     slli t4, t4, 0x3            # stores offset in bits
@@ -152,7 +154,8 @@ lhu_misalignment_epilogue:
     j finalize
 
 store_misaligned:
-    csrr t5, mscratch
+    csrr t5, mepc
+    lw t5, 0(t5)
     li t6, 0x00007000
     and t6, t5, t6
     srli t6, t6, 0xc    # stores funct3

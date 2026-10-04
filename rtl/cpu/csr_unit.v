@@ -202,7 +202,6 @@ module csr_unit
         begin
             csr_rf[CSR_RF_MEPC_IDX]     <= pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
-            csr_rf[CSR_RF_MSCRATCH_IDX] <= instr;
             csr_rf[CSR_RF_MTVAL_IDX]    <= mem_addr;
             csr_rf[CSR_RF_MTVAL2_IDX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
             trap_to_M();
