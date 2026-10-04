@@ -97,8 +97,12 @@ module csr_unit
 
     wire mstatus_tw;
     wire [63:0] minstret_visible;
+    wire minstret_write;
+    wire mcycle_write;
 
     assign minstret_visible = {csr_rf[CSR_RF_MINSTRETH_IDX], csr_rf[CSR_RF_MINSTRET_IDX]} - {63'b0, current_priv != 2'b11};
+    assign minstret_write = spec_reg_w_en && ((csr_addr == CSR_MINSTRET_ADDR) || (csr_addr == CSR_MINSTRETH_ADDR));
+    assign mcycle_write = spec_reg_w_en && ((csr_addr == CSR_MCYCLE_ADDR) || (csr_addr == CSR_MCYCLEH_ADDR));
 
     assign msip = sw_irq_i;
     assign mtip = timer_irq_i;
@@ -133,9 +137,9 @@ module csr_unit
     // write
     always @(posedge clk)
     begin
-        if (!csr_rf[CSR_RF_MCOUNTINHIBIT_IDX][0])
+        if (!csr_rf[CSR_RF_MCOUNTINHIBIT_IDX][0] && !mcycle_write)
             {csr_rf[CSR_RF_MCYCLEH_IDX], csr_rf[CSR_RF_MCYCLE_IDX]} <= {csr_rf[CSR_RF_MCYCLEH_IDX], csr_rf[CSR_RF_MCYCLE_IDX]} + 64'd1;
-        if (!csr_rf[CSR_RF_MCOUNTINHIBIT_IDX][2])
+        if (!csr_rf[CSR_RF_MCOUNTINHIBIT_IDX][2] && !minstret_write)
             {csr_rf[CSR_RF_MINSTRETH_IDX], csr_rf[CSR_RF_MINSTRET_IDX]} <= {csr_rf[CSR_RF_MINSTRETH_IDX], csr_rf[CSR_RF_MINSTRET_IDX]} + {63'd0, instret_en};
 
         if (rst == 1'b1)

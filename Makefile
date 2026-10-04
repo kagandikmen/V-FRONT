@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-10-03
+# Modified:		2026-10-04
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -45,11 +45,13 @@ TESTS := $(rv32ui_sc_tests) $(rv32mi_sc_tests) $(v-front_tests)
 
 FAILING_TESTS :=
 
-# Exclude the tests that have to be conducted by inspecting simulations
+# Exclude the tests that have to be conducted by manually inspecting simulations
 EXCLUDE_TESTS := csr_permissions illegal_instr illegal_instr_addr
 
-# (Yet) unimplemented M-mode functionalities
-UNIMP_TESTS := breakpoint instret_overflow pmpaddr
+# Tests for optional, unimplemented architectural features
+# breakpoint tests hardware triggers (optional, unimplemented)
+# pmpaddr tests PMP (optional, unimplemented)
+UNIMP_TESTS := breakpoint pmpaddr
 
 PASSING_TESTS := $(filter-out $(FAILING_TESTS) $(EXCLUDE_TESTS) $(UNIMP_TESTS), $(TESTS))
 
