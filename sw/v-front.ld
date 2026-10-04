@@ -1,14 +1,14 @@
 /* Generic linker script for V-FRONT */
 /* Created:     2025-05-24 */
-/* Modified:    2026-07-06 */
+/* Modified:    2026-09-13 */
 /* Author:      Kagan Dikmen */
 
 ENTRY(_start)
 
 MEMORY
 {
-    pmem (rx) : ORIGIN = 0x00000000, LENGTH = 16K
-    dmem (rw) : ORIGIN = 0x00004000, LENGTH = 16K
+    pmem (rx) : ORIGIN = 0x00000000, LENGTH = 128K
+    dmem (rw) : ORIGIN = 0x00020000, LENGTH = 128K
 }
 
 SECTIONS
@@ -43,7 +43,7 @@ SECTIONS
         __bss_end = .;
     } > dmem
 
-    __stack_top = 0x7FFC;
+    __stack_top = ORIGIN(dmem) + LENGTH(dmem) - 4;
 
     /DISCARD/ :
     {

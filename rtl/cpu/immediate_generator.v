@@ -1,6 +1,6 @@
 // Immediate generator of the CPU
 // Created:     2024-01-28
-// Modified:    2026-07-05
+// Modified:    2026-10-04
 // Author:      Kagan Dikmen
 
 module immediate_generator
@@ -40,7 +40,7 @@ module immediate_generator
         end
         JAL_OPCODE:
         begin
-            imm = {instr[31], instr[19:12], instr[20], instr[30:21], 1'b0};
+            imm = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
         end
         JALR_OPCODE:
         begin
@@ -56,7 +56,7 @@ module immediate_generator
         end
         FENCE_OPCODE:
         begin
-            imm = 32'b0;
+            imm = (instr[14:12] == FUNCT3_FENCEI) ? 32'd4 : 32'b0;
         end
         SYSTEM_OPCODE:
         begin

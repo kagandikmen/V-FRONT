@@ -17,6 +17,10 @@ if [[ "$OS" == "Linux" ]]; then
 
     sudo apt install -y iverilog
 
+    # Install Sail
+    mkdir -p $HOME/.bin/
+    curl --location https://github.com/riscv/sail-riscv/releases/download/0.13.1/sail-riscv-Linux-$(arch).tar.gz | tar xvz --directory=$HOME/.local --strip-components=1
+
 elif [[ "$OS" == "Darwin" ]]; then
     # Check for Homebrew, install if missing
     if ! command -v brew &> /dev/null; then
@@ -26,7 +30,24 @@ elif [[ "$OS" == "Darwin" ]]; then
 
     # Update and install packages
     brew update
-    brew install npm icarus-verilog gawk
+    brew install npm icarus-verilog gawk z3 aisk/homebrew-tap/timeout
+
+    Z3_LIB_DIR="$(brew --prefix z3)/lib"
+    Z3_DYLIB="$(find "$Z3_LIB_DIR" -maxdepth 1 -name 'libz3*.dylib' -print -quit)"
+
+    if [[ -z "$Z3_DYLIB" ]]; then
+        echo "Homebrew Z3 dynamic library not found in $Z3_LIB_DIR"
+        exit 1
+    fi
+
+    ln -sf "$Z3_DYLIB" "$Z3_LIB_DIR/libz3"
+
+    echo "Using Z3 library: $Z3_DYLIB"
+    echo "DYLD_LIBRARY_PATH=$Z3_LIB_DIR" >> $GITHUB_ENV
+
+    # Install Sail
+    mkdir -p $HOME/.bin/
+    curl --location https://github.com/riscv/sail-riscv/releases/download/0.13.1/sail-riscv-Mac-$(arch).tar.gz | tar xvz --directory=$HOME/.local --strip-components=1
 
 else
     echo "Unsupported OS: $OS"
@@ -35,5 +56,16 @@ fi
 
 # Install xpm globally using npm
 npm install --global xpm@latest
+
+# Install mise
+curl https://mise.run | sh
+export PATH="$HOME/.local/bin:$PATH"
+echo "$HOME/.local/bin/" >> $GITHUB_PATH
+
+cd "$GITHUB_WORKSPACE/ut/riscv-arch-test"
+mise trust .mise.toml
+mise install
+mise reshim
+echo "$HOME/.local/share/mise/shims" >> "$GITHUB_PATH"
 
 echo "Setup complete."

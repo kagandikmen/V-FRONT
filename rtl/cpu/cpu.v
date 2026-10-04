@@ -1,6 +1,6 @@
 // Main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-15
+// Modified:    2026-10-04
 // Author:      Kagan Dikmen
 
 `include "luftALU/rtl/alu.v"
@@ -15,7 +15,7 @@
 
 module cpu 
     #(
-    parameter DMEM_ADDR_WIDTH = 13,
+    parameter DMEM_ADDR_WIDTH = 16,
     parameter DMEM_DATA_WIDTH = 32,
     parameter OP_LENGTH = 32,
     parameter PC_WIDTH = 16,
@@ -32,13 +32,16 @@ module cpu
     output wire mem_if_en_o,
     output wire mem_enb_o,
     output wire [3:0] mem_wr_mode_o,
-    output wire [12:0] mem_addra_o,
+    output wire [31:0] mem_addr_full_o,
+    output wire [DMEM_ADDR_WIDTH-1:0] mem_addra_o,
     output wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o,
     output wire [OP_LENGTH-1:0] mem_dinb_o,
 
     // Interrupt interface
     input wire timer_irq_i,
-    input wire ext_irq_i
+    input wire ext_irq_i,
+    input wire sw_irq_i,
+    input wire [63:0] time_i
     );
 
 
@@ -88,6 +91,7 @@ module cpu
     wire illegal_csr_prel_ex, illegal_csr_ex;
     wire illegal_mret_prel_ex, illegal_mret_ex;
     wire illegal_wfi_prel_ex, illegal_wfi_ex;
+    wire illegal_zicntr_prel_ex, illegal_zicntr_ex;
     wire instr_access_misaligned;
 
     reg bypass_alu_ready, bypass_csr_ready, bypass_ld_ready, bypass_mem_ready;
@@ -96,6 +100,7 @@ module cpu
     reg [OP_LENGTH-1:0] alu_result_bypass_buffer_ex, csr_result_bypass_buffer_ex;
 
     wire [OP_LENGTH-1:0] csr_unit_out, csr_in;
+    wire [OP_LENGTH-1:0] interrupt_resume_pc;
     wire csr_unit_r_en, csr_unit_w_en;
     wire csr_imm_select;
     wire [11:0] csr_unit_addr;
@@ -198,7 +203,7 @@ module cpu
             .branch_true(comp_result[0]),
             .make_nop(make_nop_ex),
             .illegal_instr(illegal_instr_if),
-            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex),
+            .illegal_instr_csr_ex(illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || illegal_zicntr_ex),
             .msi_i(msi_ex),
             .mti_i(mti_ex),
             .mei_i(mei_ex)
@@ -238,7 +243,7 @@ module cpu
             .branch(branch_ex && !make_nop_ex),
             .jal(jal_ex && !make_nop_ex),
             .jalr(jalr_ex && !make_nop_ex),
-            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || instr_access_misaligned || msi_ex || mti_ex || mei_ex) && !make_nop_ex),
+            .csr_sel((ecall_ex || ebreak_ex || mret_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || illegal_zicntr_ex || instr_access_misaligned || msi_ex || mti_ex || mei_ex) && !make_nop_ex),
             .alu_result(alu_result),
             .comp_result(comp_result),
             .csr_out(csr_unit_out),
@@ -247,8 +252,12 @@ module cpu
             .next_pc(next_pc)
         );
 
-    assign mem_addra_o = next_pc[14:2];
+    assign mem_addra_o = next_pc[DMEM_ADDR_WIDTH-1+2:2];
     assign instr_access_misaligned = !make_nop_ex && ((((branch_ex && comp_result) || jal_ex) && (alu_result[1] || alu_result[0])) || (jalr_ex && alu_result[1]));
+
+    assign interrupt_resume_pc = jalr_ex ? {alu_result[OP_LENGTH-1:1], 1'b0} :
+                                 ((branch_ex && comp_result) || jal_ex) ? alu_result :
+                                 pc_plus4_ex;
     
     always @(posedge sysclk)
     begin
@@ -418,7 +427,7 @@ module cpu
             .z(csr_in)
         );
     
-    csr_unit #(.CSR_ADDR_WIDTH(12)) csr_unit_cpu
+    csr_unit #(.CSR_ADDR_WIDTH(12), .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH)) csr_unit_cpu
         (
             .clk(sysclk),
             .rst(rst),
@@ -436,22 +445,25 @@ module cpu
             .out(csr_unit_out),
             .is_misaligned(is_misaligned),
             .is_misalignment_store(is_misalignment_store),
-            .misaligned_store_value(alu_opd2),
-            .mem_addr(alu_result[14:0]),
-            .rd_addr(rd_addr_ex),
+            .mem_addr(alu_result[DMEM_ADDR_WIDTH-1+2:0]),
             .instr(instr_ex),
             .illegal_instr(illegal_instr_ex && !make_nop_ex),
             .illegal_csr_o(illegal_csr_prel_ex),
             .illegal_mret_o(illegal_mret_prel_ex),
             .illegal_wfi_o(illegal_wfi_prel_ex),
+            .illegal_zicntr_o(illegal_zicntr_prel_ex),
             .instr_access_misaligned(instr_access_misaligned && !make_nop_ex),
             .instr_addr(alu_result),
+            .interrupt_resume_pc(interrupt_resume_pc),
+            .interrupt_accept_i(!make_nop_ex && !cpu_stall),
             .timer_irq_i(timer_irq_i),
             .ext_irq_i(ext_irq_i),
+            .sw_irq_i(sw_irq_i),
+            .time_i(time_i),
             .msi(msi_ex),
             .mti(mti_ex),
             .mei(mei_ex),
-            .instret_en(filled_wb && !make_nop_wb && !cpu_stall)
+            .instret_en(filled_me && !make_nop_me && !cpu_stall)
         );
 
     assign is_misaligned = ((ldst_mask_ex == 4'b1111 && alu_result[1:0] != 2'b00) || (ldst_mask_ex == 4'b0011 && alu_result[0] != 1'b0)) && !make_nop_ex && !cpu_stall;
@@ -459,6 +471,7 @@ module cpu
     assign illegal_csr_ex = illegal_csr_prel_ex && !make_nop_ex;
     assign illegal_mret_ex = illegal_mret_prel_ex && !make_nop_ex;
     assign illegal_wfi_ex = illegal_wfi_prel_ex && !make_nop_ex;
+    assign illegal_zicntr_ex = illegal_zicntr_prel_ex && !make_nop_ex;
 
     // 
     // STAGE 4: Memory Access (ME)
@@ -467,7 +480,7 @@ module cpu
     always @(posedge sysclk)
     begin
         if(!cpu_stall) begin
-            make_nop_me <= make_nop_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || instr_access_misaligned;
+            make_nop_me <= make_nop_ex || ecall_ex || ebreak_ex || is_misaligned || illegal_instr_ex || illegal_csr_ex || illegal_mret_ex || illegal_wfi_ex || illegal_zicntr_ex || instr_access_misaligned;
             pc_plus4_me <= pc_plus4_ex;
             rf_w_select_me <= rf_w_select_ex;
             rd_addr_me <= rd_addr_ex;
@@ -485,7 +498,7 @@ module cpu
         end
     end
 
-    memory_access_unit #(.BYTE_WIDTH(8))
+    memory_access_unit #(.BYTE_WIDTH(8), .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH))
         memory_access_unit_cpu
         (
             .clk(sysclk),
@@ -511,6 +524,7 @@ module cpu
 
     assign mem_dinb_o = mem_acc_out;
     assign mem_enb_o = mem_enb_buf && ready_for_mem_acc;
+    assign mem_addr_full_o = alu_result_me;
 
     assign cpu_stall = filled_me && !(mem_rdata_valid_i || mem_wdata_valid_i) && ((mem_enb_buf && ready_for_mem_acc) || ((is_load_ongoing && !mem_rdata_valid_i) || (is_store_ongoing && !mem_wdata_valid_i)));
 

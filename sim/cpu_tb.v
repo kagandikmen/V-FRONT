@@ -1,6 +1,6 @@
 // Testbench for the main body of the CPU
 // Created:     2024-01-26
-// Modified:    2026-07-05
+// Modified:    2026-09-14
 // Author:      Kagan Dikmen
 
 `include "cpu.v"
@@ -10,7 +10,7 @@
 module cpu_tb
     #(
         parameter TOHOST_ADDR   = 16384,
-        parameter DMEM_ADDR_WIDTH = 13,
+        parameter DMEM_ADDR_WIDTH = 16,
         parameter DMEM_DATA_WIDTH = 32,
         parameter OP_LENGTH = 32,
         parameter PC_WIDTH = 16,
@@ -26,7 +26,7 @@ module cpu_tb
     reg [31:0] mem_rdata_i_t;
     wire mem_if_en_o_t;
     wire [3:0] mem_wr_mode_o_t;
-    wire [12:0] mem_addra_o_t;
+    wire [DMEM_ADDR_WIDTH-1:0] mem_addra_o_t;
     wire [DMEM_ADDR_WIDTH-1:0] mem_addrb_o_t;
     wire [OP_LENGTH-1:0] mem_dinb_o_t;
 

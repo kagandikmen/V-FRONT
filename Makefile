@@ -1,6 +1,6 @@
 # V-FRONT Main Makefile
 # Created:		2025-05-25
-# Modified:		2026-07-14
+# Modified:		2026-10-04
 # Author:		Kagan Dikmen
 
 include ut/riscv-tests/isa/rv32ui/Makefrag
@@ -8,7 +8,7 @@ include ut/riscv-tests/isa/rv32mi/Makefrag
 include ut/v-front/Makefrag
 
 .DEFAULT_GOAL := test
-.PHONY: compile_tests test
+.PHONY: compile_tests riscv-tests riscv-arch-test_generate riscv-arch-test_run riscv-arch-test test
 
 
 #
@@ -16,7 +16,12 @@ include ut/v-front/Makefrag
 #
 
 BUILD_DIR := build
-BUILD_TEST_DIR := $(BUILD_DIR)/tests
+BUILD_RV_TESTS_DIR := $(BUILD_DIR)/riscv-tests
+
+ACT_DIR := ut/riscv-arch-test
+ACT_CONFIG := $(abspath ut/arch-test/config/v-front-rv32i/test_config.yaml)
+ACT_WORKDIR := $(abspath $(BUILD_DIR)/riscv-arch-test)
+ACT_ELF_ROOT := $(ACT_WORKDIR)/v-front-rv32i/elfs
 
 SIM_TOOL ?= iverilog
 SIM_MODE ?=
@@ -28,6 +33,7 @@ QUESTA_MEMFILE ?= sim/init.mem
 DESIGN_SOURCES := \
 	rtl/soc/soc.v \
 	rtl/soc/bram_dual.v \
+	rtl/soc/machine_interrupt_controller.v \
 	rtl/cpu/cpu.v
 
 SIMULATION_SOURCES := \
@@ -39,13 +45,17 @@ TESTS := $(rv32ui_sc_tests) $(rv32mi_sc_tests) $(v-front_tests)
 
 FAILING_TESTS :=
 
-# Exclude the tests that have to be conducted by inspecting simulations
+# Exclude the tests that have to be conducted by manually inspecting simulations
 EXCLUDE_TESTS := csr_permissions illegal_instr illegal_instr_addr
 
-# (Yet) unimplemented M-mode functionalities
-UNIMP_TESTS := breakpoint zicntr instret_overflow pmpaddr
+# Tests for optional, unimplemented architectural features
+# breakpoint tests hardware triggers (optional, unimplemented)
+# pmpaddr tests PMP (optional, unimplemented)
+UNIMP_TESTS := breakpoint pmpaddr
 
 PASSING_TESTS := $(filter-out $(FAILING_TESTS) $(EXCLUDE_TESTS) $(UNIMP_TESTS), $(TESTS))
+
+DEBUG_TEST ?=
 
 CFLAGS += -march=rv32i_zicsr_zifencei -Wall -Wextra -Os -fomit-frame-pointer \
 	-ffreestanding -fno-builtin -fanalyzer -std=gnu99 \
@@ -71,7 +81,7 @@ v-front.prj: Makefile
 		echo "verilog work $$source" >> $@; \
 	done
 
-$(BUILD_TEST_DIR):
+$(BUILD_RV_TESTS_DIR):
 	mkdir -p $@
 	for testdir in $(TESTDIRS); do \
 		for test in $$(ls $$testdir | grep .S); do \
@@ -79,7 +89,7 @@ $(BUILD_TEST_DIR):
 		done \
 	done
 
-compile_tests: $(BUILD_TEST_DIR) v-front.f v-front.prj 
+compile_tests: $(BUILD_RV_TESTS_DIR) v-front.f v-front.prj 
 	$(RISCV_PREFIX)-gcc -c $(CFLAGS) -o sw/mtvec_handler.o sw/mtvec_handler.S
 	for testfile in $(wildcard $</*.S) ; do \
 		test=$${testfile##*/}; test=$${test%.*}; \
@@ -88,40 +98,107 @@ compile_tests: $(BUILD_TEST_DIR) v-front.f v-front.prj
 		$(RISCV_PREFIX)-objcopy -j .text -j .data -j .rodata -O verilog --verilog-data-width=4 $</$$test.elf $</$$test.mem; \
 	done
 
-test: compile_tests
+riscv-tests: compile_tests
+	EXIT_CODE=0; \
 	for test in $(PASSING_TESTS) ; do \
-		printf "Running test %-15s\t" "$$test:"; \
-		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n $(BUILD_TEST_DIR)/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
-		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n $(BUILD_TEST_DIR)/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
+		printf "Running test %-50s\t" "$$test:"; \
+		TOHOST_ADDR=$$($(RISCV_PREFIX)-nm -n $(BUILD_RV_TESTS_DIR)/$$test.elf | gawk '$$3=="tohost" { printf "%d\n", strtonum("0x"$$1) }'); \
+		RESET_ADDR=$$($(RISCV_PREFIX)-nm -n $(BUILD_RV_TESTS_DIR)/$$test.elf | gawk '$$3=="_start" { printf "%s\n", $$1 }'); \
 		if [ "$(SIM_TOOL)" = "iverilog" ]; then \
-			iverilog -o $(BUILD_TEST_DIR)/$$test.out \
+			iverilog -o $(BUILD_RV_TESTS_DIR)/$$test.out \
 				-Irtl/cpu/ -Irtl/cpu/luftALU/rtl/ -Irtl/cpu/luftALU/rtl/subunits/ -Ilib/ \
 				-f v-front.f \
 				-D UT \
-				-Psoc_tb.MEM_INIT_FILE=\"$(BUILD_TEST_DIR)/$$test.mem\" \
+				-Psoc_tb.MEM_INIT_FILE=\"$(BUILD_RV_TESTS_DIR)/$$test.mem\" \
 				-Psoc_tb.TOHOST_ADDR=$$TOHOST_ADDR \
 				-Psoc_tb.RESET_ADDR=32\'h$$RESET_ADDR \
 				rtl/soc/soc_tb.v; \
-			vvp $(BUILD_TEST_DIR)/$$test.out > $(BUILD_TEST_DIR)/$$test.results; \
+			timeout 120 vvp $(BUILD_RV_TESTS_DIR)/$$test.out > $(BUILD_RV_TESTS_DIR)/$$test.results; \
 		else \
 			xelab soc_tb -relax -debug all \
 				-i ./rtl/cpu -i ./rtl/cpu/luftALU/rtl/ -i ./rtl/cpu/luftALU/rtl/subunits/  -i ./lib/ \
 				-d UT \
-				-generic_top MEM_INIT_FILE=\"$(BUILD_TEST_DIR)/$$test.mem\" \
+				-generic_top MEM_INIT_FILE=\"$(BUILD_RV_TESTS_DIR)/$$test.mem\" \
 				-generic_top TOHOST_ADDR=$$TOHOST_ADDR \
 				-generic_top RESET_ADDR=32\'h$$RESET_ADDR \
 				-prj v-front.prj > /dev/null; \
-			xsim soc_tb -R --onfinish quit > $(BUILD_TEST_DIR)/$$test.results; \
+			timeout 120 xsim soc_tb -R --onfinish quit > $(BUILD_RV_TESTS_DIR)/$$test.results; \
 		fi; \
-		RESULT=$$(cat $(BUILD_TEST_DIR)/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
+		RESULT=$$(cat $(BUILD_RV_TESTS_DIR)/$$test.results | gawk '/Note:/ {print}' | sed 's/Note://' | gawk '/Success|Failure/ {print}'); \
 		echo "$$RESULT"; \
 		if [ "$(SIM_MODE)" = "ci" ] || [ "$(SIM_MODE)" = "CI" ]; then \
 			if echo "$$RESULT" | grep -q 'Failure'; then \
-				echo "Test $$test failed!"; \
-				exit 1; \
+				EXIT_CODE=1; \
 			fi; \
 		fi; \
-	done
+	done; \
+	if [ "$$EXIT_CODE" = "1" ]; then \
+		exit 1; \
+	fi
+
+riscv-arch-test_generate:
+	$(MAKE) -C $(ACT_DIR) \
+		CONFIG_FILES="$(ACT_CONFIG)" \
+		WORKDIR="$(ACT_WORKDIR)" \
+		EXTENSIONS="" \
+		DEBUG= \
+		--jobs 1
+
+riscv-arch-test_run: riscv-arch-test_generate v-front.f
+	EXIT_CODE=0; \
+	for ACT_ELF in $$(find "$(ACT_ELF_ROOT)" -type f -name '*.elf' | sort); do \
+		REL=$${ACT_ELF#"$(ACT_ELF_ROOT)/"}; \
+		TEST=$${REL%.elf}; \
+		TEST_ID=$$(printf '%s' "$$TEST" | tr '/' '_'); \
+		printf "Running test %-50s\t" "$$TEST:"; \
+		ACT_MEM="$(ACT_WORKDIR)/$$TEST_ID.mem"; \
+		ACT_OUT="$(ACT_WORKDIR)/$$TEST_ID.out"; \
+		ACT_RESULTS="$(ACT_WORKDIR)/$$TEST_ID.results"; \
+		$(RISCV_PREFIX)-objcopy -j .text.init -j .text.rvtest -j .text.rvmodel -j .data -j .rodata -O verilog --verilog-data-width=4 "$$ACT_ELF" "$$ACT_MEM"; \
+		ACT_TOHOST=$$($(RISCV_PREFIX)-nm -n "$$ACT_ELF" | gawk '$$3 == "tohost" { print strtonum("0x" $$1) }'); \
+		iverilog -o "$$ACT_OUT" \
+			-Irtl/cpu -Irtl/cpu/luftALU/rtl -Irtl/cpu/luftALU/rtl/subunits -Ilib \
+			-f v-front.f \
+			-D UT \
+			-Psoc_tb.MEM_INIT_FILE=\""$$ACT_MEM"\" \
+			-Psoc_tb.TOHOST_ADDR="$$ACT_TOHOST" \
+			rtl/soc/soc_tb.v; \
+		timeout 60s vvp "$$ACT_OUT" > "$$ACT_RESULTS"; \
+		RESULT=$$(gawk '/Note: (Success|Failure)/ { sub("Note:", ""); print }' "$$ACT_RESULTS"); \
+		echo "$$RESULT"; \
+		if [ "$(SIM_MODE)" = "ci" ] || [ "$(SIM_MODE)" = "CI" ]; then \
+			if echo "$$RESULT" | grep -q 'Failure'; then \
+				EXIT_CODE=1; \
+			fi; \
+		fi; \
+	done; \
+	if [ "$$EXIT_CODE" = "1" ]; then \
+		exit 1; \
+	fi
+
+riscv-arch-test: riscv-arch-test_run
+
+test: riscv-tests riscv-arch-test
+
+debug_arch_test: riscv-arch-test_generate v-front.f
+	if [ "$(DEBUG_TEST)" = "" ]; then \
+		echo "Error: DEBUG_TEST not set!"; \
+		exit 1; \
+	fi; \
+	ACT_ELF=$$(find "$(ACT_ELF_ROOT)" -type f -wholename '*$(DEBUG_TEST).elf'); \
+	REL=$${ACT_ELF#"$(ACT_ELF_ROOT)/"}; \
+	TEST=$${REL%.elf}; \
+	TEST_ID=$$(printf '%s' "$$TEST" | tr '/' '_'); \
+	printf "Running test %-50s\t" "$$TEST:"; \
+	ACT_MEM="$(ACT_WORKDIR)/$$TEST_ID.mem"; \
+	$(RISCV_PREFIX)-objcopy -j .text.init -j .text.rvtest -j .text.rvmodel -j .data -j .rodata -O verilog --verilog-data-width=4 "$$ACT_ELF" "$$ACT_MEM"; \
+	ACT_TOHOST=$$($(RISCV_PREFIX)-nm -n "$$ACT_ELF" | gawk '$$3 == "tohost" { print strtonum("0x" $$1) }'); \
+	ACT_RESET_ADDR_HEX=$$($(RISCV_PREFIX)-nm -n "$$ACT_ELF" | gawk '$$3 == "rvtest_entry_point" { print $$1 }'); \
+	$(MAKE) -f target/questa/Makefile run \
+		GUI=1 \
+		MEMFILE="$$ACT_MEM" \
+		RESET_ADDR="32'h$$ACT_RESET_ADDR_HEX" \
+		TOHOST_ADDR="$$ACT_TOHOST"
 
 $(BUILD_DIR)/vivado:
 	vivado -source target/vivado/create_project.tcl -mode batch
