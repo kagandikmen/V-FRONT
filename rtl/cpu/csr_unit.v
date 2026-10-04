@@ -123,7 +123,7 @@ module csr_unit
     assign illegal_mret = mret && (current_priv != 2'b11);
     assign illegal_mret_o = illegal_mret;
 
-    assign illegal_wfi = wfi && (current_priv == 2'b00) && (mstatus_tw == 1'b1);
+    assign illegal_wfi = 1'b0;          // WFI is implemented as NOP (for now)
     assign illegal_wfi_o = illegal_wfi;
 
     assign illegal_zicntr = (((csr_addr == CSR_CYCLE_ADDR || csr_addr == CSR_CYCLEH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][0]) || ((csr_addr == CSR_INSTRET_ADDR || csr_addr == CSR_INSTRETH_ADDR) && !csr_rf[CSR_RF_MCOUNTEREN_IDX][2])) && (r_en || w_en) && (current_priv != 2'b11);
