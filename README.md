@@ -10,7 +10,7 @@
   <img src="docs/v-front_lightbanner.png" alt="V-FRONT Banner" />
 </picture>
 
-**V-FRONT** is a **five**-stage, 32-bit RISC-**V** CPU implemented in **V**erilog. It supports the base RISC-V ISA module RV32I, version 2.1.
+**V-FRONT** is a **five**-stage, 32-bit RISC-**V** CPU implemented in **V**erilog. It implements the base integer instruction set RV32I, alongside ratified extensions Zifencei, Zicsr, and Zicntr.
 
 ### Summary
 
@@ -21,13 +21,13 @@
 [![GitHub License](https://img.shields.io/github/license/kagandikmen/V-FRONT)](LICENSE)
 [![Zenodo DOI Badge/Link](https://img.shields.io/badge/DOI-10.5281/zenodo.20783633-blue)](https://doi.org/10.5281/zenodo.20783633)
 
-- RV32I v2.1 with Zicsr and Zifencei extensions
+- Latest ratified RV32I, Zicsr, Zicntr, and Zifencei specifications (RISC-V ISA v20260120)
 - Five-stage von Neumann architecture
-- 32 KB unified dual-port dual-clock BRAM-based memory (16 KB program, 16 KB data)
-- User (U) and machine (M) privilege modes implemented
-- Handles exceptions via trap vector `mtvec_handler`
-- Unit tests for functional correctness and ISA compliance
-- Flow scripts enabling an easy jump-in for Vivado or QuestaSim users
+- 256 KiB unified dual-port BRAM-based memory (128 KiB program, 128 KiB data)
+- User (U) and machine (M) privilege modes
+- Misaligned memory accesses emulated via trap vector `mtvec_handler`
+- Verified to pass `riscv-tests` and `riscv-arch-test`
+- Vivado and QuestaSim flow scripts for an easy jump-in
 
 ## Prerequisites
 
@@ -63,7 +63,7 @@ from V-FRONT project root. To run the unit tests using Vivado, run:
 ```bash
 make SIM_TOOL=vivado
 ```
-In correct setup, the tests should all pass; there is no test failing as of 2026-07-15.
+With a correct setup, the tests should all pass.
 
 V-FRONT comes with simulation flow scripts for Vivado and QuestaSim. To create the "ideal" Vivado project for V-FRONT, use:
 ```bash
@@ -95,14 +95,14 @@ Find an example of how a generic C program can be compiled to run on V-FRONT by 
 ├── target            # Simulation flows for an easy onboarding
 │   └── questa            # QuestaSim flow
 │   └── vivado            # Vivado flow
-└── ut                # Unit tests (riscv-tests + V-FRONT's own)
+└── ut                # Unit tests (riscv-tests + riscv-arch-test + V-FRONT's own)
 ```
 
 ## Architectural Details
 
-V-FRONT implements a five-stage pipelined von Neumann CPU architecture. In its current configuration, it has a 32 KB unified memory to store both program and data, where the first 16 KB is reserved for program memory and the second 16 KB for data memory. Misaligned accesses to the data memory are detected by the CPU, which then raises an exception and jumps to a trap vector to handle the misaligned access.
+V-FRONT implements a five-stage pipelined von Neumann CPU architecture. In its current configuration, it has a 256 KiB unified memory to store both program and data, where the first 128 KiB is reserved for program memory and the second 128 KiB for data memory. Misaligned accesses to the data memory are detected by the CPU, which then raises an exception and jumps to a trap vector to handle the misaligned access.
 
-V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md). As of 2026-07-15, the hardware can raise exceptions in case of:
+V-FRONT implements a CSR unit with details you can find [here](docs/csr_unit.md). As of 2026-10-04, the hardware can raise exceptions in case of:
 
 - a misaligned data memory access,
 - an illegal instruction,
@@ -112,22 +112,20 @@ Software exceptions are raised through `ecall` and `ebreak` instructions. Any ex
 
 V-FRONT supports user mode (U-mode) and machine mode (M-mode) as its privilege modes.
 
-V-FRONT implements `fence` and `fence_i` instructions as pure NOPs, as these instructions do not serve any meaningful purpose in a single-core setting. As explicitly allowed by the spec, `wfi` is also implemented as a pure NOP, but it can still trigger an illegal instruction exception in the case of insufficient privilege.
+V-FRONT implements `fence` and `wfi` instructions as pure NOPs. `fence.i` instruction causes flushing of the younger in-flight instructions and does nothing else, because V-FRONT does not implement an instruction cache.
 
-V-FRONT is tested for functional correctness and ISA compliance using the unit tests in the [ut](ut/) folder. This directory includes tests sourced from [riscv-tests](https://github.com/riscv-software-src/riscv-tests). There are additional tests under [ut/v-front](ut/v-front/) as well. See [Getting Started](#getting-started) to learn how you can run the tests yourself.
+V-FRONT is tested for functional correctness and ISA compliance using the unit tests in the [ut](ut/) folder. This directory includes regression tests sourced from [riscv-tests](https://github.com/riscv-software-src/riscv-tests) and architectural tests (ACT4) sourced from [riscv-arch-test](https://github.com/riscv/riscv-arch-test.git). There are additional tests under [ut/v-front](ut/v-front/) as well. See [Getting Started](#getting-started) to learn how you can run the tests yourself.
 
 ## Status
 
-The unit tests all pass as of 2026-07-15. The design is fully synthesizable.
+The regression and architectural tests all pass as of 2026-10-04. The design is fully synthesizable.
 
 ### Known Issues
 
-- The CSR module does not implement read/write masking yet. CSR write operations can write to any field of a register as long as the register is read-write.
-- There are parametrization issues. Some parameters (like `PC_WIDTH`) do little to nothing.
-- Spec compliance needs to be strengthened; future work will involve [riscv-arch-test](https://github.com/riscv/riscv-arch-test).
-- The control logic shoulders instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
-- The design is not optimized yet for performance.
-- Documentation is very limited; needs to be extended.
+- **Medium** There are parametrization issues. Some parameters (like `PC_WIDTH`) do little to nothing.
+- **Low** The control logic shoulders instruction decoding far too much. As much of it as possible should be moved to the instruction decoder module.
+- **Low** The design is not optimized yet for performance.
+- **Low** Documentation is very limited; needs to be extended.
 
 ## Contributing
 
