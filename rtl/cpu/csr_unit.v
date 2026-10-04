@@ -184,6 +184,11 @@ module csr_unit
             csr_rf[CSR_RF_MSTATUS_IDX][3]       <= csr_rf[CSR_RF_MSTATUS_IDX][7];
             csr_rf[CSR_RF_MSTATUS_IDX][7]       <= 1'b1;
             csr_rf[CSR_RF_MSTATUS_IDX][12:11]   <= 2'b00;     // set back to least-privileged mode supported (U)
+            
+            if(csr_rf[CSR_RF_MSTATUS_IDX][12:11] != 2'b11) begin
+                csr_rf[CSR_RF_MSTATUS_IDX][17]  <= 1'b0;
+            end
+            
             current_priv                        <= csr_rf[CSR_RF_MSTATUS_IDX][12:11];
         end
         else if (ecall)
