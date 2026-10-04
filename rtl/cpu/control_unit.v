@@ -23,7 +23,7 @@ module control_unit
     output reg alu_cu_input_sel,
     output reg [1:0] alu_subunit_res_sel,
     output reg [3:0] alu_subunit_op_sel,
-    
+
     // to register file
     output reg w_en_rf_if,
 
@@ -60,7 +60,8 @@ module control_unit
 
     `include "common_library.vh"
 
-    wire [16:0] instr_compressed;
+    wire [23:0] instr_compressed;
+    wire [16:0] instr_mini;
 
     reg branch_id, jal_id, jalr_id, ecall_id, ebreak_id, mret_id;
     reg branch_ex, jal_ex, jalr_ex, ecall_ex, ebreak_ex, mret_ex;
@@ -82,7 +83,8 @@ module control_unit
 
     assign make_nop = make_nop_ex;
 
-    assign instr_compressed = {instr[14:12], instr[6:0]};
+    assign instr_compressed = {instr[31:25], instr[14:12], instr[6:0]};
+    assign instr_mini = {instr[14:12], instr[6:0]};
 
     assign fetch_instr = ~rst;
 
@@ -177,30 +179,27 @@ module control_unit
         ldst_mask = 4'b0000;
         w_en_rf_if = 1'b0;
         illegal_instr = 1'b0;
-        
+
         case (instr_compressed)
-            {FUNCT3_ADD, R_OPCODE}: // ADD / SUB
+            {FUNCT7_ADD, FUNCT3_ADD, R_OPCODE}: // ADD
             begin
-                if (instr[30] == 1'b0)      // ADD
-                begin
-                    alu_imm_select = 1'b0;
-                    alu_cu_input_sel = 1'b0;
-                    alu_subunit_res_sel = 2'b00; 
-                    alu_subunit_op_sel = 4'b0000;
-                    w_en_rf_if = 1'b1;
-                    rf_w_select = 2'b00;
-                end
-                else                        // SUB
-                begin
-                    alu_imm_select = 1'b0;
-                    alu_cu_input_sel = 1'b0;
-                    alu_subunit_res_sel = 2'b00; 
-                    alu_subunit_op_sel = 4'b1000;
-                    w_en_rf_if = 1'b1;
-                    rf_w_select = 2'b00;
-                end
+                alu_imm_select = 1'b0;
+                alu_cu_input_sel = 1'b0;
+                alu_subunit_res_sel = 2'b00;
+                alu_subunit_op_sel = 4'b0000;
+                w_en_rf_if = 1'b1;
+                rf_w_select = 2'b00;
             end
-            {FUNCT3_SLL, R_OPCODE}: // SLL
+            {FUNCT7_SUB, FUNCT3_SUB, R_OPCODE}: // SUB
+            begin
+                alu_imm_select = 1'b0;
+                alu_cu_input_sel = 1'b0;
+                alu_subunit_res_sel = 2'b00;
+                alu_subunit_op_sel = 4'b1000;
+                w_en_rf_if = 1'b1;
+                rf_w_select = 2'b00;
+            end
+            {FUNCT7_SLL, FUNCT3_SLL, R_OPCODE}: // SLL
             begin
                 alu_imm_select = 1'b0;
                 alu_cu_input_sel = 1'b0;
@@ -209,7 +208,7 @@ module control_unit
                 w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
-            {FUNCT3_SLT, R_OPCODE}: // SLT
+            {FUNCT7_SLT, FUNCT3_SLT, R_OPCODE}: // SLT
             begin
                 alu_imm_select = 1'b0;
                 alu_cu_input_sel = 1'b0;
@@ -218,7 +217,7 @@ module control_unit
                 w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
-            {FUNCT3_SLTU, R_OPCODE}: // SLTU
+            {FUNCT7_SLTU, FUNCT3_SLTU, R_OPCODE}: // SLTU
             begin
                 alu_imm_select = 1'b0;
                 alu_cu_input_sel = 1'b0;
@@ -227,7 +226,7 @@ module control_unit
                 w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
-            {FUNCT3_XOR, R_OPCODE}: // XOR
+            {FUNCT7_XOR, FUNCT3_XOR, R_OPCODE}: // XOR
             begin
                 alu_imm_select = 1'b0;
                 alu_cu_input_sel = 1'b0;
@@ -236,378 +235,365 @@ module control_unit
                 w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
-            {FUNCT3_SRL, R_OPCODE}: // SRL / SRA
-            begin
-                if (instr[30] == 1'b0)  // SRL
-                begin
-                    alu_imm_select = 1'b0;
-                    alu_cu_input_sel = 1'b0;
-                    alu_subunit_res_sel = 2'b10; 
-                    alu_subunit_op_sel = 4'b0001; 
-                    w_en_rf_if = 1'b1;
-                    rf_w_select = 2'b00;
-                end
-                else                    // SRA
-                begin
-                    alu_imm_select = 1'b0;
-                    alu_cu_input_sel = 1'b0;
-                    alu_subunit_res_sel = 2'b10;
-                    alu_subunit_op_sel = 4'b0111;
-                    w_en_rf_if = 1'b1;
-                    rf_w_select = 2'b00;
-                end
-            end
-            {FUNCT3_OR, R_OPCODE}: // OR
+            {FUNCT7_SRL, FUNCT3_SRL, R_OPCODE}: // SRL
             begin
                 alu_imm_select = 1'b0;
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b01;
-                alu_subunit_op_sel = 4'b0110;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_AND, R_OPCODE}: // AND
-            begin
-                alu_imm_select = 1'b0;
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b01; 
-                alu_subunit_op_sel = 4'b0111; 
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_ADDI, I_OPCODE}: // ADDI
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_SLTI, I_OPCODE}: // SLTI
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b11;
-                alu_subunit_op_sel = 4'b0011;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_SLTIU, I_OPCODE}: // SLTIU
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b11;
-                alu_subunit_op_sel = 4'b0111;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_XORI, I_OPCODE}: // XORI
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b01; 
-                alu_subunit_op_sel = 4'b0100;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_ORI, I_OPCODE}: // ORI
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b01; 
-                alu_subunit_op_sel = 4'b0110;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_ANDI, I_OPCODE}: // ANDI
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b01;
-                alu_subunit_op_sel = 4'b0111;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_SLLI, I_OPCODE}: // SLLI
-            begin
                 alu_cu_input_sel = 1'b0;
                 alu_subunit_res_sel = 2'b10;
-                alu_subunit_op_sel = 4'b0011;
+                alu_subunit_op_sel = 4'b0001;
                 w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
-                illegal_instr = (instr[31:25] != 7'b000_0000);
             end
-            {FUNCT3_SRLI, I_OPCODE}: // SRLI / SRAI
+            {FUNCT7_SRA, FUNCT3_SRA, R_OPCODE}: // SRA
             begin
-                if (instr[30] == 1'b0)      // SRLI
-                begin
-                    alu_cu_input_sel = 1'b0;
-                    alu_subunit_res_sel = 2'b10;
-                    alu_subunit_op_sel = 4'b0001;
-                    w_en_rf_if = 1'b1;
-                    rf_w_select = 2'b00;
-                    illegal_instr = (instr[31:25] != 7'b000_0000);
-                end
-                else                        // SRAI
-                begin
-                    alu_cu_input_sel = 1'b0;
-                    alu_subunit_res_sel = 2'b10;
-                    alu_subunit_op_sel = 4'b0111;
-                    w_en_rf_if = 1'b1;
-                    rf_w_select = 2'b00;
-                    illegal_instr = (instr[31:25] != 7'b010_0000);
-                end
-            end
-            {FUNCT3_LB, LOAD_OPCODE}: // LB
-            begin
+                alu_imm_select = 1'b0;
                 alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000; 
+                alu_subunit_res_sel = 2'b10;
+                alu_subunit_op_sel = 4'b0111;
                 w_en_rf_if = 1'b1;
-                rf_w_select = 2'b01;
-                ldst_mask = 4'b0001;
+                rf_w_select = 2'b00;
             end
-            {FUNCT3_LH, LOAD_OPCODE}: // LH
+            {FUNCT7_OR, FUNCT3_OR, R_OPCODE}: // OR
             begin
+                alu_imm_select = 1'b0;
                 alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000; 
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b01;
-                ldst_mask = 4'b0011;
-            end
-            {FUNCT3_LW, LOAD_OPCODE}: // LW
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000; 
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b01;
-                ldst_mask = 4'b1111;
-            end
-            {FUNCT3_LBU, LOAD_OPCODE}: // LBU
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000; 
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b01;
-                ldst_is_unsigned = 1'b1;
-                ldst_mask = 4'b0001;
-            end
-            {FUNCT3_LHU, LOAD_OPCODE}: // LHU
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000; 
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b01;
-                ldst_is_unsigned = 1'b1;
-                ldst_mask = 4'b0011;
-            end
-            {FUNCT3_SB, S_OPCODE}:  // SB
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00; 
-                alu_subunit_op_sel = 4'b0000;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-                ldst_mask = 4'b0001;
-                st_en_if = 1'b1;
-            end
-            {FUNCT3_SH, S_OPCODE}:  // SH
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00; 
-                alu_subunit_op_sel = 4'b0000;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-                ldst_mask = 4'b0011;
-                st_en_if = 1'b1;
-            end
-            {FUNCT3_SW, S_OPCODE}:  // SW
-            begin
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00; 
-                alu_subunit_op_sel = 4'b0000;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-                ldst_mask = 4'b1111;
-                st_en_if = 1'b1;
-            end
-            {FUNCT3_BEQ, B_OPCODE}: // BEQ
-            begin
-                alu_pc_select = 2'b01;
-                alu_cu_input_sel = 1'b1;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000;
-                branch = 1'b1; 
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_BNE, B_OPCODE}: // BNE
-            begin
-                alu_pc_select = 2'b01;
-                alu_cu_input_sel = 1'b1;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0001; 
-                branch = 1'b1;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_BLT, B_OPCODE}: // BLT
-            begin
-                alu_pc_select = 2'b01;
-                alu_cu_input_sel = 1'b1;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0011; 
-                branch = 1'b1;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_BGE, B_OPCODE}: // BGE
-            begin
-                alu_pc_select = 2'b01;
-                alu_cu_input_sel = 1'b1;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0010; 
-                branch = 1'b1;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_BLTU, B_OPCODE}: // BLTU
-            begin
-                alu_pc_select = 2'b01;
-                alu_cu_input_sel = 1'b1;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0111; 
-                branch = 1'b1;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_BGEU, B_OPCODE}: // BGEU
-            begin
-                alu_pc_select = 2'b01;
-                alu_cu_input_sel = 1'b1;
-                alu_subunit_res_sel = 2'b00;
+                alu_subunit_res_sel = 2'b01;
                 alu_subunit_op_sel = 4'b0110;
-                branch = 1'b1; 
-                w_en_rf_if = 1'b0;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
-            {FUNCT3_FENCE, FENCE_OPCODE}:   // FENCE
+            {FUNCT7_AND, FUNCT3_AND, R_OPCODE}: // AND
             begin
+                alu_imm_select = 1'b0;
                 alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00; 
-                alu_subunit_op_sel = 4'b0000;
-                w_en_rf_if = 1'b0;
+                alu_subunit_res_sel = 2'b01;
+                alu_subunit_op_sel = 4'b0111;
+                w_en_rf_if = 1'b1;
                 rf_w_select = 2'b00;
             end
-            {FUNCT3_FENCEI, FENCE_OPCODE}:  // FENCE.I
+            default:
             begin
-                alu_pc_select = 2'b01;
-                jal = 1'b1;
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00; 
-                alu_subunit_op_sel = 4'b0000;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-            end
-            {FUNCT3_ECALL_EBREAK, SYSTEM_OPCODE}:
-            begin
-                alu_pc_select = 2'b00;
-                alu_cu_input_sel = 1'b0;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000;   
-                alu_imm_select = 1'b1;
-                w_en_rf_if = 1'b0;
-                rf_w_select = 2'b00;
-                case (instr)
-                    32'h00000073: ecall = 1'b1;
-                    32'h00100073: ebreak = 1'b1;
-                    32'h30200073: mret = 1'b1;
-                    32'h10500073: wfi = 1'b1;
-                    default: illegal_instr = 1'b1;
-                endcase
-            end
-            {FUNCT3_CSRRW, SYSTEM_OPCODE}:
-            begin
-                alu_pc_select = 2'b00;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000;  
-                alu_imm_select = 1'b1;
-                w_en_rf_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
-                rf_w_select = 2'b11;
-                csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
-                csr_w_en_if = 1'b1;
-                csr_addr_if = instr[31:20];
-                csr_op_if = 3'b001;
-            end
-            {FUNCT3_CSRRS, SYSTEM_OPCODE}:
-            begin
-                alu_pc_select = 2'b00;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000;  
-                alu_imm_select = 1'b1;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b11;
-                csr_r_en_if = 1'b1;
-                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr_if = instr[31:20];
-                csr_op_if = 3'b010;
-            end
-            {FUNCT3_CSRRC, SYSTEM_OPCODE}:
-            begin
-                alu_pc_select = 2'b00;
-                alu_subunit_res_sel = 2'b00;
-                alu_subunit_op_sel = 4'b0000;  
-                alu_imm_select = 1'b1;
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b11;
-                csr_r_en_if = 1'b1;
-                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr_if = instr[31:20];
-                csr_op_if = 3'b011;
-            end
-            {FUNCT3_CSRRWI, SYSTEM_OPCODE}:
-            begin
-                w_en_rf_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
-                rf_w_select = 2'b11;
-                csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
-                csr_w_en_if = 1'b1;
-                csr_addr_if = instr[31:20];
-                csr_imm_select_if = 1'b1;
-                csr_op_if = 3'b101;
-            end
-            {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
-            begin
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b11;
-                csr_r_en_if = 1'b1;
-                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr_if = instr[31:20];
-                csr_imm_select_if = 1'b1;
-                csr_op_if = 3'b110;
-            end
-            {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
-            begin
-                w_en_rf_if = 1'b1;
-                rf_w_select = 2'b11;
-                csr_r_en_if = 1'b1;
-                csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
-                csr_addr_if = instr[31:20];
-                csr_imm_select_if = 1'b1;
-                csr_op_if = 3'b111;
-            end
-            default:    // JAL / JALR / LUI / AUIPC
-            begin
-                case (instr[6:0])
-                    JAL_OPCODE:
+                case(instr_mini)
+                    {FUNCT3_ADDI, I_OPCODE}: // ADDI
                     begin
-                        alu_pc_select = 2'b01;
                         alu_cu_input_sel = 1'b0;
                         alu_subunit_res_sel = 2'b00;
-                        alu_subunit_op_sel = 4'b0000; 
-                        jal = 1'b1;
+                        alu_subunit_op_sel = 4'b0000;
                         w_en_rf_if = 1'b1;
-                        rf_w_select = 2'b10;
+                        rf_w_select = 2'b00;
                     end
-                    JALR_OPCODE:
+                    {FUNCT3_SLTI, I_OPCODE}: // SLTI
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b11;
+                        alu_subunit_op_sel = 4'b0011;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_SLTIU, I_OPCODE}: // SLTIU
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b11;
+                        alu_subunit_op_sel = 4'b0111;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_XORI, I_OPCODE}: // XORI
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b01;
+                        alu_subunit_op_sel = 4'b0100;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_ORI, I_OPCODE}: // ORI
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b01;
+                        alu_subunit_op_sel = 4'b0110;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_ANDI, I_OPCODE}: // ANDI
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b01;
+                        alu_subunit_op_sel = 4'b0111;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_SLLI, I_OPCODE}: // SLLI
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b10;
+                        alu_subunit_op_sel = 4'b0011;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b00;
+                        illegal_instr = (instr[31:25] != 7'b000_0000);
+                    end
+                    {FUNCT3_SRLI, I_OPCODE}: // SRLI / SRAI
+                    begin
+                        if (instr[30] == 1'b0)      // SRLI
+                        begin
+                            alu_cu_input_sel = 1'b0;
+                            alu_subunit_res_sel = 2'b10;
+                            alu_subunit_op_sel = 4'b0001;
+                            w_en_rf_if = 1'b1;
+                            rf_w_select = 2'b00;
+                            illegal_instr = (instr[31:25] != 7'b000_0000);
+                        end
+                        else                        // SRAI
+                        begin
+                            alu_cu_input_sel = 1'b0;
+                            alu_subunit_res_sel = 2'b10;
+                            alu_subunit_op_sel = 4'b0111;
+                            w_en_rf_if = 1'b1;
+                            rf_w_select = 2'b00;
+                            illegal_instr = (instr[31:25] != 7'b010_0000);
+                        end
+                    end
+                    {FUNCT3_LB, LOAD_OPCODE}: // LB
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b01;
+                        ldst_mask = 4'b0001;
+                    end
+                    {FUNCT3_LH, LOAD_OPCODE}: // LH
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b01;
+                        ldst_mask = 4'b0011;
+                    end
+                    {FUNCT3_LW, LOAD_OPCODE}: // LW
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b01;
+                        ldst_mask = 4'b1111;
+                    end
+                    {FUNCT3_LBU, LOAD_OPCODE}: // LBU
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b01;
+                        ldst_is_unsigned = 1'b1;
+                        ldst_mask = 4'b0001;
+                    end
+                    {FUNCT3_LHU, LOAD_OPCODE}: // LHU
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b01;
+                        ldst_is_unsigned = 1'b1;
+                        ldst_mask = 4'b0011;
+                    end
+                    {FUNCT3_SB, S_OPCODE}:  // SB
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                        ldst_mask = 4'b0001;
+                        st_en_if = 1'b1;
+                    end
+                    {FUNCT3_SH, S_OPCODE}:  // SH
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                        ldst_mask = 4'b0011;
+                        st_en_if = 1'b1;
+                    end
+                    {FUNCT3_SW, S_OPCODE}:  // SW
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                        ldst_mask = 4'b1111;
+                        st_en_if = 1'b1;
+                    end
+                    {FUNCT3_BEQ, B_OPCODE}: // BEQ
+                    begin
+                        alu_pc_select = 2'b01;
+                        alu_cu_input_sel = 1'b1;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        branch = 1'b1;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_BNE, B_OPCODE}: // BNE
+                    begin
+                        alu_pc_select = 2'b01;
+                        alu_cu_input_sel = 1'b1;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0001;
+                        branch = 1'b1;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_BLT, B_OPCODE}: // BLT
+                    begin
+                        alu_pc_select = 2'b01;
+                        alu_cu_input_sel = 1'b1;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0011;
+                        branch = 1'b1;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_BGE, B_OPCODE}: // BGE
+                    begin
+                        alu_pc_select = 2'b01;
+                        alu_cu_input_sel = 1'b1;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0010;
+                        branch = 1'b1;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_BLTU, B_OPCODE}: // BLTU
+                    begin
+                        alu_pc_select = 2'b01;
+                        alu_cu_input_sel = 1'b1;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0111;
+                        branch = 1'b1;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_BGEU, B_OPCODE}: // BGEU
+                    begin
+                        alu_pc_select = 2'b01;
+                        alu_cu_input_sel = 1'b1;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0110;
+                        branch = 1'b1;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_FENCE, FENCE_OPCODE}:   // FENCE
+                    begin
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_FENCEI, FENCE_OPCODE}:  // FENCE.I
+                    begin
+                        alu_pc_select = 2'b01;
+                        jal = 1'b1;
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                    end
+                    {FUNCT3_ECALL_EBREAK, SYSTEM_OPCODE}:
+                    begin
+                        alu_pc_select = 2'b00;
+                        alu_cu_input_sel = 1'b0;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        alu_imm_select = 1'b1;
+                        w_en_rf_if = 1'b0;
+                        rf_w_select = 2'b00;
+                        case (instr)
+                            32'h00000073: ecall = 1'b1;
+                            32'h00100073: ebreak = 1'b1;
+                            32'h30200073: mret = 1'b1;
+                            32'h10500073: wfi = 1'b1;
+                            default: illegal_instr = 1'b1;
+                        endcase
+                    end
+                    {FUNCT3_CSRRW, SYSTEM_OPCODE}:
+                    begin
+                        alu_pc_select = 2'b00;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        alu_imm_select = 1'b1;
+                        w_en_rf_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                        rf_w_select = 2'b11;
+                        csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                        csr_w_en_if = 1'b1;
+                        csr_addr_if = instr[31:20];
+                        csr_op_if = 3'b001;
+                    end
+                    {FUNCT3_CSRRS, SYSTEM_OPCODE}:
+                    begin
+                        alu_pc_select = 2'b00;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        alu_imm_select = 1'b1;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b11;
+                        csr_r_en_if = 1'b1;
+                        csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                        csr_addr_if = instr[31:20];
+                        csr_op_if = 3'b010;
+                    end
+                    {FUNCT3_CSRRC, SYSTEM_OPCODE}:
+                    begin
+                        alu_pc_select = 2'b00;
+                        alu_subunit_res_sel = 2'b00;
+                        alu_subunit_op_sel = 4'b0000;
+                        alu_imm_select = 1'b1;
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b11;
+                        csr_r_en_if = 1'b1;
+                        csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                        csr_addr_if = instr[31:20];
+                        csr_op_if = 3'b011;
+                    end
+                    {FUNCT3_CSRRWI, SYSTEM_OPCODE}:
+                    begin
+                        w_en_rf_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                        rf_w_select = 2'b11;
+                        csr_r_en_if = (instr[11:7] == 5'b00000) ? 1'b0 : 1'b1;
+                        csr_w_en_if = 1'b1;
+                        csr_addr_if = instr[31:20];
+                        csr_imm_select_if = 1'b1;
+                        csr_op_if = 3'b101;
+                    end
+                    {FUNCT3_CSRRSI, SYSTEM_OPCODE}:
+                    begin
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b11;
+                        csr_r_en_if = 1'b1;
+                        csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                        csr_addr_if = instr[31:20];
+                        csr_imm_select_if = 1'b1;
+                        csr_op_if = 3'b110;
+                    end
+                    {FUNCT3_CSRRCI, SYSTEM_OPCODE}:
+                    begin
+                        w_en_rf_if = 1'b1;
+                        rf_w_select = 2'b11;
+                        csr_r_en_if = 1'b1;
+                        csr_w_en_if = (instr[19:15] == 5'b00000) ? 1'b0: 1'b1;
+                        csr_addr_if = instr[31:20];
+                        csr_imm_select_if = 1'b1;
+                        csr_op_if = 3'b111;
+                    end
+                    {FUNCT3_JALR, JALR_OPCODE}:
                     begin
                         alu_cu_input_sel = 1'b0;
                         alu_subunit_res_sel = 2'b00;
@@ -616,32 +602,47 @@ module control_unit
                         w_en_rf_if = 1'b1;
                         rf_w_select = 2'b10;
                     end
-                    LUI_OPCODE:
+                    default:    // JAL / LUI / AUIPC
                     begin
-                        alu_pc_select = 2'b10;
-                        alu_cu_input_sel = 1'b0;
-                        alu_subunit_res_sel = 2'b00;
-                        alu_subunit_op_sel = 4'b0000;
-                        w_en_rf_if = 1'b1;
-                        rf_w_select = 2'b00;
-                    end
-                    AUIPC_OPCODE:
-                    begin
-                        alu_pc_select = 2'b01;
-                        alu_cu_input_sel = 1'b0;
-                        alu_subunit_res_sel = 2'b00;
-                        alu_subunit_op_sel = 4'b0000;
-                        w_en_rf_if = 1'b1;
-                        rf_w_select = 2'b00;
-                    end
-                    default:
-                    begin
-                        alu_cu_input_sel = 1'b0;
-                        alu_subunit_res_sel = 2'b00;
-                        alu_subunit_op_sel = 4'b0000;
-                        w_en_rf_if = 1'b0;
-                        rf_w_select = 2'b00;
-                        illegal_instr = 1'b1;
+                        case (instr[6:0])
+                            JAL_OPCODE:
+                            begin
+                                alu_pc_select = 2'b01;
+                                alu_cu_input_sel = 1'b0;
+                                alu_subunit_res_sel = 2'b00;
+                                alu_subunit_op_sel = 4'b0000;
+                                jal = 1'b1;
+                                w_en_rf_if = 1'b1;
+                                rf_w_select = 2'b10;
+                            end
+                            LUI_OPCODE:
+                            begin
+                                alu_pc_select = 2'b10;
+                                alu_cu_input_sel = 1'b0;
+                                alu_subunit_res_sel = 2'b00;
+                                alu_subunit_op_sel = 4'b0000;
+                                w_en_rf_if = 1'b1;
+                                rf_w_select = 2'b00;
+                            end
+                            AUIPC_OPCODE:
+                            begin
+                                alu_pc_select = 2'b01;
+                                alu_cu_input_sel = 1'b0;
+                                alu_subunit_res_sel = 2'b00;
+                                alu_subunit_op_sel = 4'b0000;
+                                w_en_rf_if = 1'b1;
+                                rf_w_select = 2'b00;
+                            end
+                            default:
+                            begin
+                                alu_cu_input_sel = 1'b0;
+                                alu_subunit_res_sel = 2'b00;
+                                alu_subunit_op_sel = 4'b0000;
+                                w_en_rf_if = 1'b0;
+                                rf_w_select = 2'b00;
+                                illegal_instr = 1'b1;
+                            end
+                        endcase
                     end
                 endcase
             end
