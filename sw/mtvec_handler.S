@@ -1,19 +1,19 @@
 # Trap vector mtvec_handler to manage misaligned loads and stores
 # Created:      2025-05-28
-# Modified:     2026-07-14
+# Modified:     2026-10-04
 # Author:       Kagan Dikmen
 
 .section .text.mtvec
 
 # In case of misaligned data memory access:
-# mscratch stores the instruction
 # mtval stores the addr
-# mtval2 stores for loads: target register
-#                  for stores: data to be written
+# The trapped instruction identifies the load destination or store source.
+# gpr_save makes its value available at sp + 4 * register number.
 
 .weak mtvec_handler
 mtvec_handler:
-    jal ra, gpr_save
+    j gpr_save
+gpr_save_done:
     csrr t5, mcause
     li t6, 0
     beq t5, t6, instr_addr_misaligned
@@ -69,7 +69,10 @@ lw_misalignment:
     srl t0, t3, t4              # shifts lower word right by offset
     sll t1, t6, t2              # shifts upper word left by 32-offset
     add t0, t0, t1              # final result
-    csrr t1, mtval2
+    csrr t1, mepc
+    lw t1, 0(t1)
+    srli t1, t1, 7
+    andi t1, t1, 0x1f
     sll t1, t1, 0x2
     add t1, t1, sp
     sw t0, 0(t1)
@@ -108,7 +111,10 @@ lh_offset3:
     srai t3, t3, 16
     j lh_misalignment_epilogue
 lh_misalignment_epilogue:
-    csrr t1, mtval2
+    csrr t1, mepc
+    lw t1, 0(t1)
+    srli t1, t1, 7
+    andi t1, t1, 0x1f
     sll t1, t1, 0x2
     add t1, t1, sp
     sw t3, 0(t1)
@@ -147,7 +153,10 @@ lhu_offset3:
     srli t3, t3, 16
     j lh_misalignment_epilogue
 lhu_misalignment_epilogue:
-    csrr t1, mtval2
+    csrr t1, mepc
+    lw t1, 0(t1)
+    srli t1, t1, 7
+    andi t1, t1, 0x1f
     sll t1, t1, 0x2
     add t1, t1, sp
     sw t3, 0(t1)
@@ -174,7 +183,13 @@ sh_misalignment:
     beq t4, t2, sh_offset3
 sh_offset1:
     andi t3, t3, 0xfffffffc     # address of the word
-    csrr t4, mtval2              # halfword to be written
+    csrr t4, mepc
+    lw t4, 0(t4)
+    srli t4, t4, 20
+    andi t4, t4, 0x1f
+    slli t4, t4, 2
+    add t4, t4, sp
+    lw t4, 0(t4)                 # halfword to be written
     slli t4, t4, 8
     lw t5, 0(t3)
     li t6, 0xff0000ff
@@ -186,7 +201,13 @@ sh_offset1:
     j finalize
 sh_offset3:
     andi t3, t3, 0xfffffffc     # address of the lower word
-    csrr t4, mtval2              # halfword to be written
+    csrr t4, mepc
+    lw t4, 0(t4)
+    srli t4, t4, 20
+    andi t4, t4, 0x1f
+    slli t4, t4, 2
+    add t4, t4, sp
+    lw t4, 0(t4)                 # halfword to be written
     andi t5, t4, 0x0ff          # lower byte -> t5
     srli t6, t4, 8
     andi t6, t6, 0x0ff          # upper byte -> t6
@@ -196,7 +217,13 @@ sh_offset3:
 
 sw_misalignment:
     csrr t3, mtval          # addr -> t3
-    csrr t6, mtval2          # word -> t6
+    csrr t6, mepc
+    lw t6, 0(t6)
+    srli t6, t6, 20
+    andi t6, t6, 0x1f
+    slli t6, t6, 2
+    add t6, t6, sp
+    lw t6, 0(t6)             # word -> t6
     li t2, 0x0ff
     and t2, t2, t6         # byte 0 -> t2
     sb t2, 0(t3)
@@ -254,12 +281,13 @@ gpr_save:
     sw x29, 116(sp)
     sw x30, 120(sp)
     sw x31, 124(sp)
-    ret
+    addi t0, sp, 128
+    sw t0, 8(sp)
+    j gpr_save_done
 
 gpr_restore:
     lw x0, 0(sp)
     lw x1, 4(sp)
-#   lw x2, 8(sp)    
     lw x3, 12(sp)
     lw x4, 16(sp)
     lw x5, 20(sp)
@@ -289,6 +317,5 @@ gpr_restore:
     lw x29, 116(sp)
     lw x30, 120(sp)
     lw x31, 124(sp)
-    addi sp, sp, 128
+    lw x2, 8(sp)
     mret
-

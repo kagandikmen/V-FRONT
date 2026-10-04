@@ -116,7 +116,6 @@ localparam RF_ADDR_LENGTH   = 5;        // log2(RF_DEPTH) = 5
 
 // CSR
 
-localparam CSR_JVT_ADDR             = 12'h017;
 localparam CSR_MSTATUS_ADDR         = 12'h300;
 localparam CSR_MISA_ADDR            = 12'h301;
 localparam CSR_MIE_ADDR             = 12'h304;
@@ -131,8 +130,6 @@ localparam CSR_MEPC_ADDR            = 12'h341;
 localparam CSR_MCAUSE_ADDR          = 12'h342;
 localparam CSR_MTVAL_ADDR           = 12'h343;
 localparam CSR_MIP_ADDR             = 12'h344;
-localparam CSR_MTINST_ADDR          = 12'h34a;
-localparam CSR_MTVAL2_ADDR          = 12'h34b;
 localparam CSR_MCYCLE_ADDR          = 12'hb00;
 localparam CSR_MINSTRET_ADDR        = 12'hb02;
 localparam CSR_MCYCLEH_ADDR         = 12'hb80;
@@ -149,7 +146,6 @@ localparam CSR_MIMPID_ADDR          = 12'hf13;
 localparam CSR_MHARTID_ADDR         = 12'hf14;
 localparam CSR_MCONFIGPTR_ADDR      = 12'hf15;
 
-localparam CSR_JVT_RST          = 32'h0000_0000;
 localparam CSR_MSTATUS_RST      = 32'h0000_0000;
 localparam CSR_MISA_RST         = 32'h4010_0100;    // RV32I with user mode
 localparam CSR_MIE_RST          = 32'h0000_0000;
@@ -161,8 +157,6 @@ localparam CSR_MEPC_RST         = 32'h0000_0000;
 localparam CSR_MCAUSE_RST       = 32'h0000_0000;
 localparam CSR_MTVAL_RST        = 32'h0000_0000;
 localparam CSR_MIP_RST          = 32'h0000_0000;
-localparam CSR_MTINST_RST       = 32'h0000_0000;
-localparam CSR_MTVAL2_RST       = 32'h0000_0000;
 localparam CSR_MCYCLE_RST       = 32'h0000_0000;
 localparam CSR_MINSTRET_RST     = 32'h0000_0000;
 localparam CSR_MCYCLEH_RST      = 32'h0000_0000;

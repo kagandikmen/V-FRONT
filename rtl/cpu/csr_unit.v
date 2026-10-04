@@ -30,9 +30,7 @@ module csr_unit
 
     input is_misaligned,
     input is_misalignment_store,
-    input [31:0] misaligned_store_value,
     input [DMEM_ADDR_WIDTH-1+2:0] mem_addr,
-    input [4:0] rd_addr,
 
     input [31:0] instr,
     input illegal_instr,
@@ -60,35 +58,32 @@ module csr_unit
 
     `include "common_library.vh"
 
-    localparam CSR_RF_JVT_IDX           = 0;
-    localparam CSR_RF_MSTATUS_IDX       = 1;
-    localparam CSR_RF_MISA_IDX          = 2;
-    localparam CSR_RF_MIE_IDX           = 3;
-    localparam CSR_RF_MTVEC_IDX         = 4;
-    localparam CSR_RF_MCOUNTEREN_IDX    = 5;
-    localparam CSR_RF_MSTATUSH_IDX      = 6;
-    localparam CSR_RF_MSCRATCH_IDX      = 7;
-    localparam CSR_RF_MEPC_IDX          = 8;
-    localparam CSR_RF_MCAUSE_IDX        = 9;
-    localparam CSR_RF_MTVAL_IDX         = 10;
-    localparam CSR_RF_MIP_IDX           = 11;
-    localparam CSR_RF_MTINST_IDX        = 12;
-    localparam CSR_RF_MTVAL2_IDX        = 13;
-    localparam CSR_RF_MCYCLE_IDX        = 14;
-    localparam CSR_RF_MINSTRET_IDX      = 15;
-    localparam CSR_RF_MCYCLEH_IDX       = 16;
-    localparam CSR_RF_MINSTRETH_IDX     = 17;
-    localparam CSR_RF_MVENDORID_IDX     = 18;
-    localparam CSR_RF_MARCHID_IDX       = 19;
-    localparam CSR_RF_MIMPID_IDX        = 20;
-    localparam CSR_RF_MHARTID_IDX       = 21;
-    localparam CSR_RF_MCONFIGPTR_IDX    = 22;
-    localparam CSR_RF_MENVCFG_IDX       = 23;
-    localparam CSR_RF_MCOUNTINHIBIT_IDX = 24;
+    localparam CSR_RF_MSTATUS_IDX       = 0;
+    localparam CSR_RF_MISA_IDX          = 1;
+    localparam CSR_RF_MIE_IDX           = 2;
+    localparam CSR_RF_MTVEC_IDX         = 3;
+    localparam CSR_RF_MCOUNTEREN_IDX    = 4;
+    localparam CSR_RF_MSTATUSH_IDX      = 5;
+    localparam CSR_RF_MSCRATCH_IDX      = 6;
+    localparam CSR_RF_MEPC_IDX          = 7;
+    localparam CSR_RF_MCAUSE_IDX        = 8;
+    localparam CSR_RF_MTVAL_IDX         = 9;
+    localparam CSR_RF_MIP_IDX           = 10;
+    localparam CSR_RF_MCYCLE_IDX        = 11;
+    localparam CSR_RF_MINSTRET_IDX      = 12;
+    localparam CSR_RF_MCYCLEH_IDX       = 13;
+    localparam CSR_RF_MINSTRETH_IDX     = 14;
+    localparam CSR_RF_MVENDORID_IDX     = 15;
+    localparam CSR_RF_MARCHID_IDX       = 16;
+    localparam CSR_RF_MIMPID_IDX        = 17;
+    localparam CSR_RF_MHARTID_IDX       = 18;
+    localparam CSR_RF_MCONFIGPTR_IDX    = 19;
+    localparam CSR_RF_MENVCFG_IDX       = 20;
+    localparam CSR_RF_MCOUNTINHIBIT_IDX = 21;
 
     reg spec_reg_r_en, spec_reg_w_en;
     reg [31:0] write_value;
-    reg [31:0] csr_rf [24:0];
+    reg [31:0] csr_rf [21:0];
 
     reg [1:0] current_priv;
 
@@ -147,7 +142,6 @@ module csr_unit
         begin
             current_priv <= 2'b11;  // boot the chip in M mode
 
-            csr_rf[CSR_RF_JVT_IDX]          <= CSR_JVT_RST;
             csr_rf[CSR_RF_MSTATUS_IDX]      <= CSR_MSTATUS_RST;
             csr_rf[CSR_RF_MISA_IDX]         <= CSR_MISA_RST;
             csr_rf[CSR_RF_MIE_IDX]          <= CSR_MIE_RST;
@@ -159,8 +153,6 @@ module csr_unit
             csr_rf[CSR_RF_MCAUSE_IDX]       <= CSR_MCAUSE_RST;
             csr_rf[CSR_RF_MTVAL_IDX]        <= CSR_MTVAL_RST;
             csr_rf[CSR_RF_MIP_IDX]          <= CSR_MIP_RST;
-            csr_rf[CSR_RF_MTINST_IDX]       <= CSR_MTINST_RST;
-            csr_rf[CSR_RF_MTVAL2_IDX]       <= CSR_MTVAL2_RST;
             csr_rf[CSR_RF_MCYCLE_IDX]       <= CSR_MCYCLE_RST;
             csr_rf[CSR_RF_MINSTRET_IDX]     <= CSR_MINSTRET_RST;
             csr_rf[CSR_RF_MCYCLEH_IDX]      <= CSR_MCYCLEH_RST;
@@ -213,7 +205,6 @@ module csr_unit
             csr_rf[CSR_RF_MEPC_IDX]     <= pc;
             csr_rf[CSR_RF_MCAUSE_IDX]   <= (is_misalignment_store) ? 32'd6 : 32'd4;
             csr_rf[CSR_RF_MTVAL_IDX]    <= mem_addr;
-            csr_rf[CSR_RF_MTVAL2_IDX]   <= (is_misalignment_store) ? misaligned_store_value : {27'b0, rd_addr};
             trap_to_M();
         end
         else if (mei_en)
@@ -237,7 +228,6 @@ module csr_unit
         else if (spec_reg_w_en && !(current_priv < csr_addr[9:8]))
         begin
             case(csr_addr)
-                CSR_JVT_ADDR:           csr_rf[CSR_RF_JVT_IDX]              <= write_value;
                 CSR_MSTATUS_ADDR:       csr_rf[CSR_RF_MSTATUS_IDX]          <= write_value & CSR_MSTATUS_WMASK;
                 CSR_MISA_ADDR:          csr_rf[CSR_RF_MISA_IDX]             <= write_value;
                 CSR_MIE_ADDR:           csr_rf[CSR_RF_MIE_IDX]              <= write_value & CSR_MIE_WMASK;
@@ -251,8 +241,6 @@ module csr_unit
                 CSR_MCAUSE_ADDR:        csr_rf[CSR_RF_MCAUSE_IDX]           <= write_value;
                 CSR_MTVAL_ADDR:         csr_rf[CSR_RF_MTVAL_IDX]            <= write_value;
                 CSR_MIP_ADDR:           csr_rf[CSR_RF_MIP_IDX]              <= write_value & CSR_MIP_WMASK;             // read-only
-                CSR_MTINST_ADDR:        csr_rf[CSR_RF_MTINST_IDX]           <= write_value;
-                CSR_MTVAL2_ADDR:        csr_rf[CSR_RF_MTVAL2_IDX]           <= write_value;
                 CSR_MCYCLE_ADDR:        csr_rf[CSR_RF_MCYCLE_IDX]           <= write_value;
                 CSR_MINSTRET_ADDR:      csr_rf[CSR_RF_MINSTRET_IDX]         <= write_value;
                 CSR_MCYCLEH_ADDR:       csr_rf[CSR_RF_MCYCLEH_IDX]          <= write_value;
@@ -287,8 +275,7 @@ module csr_unit
         not_csr = 1'b0;
         write_to_ro_csr = 1'b0;
         
-        if(csr_addr == CSR_JVT_ADDR 
-            || csr_addr == CSR_MSTATUS_ADDR
+        if(csr_addr == CSR_MSTATUS_ADDR
             || csr_addr == CSR_MISA_ADDR
             || csr_addr == CSR_MIE_ADDR
             || csr_addr == CSR_MTVEC_ADDR
@@ -302,8 +289,6 @@ module csr_unit
             || csr_addr == CSR_MCAUSE_ADDR
             || csr_addr == CSR_MTVAL_ADDR
             || csr_addr == CSR_MIP_ADDR
-            || csr_addr == CSR_MTINST_ADDR
-            || csr_addr == CSR_MTVAL2_ADDR
             || csr_addr == CSR_MCYCLE_ADDR
             || csr_addr == CSR_MINSTRET_ADDR
             || csr_addr == CSR_MCYCLEH_ADDR
@@ -342,7 +327,6 @@ module csr_unit
         if(spec_reg_r_en)
         begin
             case(csr_addr)
-                CSR_JVT_ADDR:           out = csr_rf[CSR_RF_JVT_IDX];
                 CSR_MSTATUS_ADDR:       out = csr_rf[CSR_RF_MSTATUS_IDX];
                 CSR_MISA_ADDR:          out = csr_rf[CSR_RF_MISA_IDX];
                 CSR_MIE_ADDR:           out = csr_rf[CSR_RF_MIE_IDX];
@@ -356,8 +340,6 @@ module csr_unit
                 CSR_MCAUSE_ADDR:        out = csr_rf[CSR_RF_MCAUSE_IDX];
                 CSR_MTVAL_ADDR:         out = csr_rf[CSR_RF_MTVAL_IDX];
                 CSR_MIP_ADDR: begin     out = 32'b0; out[3] = sw_irq_i; out[7] = timer_irq_i; out[11] = ext_irq_i; end
-                CSR_MTINST_ADDR:        out = csr_rf[CSR_RF_MTINST_IDX];
-                CSR_MTVAL2_ADDR:        out = csr_rf[CSR_RF_MTVAL2_IDX];
                 CSR_MCYCLE_ADDR:        out = csr_rf[CSR_RF_MCYCLE_IDX];
                 CSR_MINSTRET_ADDR:      out = minstret_visible[31:0];
                 CSR_MCYCLEH_ADDR:       out = csr_rf[CSR_RF_MCYCLEH_IDX];
